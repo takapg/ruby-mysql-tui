@@ -74,17 +74,19 @@ module RubyMysqlTui
 
   private_class_method def self.process_sql_keypress(event, state, client)
     case event.key.name
-    when :escape
-      [state.merge!(sql_mode: false, sql_input: ''), false]
-    when :return
-      handle_sql_return(state, client)
-    when :backspace
-      state[:sql_input] = state[:sql_input].chop
-      [state, false]
-    else
-      state[:sql_input] += event.value if event.value
-      [state, false]
+    when :escape then [state.merge!(sql_mode: false, sql_input: ''), false]
+    when :return then handle_sql_return(state, client)
+    else handle_sql_text_input(event, state)
     end
+  end
+
+  private_class_method def self.handle_sql_text_input(event, state)
+    if event.key.name == :backspace
+      state[:sql_input] = state[:sql_input].chop
+    elsif event.value
+      state[:sql_input] += event.value
+    end
+    [state, false]
   end
 
   private_class_method def self.handle_sql_return(state, client)
