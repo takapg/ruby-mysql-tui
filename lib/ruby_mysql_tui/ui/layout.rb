@@ -30,9 +30,7 @@ module RubyMysqlTui
 
       def calculate_widths
         @width = TTY::Screen.width
-        @left_w = [(@width * 0.3).to_i, 10].max
-        @left_w = [@left_w, @width - 2].min
-        @left_w = [@left_w, 0].max
+        @left_w = [(@width * 0.3).to_i, 10].max.clamp(0, [@width - 2, 0].max)
         @right_w = [@width - @left_w - 1, 0].max
       end
     end

@@ -7,6 +7,8 @@ module RubyMysqlTui
   module UI
     # Renderer は Layout に基づいて TUI 画面を描画します。
     class Renderer
+      CLEAR_SCREEN = "\e[2J\e[H"
+
       def initialize(layout)
         @layout = layout
       end
@@ -14,7 +16,7 @@ module RubyMysqlTui
       # 画面全体をレンダリングします。
       def render(client)
         @layout.update_dimensions
-        print "\e[2J\e[H"
+        print CLEAR_SCREEN
 
         render_header(client)
         render_main
