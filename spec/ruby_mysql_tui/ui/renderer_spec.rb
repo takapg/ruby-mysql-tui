@@ -10,6 +10,11 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   let(:renderer) { described_class.new(layout) }
   let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }) }
 
+  before do
+    allow(TTY::Screen).to receive(:width).and_return(100)
+    allow(TTY::Screen).to receive(:height).and_return(30)
+  end
+
   describe '#render' do
     it 'renders different output based on focus state' do
       left_output = StringIO.new
