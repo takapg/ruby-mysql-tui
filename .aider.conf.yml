@@ -1,0 +1,5 @@
+analytics-disable: true
+
+read:
+  - AGENTS.md
+  - .rubocop.yml
