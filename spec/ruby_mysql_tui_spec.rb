@@ -211,46 +211,50 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination)' do
 
   before { allow(client).to receive(:list_databases).and_return([]) }
 
-  it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
-    state = initial_state.merge(
-      focus: :right,
-      view_mode: :records,
-      selected_table: 'users',
-      records: Array.new(100) { { 'id' => 0 } },
-      page_offset: 0,
-      records_offset: 99
-    )
-    
-    next_page = Array.new(100) { { 'id' => 1 } }
-    allow(client).to receive(:list_records).with('users', 100).and_return(next_page)
-    
-    down_event = double('Event', value: nil, key: double('Key', name: :down))
-    result = RubyMysqlTui.handle_input(down_event, state, client)
-    
-    expect(result[:records_offset]).to eq(100)
-    expect(result[:page_offset]).to eq(100)
-    expect(result[:records]).to eq(next_page)
+  context 'when scrolling down' do
+    it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
+      state = initial_state.merge(
+        focus: :right,
+        view_mode: :records,
+        selected_table: 'users',
+        records: Array.new(100) { { 'id' => 0 } },
+        page_offset: 0,
+        records_offset: 99
+      )
+
+      next_page = Array.new(100) { { 'id' => 1 } }
+      allow(client).to receive(:list_records).with('users', 100).and_return(next_page)
+
+      down_event = double('Event', value: nil, key: double('Key', name: :down))
+      result = RubyMysqlTui.handle_input(down_event, state, client)
+
+      expect(result[:records_offset]).to eq(100)
+      expect(result[:page_offset]).to eq(100)
+      expect(result[:records]).to eq(next_page)
+    end
   end
 
-  it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
-    state = initial_state.merge(
-      focus: :right,
-      view_mode: :records,
-      selected_table: 'users',
-      records: Array.new(100) { { 'id' => 1 } },
-      page_offset: 100,
-      records_offset: 100
-    )
-    
-    prev_page = Array.new(100) { { 'id' => 0 } }
-    allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
-    
-    up_event = double('Event', value: nil, key: double('Key', name: :up))
-    result = RubyMysqlTui.handle_input(up_event, state, client)
-    
-    expect(result[:records_offset]).to eq(99)
-    expect(result[:page_offset]).to eq(0)
-    expect(result[:records]).to eq(prev_page)
+  context 'when scrolling up' do
+    it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
+      state = initial_state.merge(
+        focus: :right,
+        view_mode: :records,
+        selected_table: 'users',
+        records: Array.new(100) { { 'id' => 1 } },
+        page_offset: 100,
+        records_offset: 100
+      )
+
+      prev_page = Array.new(100) { { 'id' => 0 } }
+      allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
+
+      up_event = double('Event', value: nil, key: double('Key', name: :up))
+      result = RubyMysqlTui.handle_input(up_event, state, client)
+
+      expect(result[:records_offset]).to eq(99)
+      expect(result[:page_offset]).to eq(0)
+      expect(result[:records]).to eq(prev_page)
+    end
   end
 end
 
