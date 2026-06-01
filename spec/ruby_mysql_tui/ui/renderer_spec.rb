@@ -202,4 +202,23 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
     line_count = content.count("\n") + 1
     expect(line_count).to be <= layout.main_h
   end
+
+  it 'displays records starting from the offset' do
+    state = {
+      focus: :left,
+      view_mode: :records,
+      selected_table: 'users',
+      records: [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }, { 'id' => 3, 'name' => 'Charlie' }],
+      records_offset: 1,
+      items: []
+    }
+    allow(TTY::Screen).to receive(:height).and_return(12)
+    layout = RubyMysqlTui::UI::Layout.new
+    renderer = described_class.new(layout)
+
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('Bob')
+    expect(output).to include('Charlie')
+    expect(output).not_to include('Alice')
+  end
 end

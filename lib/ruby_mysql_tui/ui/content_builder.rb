@@ -21,7 +21,7 @@ module RubyMysqlTui
         case state[:view_mode]
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then build_records_text(state[:selected_table], state[:records], content_width, height)
+        when :records then build_records_text(state[:selected_table], state[:records], content_width, height, state[:records_offset] || 0)
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -40,23 +40,24 @@ module RubyMysqlTui
         end
       end
 
-      def build_records_text(table_name, records, width, height = nil)
+      def build_records_text(table_name, records, width, height = nil, offset = 0)
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_records_table(records, width, max_rows).to_s
+        table_output = create_records_table(records, width, max_rows, offset).to_s
         truncated_table = (table_output || '').lines.map { |line| truncate(line.chomp, width) }.join("\n")
         "#{header}\n\n#{truncated_table}"
       end
 
-      def create_records_table(records, width, max_rows = nil)
+      def create_records_table(records, width, max_rows = nil, offset = 0)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
         # 表示可能件数でスライス
-        display_records = max_rows ? records.first(max_rows) : records
+        display_records = max_rows ? records[offset, max_rows] : records[offset..-1]
+        display_records ||= []
 
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
