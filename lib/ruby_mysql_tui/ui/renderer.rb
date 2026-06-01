@@ -53,18 +53,23 @@ module RubyMysqlTui
       def build_right_text(view_mode, selected_db, items, width)
         content_width = width - 2
         case view_mode
-        when :databases
-          truncate('Data will appear here', content_width)
-        when :tables
-          header = truncate("Database: #{selected_db}", content_width)
-          if items.empty?
-            "#{header}\n\n#{truncate('No tables found', content_width)}"
-          else
-            table_list = items.map { |item| truncate(item, content_width) }.join("\n")
-            "#{header}\n\n#{table_list}"
-          end
+        when :databases then build_databases_text(content_width)
+        when :tables then build_tables_text(selected_db, items, content_width)
+        else truncate('Unknown view mode', content_width)
+        end
+      end
+
+      def build_databases_text(width)
+        truncate('Data will appear here', width)
+      end
+
+      def build_tables_text(selected_db, items, width)
+        header = truncate("Database: #{selected_db}", width)
+        if items.empty?
+          "#{header}\n\n#{truncate('No tables found', width)}"
         else
-          truncate('Unknown view mode', content_width)
+          table_list = items.map { |item| truncate(item, width) }.join("\n")
+          "#{header}\n\n#{table_list}"
         end
       end
 

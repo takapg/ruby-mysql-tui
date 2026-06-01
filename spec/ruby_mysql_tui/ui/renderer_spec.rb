@@ -32,7 +32,7 @@ RSpec.shared_context 'renderer setup' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'focus' do
   include_context 'renderer setup'
   describe '#render' do
     it 'applies correct colors based on focus' do
@@ -45,31 +45,42 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
         ).to_stdout
       end
     end
-    it 'displays "No items found" when the database list is empty' do
-      state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
-      expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
-    end
-    it 'displays table list in the right pane when view_mode is :tables' do
-      state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
-      output = capture_stdout { renderer.render(client, state) }
-      expect(output).to include('Box(color: white, content: Database: test_db')
-      expect(output).to include('table1')
-      expect(output).to include('table2')
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content' do
+  include_context 'renderer setup'
+  describe '#render' do
+    context 'when view_mode is :databases' do
+      it 'displays "No items found" when the database list is empty' do
+        state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+        expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
+      end
     end
 
-    it 'displays "No tables found" in the right pane when view_mode is :tables and items are empty' do
-      state = { focus: :left, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
-      output = capture_stdout { renderer.render(client, state) }
-      expect(output).to include('Box(color: white, content: Database: test_db')
-      expect(output).to include('No tables found')
-    end
+    context 'when view_mode is :tables' do
+      it 'displays table list in the right pane' do
+        state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        output = capture_stdout { renderer.render(client, state) }
+        expect(output).to include('Box(color: white, content: Database: test_db')
+        expect(output).to include('table1')
+        expect(output).to include('table2')
+      end
 
-    it 'truncates long table names in the right pane' do
-      long_table = 'a' * 100
-      state = { focus: :left, items: [long_table], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
-      output = capture_stdout { renderer.render(client, state) }
-      expect(output).to include('...')
-      expect(output).not_to include(long_table)
+      it 'displays "No tables found" when items are empty' do
+        state = { focus: :left, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        output = capture_stdout { renderer.render(client, state) }
+        expect(output).to include('Box(color: white, content: Database: test_db')
+        expect(output).to include('No tables found')
+      end
+
+      it 'truncates long table names' do
+        long_table = 'a' * 100
+        state = { focus: :left, items: [long_table], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        output = capture_stdout { renderer.render(client, state) }
+        expect(output).to include('...')
+        expect(output).not_to include(long_table)
+      end
     end
   end
 end
