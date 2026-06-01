@@ -136,9 +136,8 @@ RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
   end
 end
 
-RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
+RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Transition' do
   let(:client) { double('Client') }
-  let(:reader) { double('Reader') }
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
   before { allow(client).to receive(:list_databases).and_return([]) }
@@ -148,6 +147,14 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
     state = RubyMysqlTui.handle_input(s_event, initial_state, client)
     expect(state[:sql_mode]).to eq(true)
   end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Execution' do
+  let(:client) { double('Client') }
+  let(:reader) { double('Reader') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
   it 'SQLを入力して実行し、結果が反映されて通常モードに戻ること' do
     state = initial_state.merge(sql_mode: true)
@@ -161,7 +168,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
 
     current_state = state
     loop do
-      current_state, _ = RubyMysqlTui.handle_loop_input(reader, current_state, client)
+      current_state = RubyMysqlTui.handle_loop_input(reader, current_state, client).first
       break unless current_state[:sql_mode]
     end
 

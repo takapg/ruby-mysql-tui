@@ -69,15 +69,15 @@ module RubyMysqlTui
 
   private_class_method def self.handle_sql_mode_input(reader, state, client)
     event = reader.read_keypress
+    process_sql_keypress(event, state, client)
+  end
+
+  private_class_method def self.process_sql_keypress(event, state, client)
     case event.key.name
     when :escape
       [state.merge!(sql_mode: false, sql_input: ''), false]
     when :return
-      if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
-        return [state.merge!(sql_mode: false, sql_input: ''), false]
-      end
-      new_state = InputHandler.execute_sql(state[:sql_input], state, client)
-      [new_state.merge!(sql_input: ''), false]
+      handle_sql_return(state, client)
     when :backspace
       state[:sql_input] = state[:sql_input].chop
       [state, false]
@@ -85,6 +85,15 @@ module RubyMysqlTui
       state[:sql_input] += event.value if event.value
       [state, false]
     end
+  end
+
+  private_class_method def self.handle_sql_return(state, client)
+    if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
+      return [state.merge!(sql_mode: false, sql_input: ''), false]
+    end
+
+    new_state = InputHandler.execute_sql(state[:sql_input], state, client)
+    [new_state.merge!(sql_input: ''), false]
   end
 
   def self.initial_state(client)
