@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'tty-table'
+
 module RubyMysqlTui
   module UI
     # ContentBuilder は TUI 画面に表示するためのテキスト構築ロジックを提供します。
@@ -56,6 +58,7 @@ module RubyMysqlTui
 
         # 表示可能件数でスライス
         display_records = max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
+        display_records ||= []
 
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
