@@ -2,7 +2,7 @@
 
 require 'logger'
 
-# TODO: 適切なコメントに変更
+# RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
 module RubyMysqlTui
   # ロガーの設定
   @logger_mutex = Mutex.new
@@ -11,6 +11,7 @@ module RubyMysqlTui
     return @logger if @logger
 
     @logger_mutex.synchronize do
+      # TODO: 標準出力で問題ないか検討
       @logger ||= Logger.new($stdout).tap do |log|
         level_name = ENV.fetch('LOG_LEVEL', 'DEBUG').upcase
         log.level = Logger.const_defined?(level_name) ? Logger.const_get(level_name) : Logger::DEBUG
