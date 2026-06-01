@@ -197,7 +197,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
     # TTY::Box の出力形式 "Box(color: white, content: ...)" から中身を取り出す
     right_box_match = output.match(/Box\(color: white, content: (.*?)\)\n/m)
     expect(right_box_match).not_to be_nil
-    
+
     content = right_box_match[1]
     line_count = content.count("\n") + 1
     expect(line_count).to be <= layout.main_h
