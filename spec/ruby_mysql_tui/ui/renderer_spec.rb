@@ -44,5 +44,11 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
       expect { renderer.render(client, :right, databases) }
         .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
     end
+
+    it 'displays "No databases found" when the database list is empty' do
+      databases = []
+      expect { renderer.render(client, :left, databases) }
+        .to output(/Box\(color: cyan, content: No databases found\)/).to_stdout
+    end
   end
 end
