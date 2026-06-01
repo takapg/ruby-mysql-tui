@@ -67,7 +67,7 @@ module RubyMysqlTui
 
       def build_tables_text(selected_db, items, width)
         header = truncate("Database: #{selected_db}", width)
-        if items.empty?
+        if items.nil? || items.empty?
           "#{header}\n\n#{truncate('No tables found', width)}"
         else
           table_list = items.map { |item| truncate(item, width) }.join("\n")
@@ -90,8 +90,8 @@ module RubyMysqlTui
       end
 
       def render_side_by_side(left_box, right_box)
-        left_lines = left_box.split("\n")
-        right_lines = right_box.split("\n")
+        left_lines = left_box.split("\n", -1)
+        right_lines = right_box.split("\n", -1)
 
         left_lines.zip(right_lines).each do |left, right|
           puts "#{left}#{right}"
