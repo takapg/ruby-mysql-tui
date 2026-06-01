@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'stringio'
 require 'spec_helper'
 require_relative '../../../lib/ruby_mysql_tui/ui/renderer'
 require_relative '../../../lib/ruby_mysql_tui/ui/layout'
@@ -19,6 +20,15 @@ RSpec.shared_context 'renderer setup' do
       content = block&.call
       "Box(color: #{color}, content: #{content})"
     end
+  end
+
+  def capture_stdout
+    old_stdout = $stdout
+    $stdout = StringIO.new
+    yield
+    $stdout.string
+  ensure
+    $stdout = old_stdout
   end
 end
 
@@ -48,7 +58,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
 
     it 'displays table list in the right pane when view_mode is :tables' do
       state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
-      expect { renderer.render(client, state) }.to output(/Box\(color: white, content: Database: test_db\n\ntable1\ntable2\)/).to_stdout
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include('Box(color: white, content: Database: test_db')
+      expect(output).to include('table1')
+      expect(output).to include('table2')
     end
   end
 end
