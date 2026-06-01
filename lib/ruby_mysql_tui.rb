@@ -104,8 +104,8 @@ module RubyMysqlTui
     return state unless state[:focus] == :left
 
     case state[:view_mode]
-    when :databases then self.handle_databases_return(state, client)
-    when :tables then self.handle_tables_return(state, client)
+    when :databases then RubyMysqlTui.handle_databases_return(state, client)
+    when :tables then RubyMysqlTui.handle_tables_return(state, client)
     end
     state
   end

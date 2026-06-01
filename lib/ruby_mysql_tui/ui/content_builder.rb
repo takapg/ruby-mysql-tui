@@ -10,40 +10,40 @@ module RubyMysqlTui
         content_width = width - 2
         items.each_with_index.map do |item, idx|
           text = idx == selected_index ? "> #{item}" : "  #{item}"
-          self.truncate(text, content_width)
+          ContentBuilder.truncate(text, content_width)
         end.join("\n")
       end
 
       def self.build_right_text(state, width)
         content_width = width - 2
         case state[:view_mode]
-        when :databases then self.build_databases_text(content_width)
-        when :tables then self.build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then self.build_records_text(state[:selected_table], state[:records], content_width)
-        else self.truncate('Unknown view mode', content_width)
+        when :databases then ContentBuilder.build_databases_text(content_width)
+        when :tables then ContentBuilder.build_tables_text(state[:selected_db], state[:items], content_width)
+        when :records then ContentBuilder.build_records_text(state[:selected_table], state[:records], content_width)
+        else ContentBuilder.truncate('Unknown view mode', content_width)
         end
       end
 
       def self.build_databases_text(width)
-        self.truncate('Data will appear here', width)
+        ContentBuilder.truncate('Data will appear here', width)
       end
 
       def self.build_tables_text(selected_db, items, width)
-        header = self.truncate("Database: #{selected_db}", width)
+        header = ContentBuilder.truncate("Database: #{selected_db}", width)
         if items.nil? || items.empty?
-          "#{header}\n\n#{self.truncate('No tables found', width)}"
+          "#{header}\n\n#{ContentBuilder.truncate('No tables found', width)}"
         else
-          table_list = items.map { |item| self.truncate(item, width) }.join("\n")
+          table_list = items.map { |item| ContentBuilder.truncate(item, width) }.join("\n")
           "#{header}\n\n#{table_list}"
         end
       end
 
       def self.build_records_text(table_name, records, width)
-        header = self.truncate("Table: #{table_name}", width)
-        return "#{header}\n\n#{self.truncate('No records found', width)}" if records.nil? || records.empty?
+        header = ContentBuilder.truncate("Table: #{table_name}", width)
+        return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.empty?
 
-        table_output = self.create_records_table(records, width).render
-        truncated_table = table_output.lines.map { |line| self.truncate(line.chomp, width) }.join("\n")
+        table_output = ContentBuilder.create_records_table(records, width).render
+        truncated_table = table_output.lines.map { |line| ContentBuilder.truncate(line.chomp, width) }.join("\n")
         "#{header}\n\n#{truncated_table}"
       end
 
@@ -54,14 +54,14 @@ module RubyMysqlTui
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
         TTY::Table.new(
-          header: columns.map { |c| self.truncate(c, col_width) },
-          rows: self.format_records_rows(records, col_width)
+          header: columns.map { |c| ContentBuilder.truncate(c, col_width) },
+          rows: ContentBuilder.format_records_rows(records, col_width)
         )
       end
 
       def self.format_records_rows(records, col_width)
         records.map do |row|
-          row.values.map { |val| self.truncate(val.to_s, col_width) }
+          row.values.map { |val| ContentBuilder.truncate(val.to_s, col_width) }
         end
       end
 
