@@ -56,8 +56,7 @@ module RubyMysqlTui
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
         # 表示可能件数でスライス
-        display_records = max_rows ? records[offset, max_rows] : records[offset..-1]
-        display_records ||= []
+        display_records = max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
 
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
