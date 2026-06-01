@@ -14,12 +14,12 @@ module RubyMysqlTui
       end
 
       # 画面全体をレンダリングします。
-      def render(client)
+      def render(client, focus)
         @layout.update_dimensions
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main
+        render_main(focus)
         render_log
         render_footer
       end
@@ -33,16 +33,17 @@ module RubyMysqlTui
         end
       end
 
-      def render_main
-        left = build_box(@layout.left_w, 'DB/Table Tree', 'Tables will appear here')
-        right = build_box(@layout.right_w, 'Record/Structure View', 'Data will appear here')
+      def render_main(focus)
+        left = build_box(@layout.left_w, 'DB/Table Tree', 'Tables will appear here', focus == :left)
+        right = build_box(@layout.right_w, 'Record/Structure View', 'Data will appear here', focus == :right)
 
         render_side_by_side(left, right)
       end
 
-      def build_box(width, title, content)
+      def build_box(width, title, content, focused)
         TTY::Box.frame(
-          width: width, height: @layout.main_h, title: title, align: :left
+          width: width, height: @layout.main_h, title: title, align: :left,
+          style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
       end
 

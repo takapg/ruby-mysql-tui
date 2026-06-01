@@ -49,10 +49,16 @@ module RubyMysqlTui
     reader = TTY::Reader.new
     layout = UI::Layout.new
     renderer = UI::Renderer.new(layout)
+    current_focus = :left
 
     loop do
-      renderer.render(client)
-      break if reader.read_char == 'q'
+      renderer.render(client, current_focus)
+      char = reader.read_char
+      break if char == 'q'
+
+      if char == "\t"
+        current_focus = (current_focus == :left ? :right : :left)
+      end
     end
   end
 end
