@@ -38,9 +38,11 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
     it 'applies correct colors based on focus' do
       %i[left right].each do |focus|
         state = { focus: focus, items: %w[db1 db2], selected_index: 0, view_mode: :databases, selected_db: nil }
-        c, o = focus == :left ? ['cyan', 'white'] : ['white', 'cyan']
+        c, o = focus == :left ? %w[cyan white] : %w[white cyan]
         expect { renderer.render(client, state) }.to output(/Box\(color: #{c}, content: > db1/).to_stdout
-        expect { renderer.render(client, state) }.to output(/Box\(color: #{o}, content: Data will appear here\)/).to_stdout
+        expect { renderer.render(client, state) }.to output(
+          /Box\(color: #{o}, content: Data will appear here\)/
+        ).to_stdout
       end
     end
     it 'displays "No items found" when the database list is empty' do
