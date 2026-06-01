@@ -8,7 +8,7 @@ require_relative '../../../lib/ruby_mysql_tui/ui/layout'
 RSpec.shared_context 'renderer setup' do
   let(:layout) { RubyMysqlTui::UI::Layout.new }
   let(:renderer) { described_class.new(layout) }
-  let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }) }
+  let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }, last_sql: nil) }
 
   before do
     allow(TTY::Screen).to receive(:width).and_return(100)
