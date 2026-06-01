@@ -40,6 +40,12 @@ module RubyMysqlTui
       results.map { |row| row.values.first }
     end
 
+    # 指定したテーブルのレコード一覧を取得します。
+    def list_records(table_name)
+      escaped_table_name = table_name.gsub('`', '``')
+      query("SELECT * FROM `#{escaped_table_name}` LIMIT 100")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close

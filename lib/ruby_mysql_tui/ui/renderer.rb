@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require 'tty-box'
+require 'tty-table'
 require_relative 'layout'
+require_relative 'content_builder'
 
 module RubyMysqlTui
   module UI
@@ -19,7 +21,7 @@ module RubyMysqlTui
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main(state[:focus], state[:items], state[:selected_index], state[:view_mode], state[:selected_db])
+        render_main(state)
         render_log
         render_footer
       end
@@ -33,46 +35,19 @@ module RubyMysqlTui
         end
       end
 
-      def render_main(focus, items, selected_index, view_mode, selected_db)
-        left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
-        right = build_box(
-          @layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right
-        )
+      def render_main(state)
+        left = build_box(@layout.left_w, left_content(state), state[:focus] == :left)
+        right = build_box(@layout.right_w, right_content(state), state[:focus] == :right)
 
         render_side_by_side(left, right)
       end
 
-      def build_list_text(items, selected_index)
-        return 'No items found' if items.empty?
-
-        content_width = @layout.left_w - 2
-        items.each_with_index.map do |item, idx|
-          text = idx == selected_index ? "> #{item}" : "  #{item}"
-          truncate(text, content_width)
-        end.join("\n")
+      def left_content(state)
+        ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w)
       end
 
-      def build_right_text(view_mode, selected_db, items, width)
-        content_width = width - 2
-        case view_mode
-        when :databases then build_databases_text(content_width)
-        when :tables then build_tables_text(selected_db, items, content_width)
-        else truncate('Unknown view mode', content_width)
-        end
-      end
-
-      def build_databases_text(width)
-        truncate('Data will appear here', width)
-      end
-
-      def build_tables_text(selected_db, items, width)
-        header = truncate("Database: #{selected_db}", width)
-        if items.nil? || items.empty?
-          "#{header}\n\n#{truncate('No tables found', width)}"
-        else
-          table_list = items.map { |item| truncate(item, width) }.join("\n")
-          "#{header}\n\n#{table_list}"
-        end
+      def right_content(state)
+        ContentBuilder.build_right_text(state, @layout.right_w)
       end
 
       def build_box(width, content, focused)
@@ -80,13 +55,6 @@ module RubyMysqlTui
           width: width, height: @layout.main_h,
           style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
-      end
-
-      def truncate(text, width)
-        return text if text.nil? || width <= 0
-        return text[0...width] if width < 3
-
-        text.length > width ? "#{text[0...(width - 3)]}..." : text
       end
 
       def render_side_by_side(left_box, right_box)
