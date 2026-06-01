@@ -3,7 +3,7 @@
 module RubyMysqlTui
   module UI
     # ContentBuilder は TUI 画面に表示するためのテキスト構築ロジックを提供します。
-    class ContentBuilder
+    module ContentBuilder
       def self.build_list_text(items, selected_index, width)
         return 'No items found' if items.nil? || items.empty?
 
@@ -49,7 +49,7 @@ module RubyMysqlTui
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
-        col_width = [(width / columns.size).floor - 1, 1].max
+        col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
         TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
