@@ -56,5 +56,20 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
       expect(output).to include('table1')
       expect(output).to include('table2')
     end
+
+    it 'displays "No tables found" in the right pane when view_mode is :tables and items are empty' do
+      state = { focus: :left, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include('Box(color: white, content: Database: test_db')
+      expect(output).to include('No tables found')
+    end
+
+    it 'truncates long table names in the right pane' do
+      long_table = 'a' * 100
+      state = { focus: :left, items: [long_table], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include('...')
+      expect(output).not_to include(long_table)
+    end
   end
 end

@@ -35,7 +35,7 @@ module RubyMysqlTui
 
       def render_main(focus, items, selected_index, view_mode, selected_db)
         left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
-        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items), focus == :right)
+        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right)
 
         render_side_by_side(left, right)
       end
@@ -48,16 +48,21 @@ module RubyMysqlTui
         end.join("\n")
       end
 
-      def build_right_text(view_mode, selected_db, items)
+      def build_right_text(view_mode, selected_db, items, width)
+        content_width = width - 2
         case view_mode
         when :databases
-          'Data will appear here'
+          truncate('Data will appear here', content_width)
         when :tables
-          return "Database: #{selected_db}\n\nNo tables found" if items.empty?
-
-          "Database: #{selected_db}\n\n" + items.join("\n")
+          header = truncate("Database: #{selected_db}", content_width)
+          if items.empty?
+            "#{header}\n\n#{truncate('No tables found', content_width)}"
+          else
+            table_list = items.map { |item| truncate(item, content_width) }.join("\n")
+            "#{header}\n\n#{table_list}"
+          end
         else
-          'Unknown view mode'
+          truncate('Unknown view mode', content_width)
         end
       end
 
@@ -66,6 +71,11 @@ module RubyMysqlTui
           width: width, height: @layout.main_h,
           style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
+      end
+
+      def truncate(text, width)
+        return text if text.nil? || width <= 0
+        text.length > width ? "#{text[0...width - 3]}..." : text
       end
 
       def render_side_by_side(left_box, right_box)
