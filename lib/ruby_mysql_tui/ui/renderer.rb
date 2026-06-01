@@ -20,7 +20,7 @@ module RubyMysqlTui
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main(state[:focus], state[:items], state[:selected_index], state[:view_mode], state[:selected_db], state[:records], state[:selected_table])
+        render_main(state)
         render_log
         render_footer
       end
@@ -34,31 +34,32 @@ module RubyMysqlTui
         end
       end
 
-      def render_main(focus, items, selected_index, view_mode, selected_db, records, selected_table)
-        left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
+      def render_main(state)
+        left = build_box(@layout.left_w, build_list_text(state), state[:focus] == :left)
         right = build_box(
-          @layout.right_w, build_right_text(view_mode, selected_db, items, records, selected_table, @layout.right_w), focus == :right
+          @layout.right_w, build_right_text(state, @layout.right_w), state[:focus] == :right
         )
 
         render_side_by_side(left, right)
       end
 
-      def build_list_text(items, selected_index)
+      def build_list_text(state)
+        items = state[:items]
         return 'No items found' if items.empty?
 
         content_width = @layout.left_w - 2
         items.each_with_index.map do |item, idx|
-          text = idx == selected_index ? "> #{item}" : "  #{item}"
+          text = idx == state[:selected_index] ? "> #{item}" : "  #{item}"
           truncate(text, content_width)
         end.join("\n")
       end
 
-      def build_right_text(view_mode, selected_db, items, records, selected_table, width)
+      def build_right_text(state, width)
         content_width = width - 2
-        case view_mode
+        case state[:view_mode]
         when :databases then build_databases_text(content_width)
-        when :tables then build_tables_text(selected_db, items, content_width)
-        when :records then build_records_text(selected_table, records, content_width)
+        when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
+        when :records then build_records_text(state[:selected_table], state[:records], content_width)
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -84,12 +85,17 @@ module RubyMysqlTui
         columns = records.first.keys
         col_width = (width / columns.size).floor - 1
 
-        rows = records.map do |row|
+        table = TTY::Table.new(
+          header: columns.map { |c| truncate(c, col_width) },
+          rows: format_records_rows(records, col_width)
+        )
+        "#{header}\n\n#{table.render}"
+      end
+
+      def format_records_rows(records, col_width)
+        records.map do |row|
           row.values.map { |val| truncate(val.to_s, col_width) }
         end
-
-        table = TTY::Table.new(header: columns.map { |c| truncate(c, col_width) }, rows: rows)
-        "#{header}\n\n#{table.render}"
       end
 
       def build_box(width, content, focused)

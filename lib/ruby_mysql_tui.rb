@@ -101,25 +101,31 @@ module RubyMysqlTui
   end
 
   def self.handle_return(state, client)
-    if state[:focus] == :left
-      case state[:view_mode]
-      when :databases
-        if !state[:items].empty?
-          db_name = state[:items][state[:selected_index]]
-          state[:selected_db] = db_name
-          state[:view_mode] = :tables
-          state[:items] = client.list_tables(db_name)
-          state[:selected_index] = 0
-        end
-      when :tables
-        if !state[:items].empty?
-          table_name = state[:items][state[:selected_index]]
-          state[:selected_table] = table_name
-          state[:view_mode] = :records
-          state[:records] = client.list_records(table_name)
-        end
-      end
+    return state unless state[:focus] == :left
+
+    case state[:view_mode]
+    when :databases then handle_databases_return(state, client)
+    when :tables then handle_tables_return(state, client)
     end
     state
+  end
+
+  def self.handle_databases_return(state, client)
+    return if state[:items].empty?
+
+    db_name = state[:items][state[:selected_index]]
+    state[:selected_db] = db_name
+    state[:view_mode] = :tables
+    state[:items] = client.list_tables(db_name)
+    state[:selected_index] = 0
+  end
+
+  def self.handle_tables_return(state, client)
+    return if state[:items].empty?
+
+    table_name = state[:items][state[:selected_index]]
+    state[:selected_table] = table_name
+    state[:view_mode] = :records
+    state[:records] = client.list_records(table_name)
   end
 end
