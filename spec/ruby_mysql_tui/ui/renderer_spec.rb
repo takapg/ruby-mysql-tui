@@ -138,6 +138,19 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
     expect { renderer.render(client, state) }.to output(/No SQL executed/).to_stdout
   end
+
+  it 'truncates very long SQL queries' do
+    long_sql = 'SELECT ' + ('a' * 200) + ' FROM users'
+    client = double(
+      'Client',
+      last_sql: long_sql,
+      config: { host: 'localhost', username: 'root', database: 'test' }
+    )
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('...')
+    expect(output).not_to include(long_sql)
+  end
 end
 
 RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - empty' do

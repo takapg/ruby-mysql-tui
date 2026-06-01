@@ -66,8 +66,8 @@ module RubyMysqlTui
       end
 
       def render_log(client)
-        sql = client.last_sql || 'No SQL executed'
-        text = "Last SQL: #{sql}"
+        sql = client.last_sql
+        text = sql ? "Last SQL: #{sql}" : 'No SQL executed'
         truncated_text = ContentBuilder.truncate(text, @layout.width - 2)
         puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { truncated_text }
       end
