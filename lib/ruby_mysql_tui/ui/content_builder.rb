@@ -4,68 +4,70 @@ module RubyMysqlTui
   module UI
     # ContentBuilder は TUI 画面に表示するためのテキスト構築ロジックを提供します。
     module ContentBuilder
-      def self.build_list_text(items, selected_index, width)
+      extend self
+
+      def build_list_text(items, selected_index, width)
         return 'No items found' if items.nil? || items.empty?
 
         content_width = width - 2
         items.each_with_index.map do |item, idx|
           text = idx == selected_index ? "> #{item}" : "  #{item}"
-          ContentBuilder.truncate(text, content_width)
+          truncate(text, content_width)
         end.join("\n")
       end
 
-      def self.build_right_text(state, width)
+      def build_right_text(state, width)
         content_width = width - 2
         case state[:view_mode]
-        when :databases then ContentBuilder.build_databases_text(content_width)
-        when :tables then ContentBuilder.build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then ContentBuilder.build_records_text(state[:selected_table], state[:records], content_width)
-        else ContentBuilder.truncate('Unknown view mode', content_width)
+        when :databases then build_databases_text(content_width)
+        when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
+        when :records then build_records_text(state[:selected_table], state[:records], content_width)
+        else truncate('Unknown view mode', content_width)
         end
       end
 
-      def self.build_databases_text(width)
-        ContentBuilder.truncate('Data will appear here', width)
+      def build_databases_text(width)
+        truncate('Data will appear here', width)
       end
 
-      def self.build_tables_text(selected_db, items, width)
-        header = ContentBuilder.truncate("Database: #{selected_db}", width)
+      def build_tables_text(selected_db, items, width)
+        header = truncate("Database: #{selected_db}", width)
         if items.nil? || items.empty?
-          "#{header}\n\n#{ContentBuilder.truncate('No tables found', width)}"
+          "#{header}\n\n#{truncate('No tables found', width)}"
         else
-          table_list = items.map { |item| ContentBuilder.truncate(item, width) }.join("\n")
+          table_list = items.map { |item| truncate(item, width) }.join("\n")
           "#{header}\n\n#{table_list}"
         end
       end
 
-      def self.build_records_text(table_name, records, width)
-        header = ContentBuilder.truncate("Table: #{table_name}", width)
-        return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.empty?
+      def build_records_text(table_name, records, width)
+        header = truncate("Table: #{table_name}", width)
+        return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
-        table_output = ContentBuilder.create_records_table(records, width).render
-        truncated_table = table_output.lines.map { |line| ContentBuilder.truncate(line.chomp, width) }.join("\n")
+        table_output = create_records_table(records, width).render
+        truncated_table = table_output.lines.map { |line| truncate(line.chomp, width) }.join("\n")
         "#{header}\n\n#{truncated_table}"
       end
 
-      def self.create_records_table(records, width)
+      def create_records_table(records, width)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
         TTY::Table.new(
-          header: columns.map { |c| ContentBuilder.truncate(c, col_width) },
-          rows: ContentBuilder.format_records_rows(records, col_width)
+          header: columns.map { |c| truncate(c, col_width) },
+          rows: format_records_rows(records, col_width)
         )
       end
 
-      def self.format_records_rows(records, col_width)
+      def format_records_rows(records, col_width)
         records.map do |row|
-          row.values.map { |val| ContentBuilder.truncate(val.to_s, col_width) }
+          row.values.map { |val| truncate(val.to_s, col_width) }
         end
       end
 
-      def self.truncate(text, width)
+      def truncate(text, width)
         return text if text.nil? || width <= 0
         return text[0...width] if width < 3
 
