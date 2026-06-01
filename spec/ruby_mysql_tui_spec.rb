@@ -162,6 +162,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
 
     # SQLモードが終了するまで handle_loop_input を繰り返し呼び出す
     current_state = state
+    should_break = false
     loop do
       current_state, should_break = RubyMysqlTui.handle_loop_input(reader, current_state, client)
       break if !current_state[:sql_mode] || should_break
