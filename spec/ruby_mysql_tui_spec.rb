@@ -205,56 +205,59 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Transition' do
   end
 end
 
-RSpec.describe RubyMysqlTui, 'Integration flow (Pagination)' do
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down)' do
   let(:client) { double('Client') }
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
   before { allow(client).to receive(:list_databases).and_return([]) }
 
-  context 'when scrolling down' do
-    it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
-      state = initial_state.merge(
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(100) { { 'id' => 0 } },
-        page_offset: 0,
-        records_offset: 99
-      )
+  it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 99
+    )
 
-      next_page = Array.new(100) { { 'id' => 1 } }
-      allow(client).to receive(:list_records).with('users', 100).and_return(next_page)
+    next_page = Array.new(100) { { 'id' => 1 } }
+    allow(client).to receive(:list_records).with('users', 100).and_return(next_page)
 
-      down_event = double('Event', value: nil, key: double('Key', name: :down))
-      result = RubyMysqlTui.handle_input(down_event, state, client)
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
 
-      expect(result[:records_offset]).to eq(100)
-      expect(result[:page_offset]).to eq(100)
-      expect(result[:records]).to eq(next_page)
-    end
+    expect(result[:records_offset]).to eq(100)
+    expect(result[:page_offset]).to eq(100)
+    expect(result[:records]).to eq(next_page)
   end
+end
 
-  context 'when scrolling up' do
-    it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
-      state = initial_state.merge(
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(100) { { 'id' => 1 } },
-        page_offset: 100,
-        records_offset: 100
-      )
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
-      prev_page = Array.new(100) { { 'id' => 0 } }
-      allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
-      up_event = double('Event', value: nil, key: double('Key', name: :up))
-      result = RubyMysqlTui.handle_input(up_event, state, client)
+  it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 1 } },
+      page_offset: 100,
+      records_offset: 100
+    )
 
-      expect(result[:records_offset]).to eq(99)
-      expect(result[:page_offset]).to eq(0)
-      expect(result[:records]).to eq(prev_page)
-    end
+    prev_page = Array.new(100) { { 'id' => 0 } }
+    allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
+
+    up_event = double('Event', value: nil, key: double('Key', name: :up))
+    result = RubyMysqlTui.handle_input(up_event, state, client)
+
+    expect(result[:records_offset]).to eq(99)
+    expect(result[:page_offset]).to eq(0)
+    expect(result[:records]).to eq(prev_page)
   end
 end
 
