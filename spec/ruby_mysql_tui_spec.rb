@@ -78,10 +78,9 @@ RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
       expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
     end
 
-    it 'records_offset が最大値 (records.size - main_h) を超えないこと' do
-      allow_any_instance_of(RubyMysqlTui::UI::Layout).to receive(:main_h).and_return(10)
+    it 'Downキーで records_offset が正しく増加すること' do
       state = { focus: :right, view_mode: :records, records: Array.new(20), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(10)
+      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
     end
   end
 end
@@ -105,7 +104,7 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
     it 'フォーカス :left かつ view_mode :tables のとき、レコード一覧に遷移する' do
       state = { focus: :left, view_mode: :tables, items: %w[table1], selected_index: 0 }
       records = [{ 'id' => 1, 'name' => 'Alice' }]
-      allow(client).to receive(:list_records).with('table1').and_return(records)
+      allow(client).to receive(:list_records).with('table1', 0).and_return(records)
 
       result = RubyMysqlTui.handle_input(return_event, state, client)
       expect(result[:view_mode]).to eq(:records)
@@ -209,6 +208,8 @@ end
 RSpec.describe RubyMysqlTui, 'Integration flow (Pagination)' do
   let(:client) { double('Client') }
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
   it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
     state = initial_state.merge(

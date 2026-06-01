@@ -98,7 +98,7 @@ RSpec.describe RubyMysqlTui::Client, '#list_records' do
   it 'escapes backticks in table name' do
     table_name_with_backtick = 'user`s'
     records = []
-    expect(mock_mysql_client).to receive(:query).with('SELECT * FROM `user``s` LIMIT 100').and_return(records)
+    expect(mock_mysql_client).to receive(:query).with('SELECT * FROM `user``s` LIMIT 100 OFFSET 0').and_return(records)
     expect(client.list_records(table_name_with_backtick)).to eq(records)
   end
 end
