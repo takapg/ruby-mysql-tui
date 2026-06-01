@@ -34,24 +34,26 @@ module RubyMysqlTui
       end
 
       def render_main(focus, items, selected_index, view_mode, selected_db)
-        list_text = if items.empty?
-                      'No items found'
-                    else
-                      items.each_with_index.map do |item, idx|
-                        idx == selected_index ? "> #{item}" : "  #{item}"
-                      end.join("\n")
-                    end
-
-        left = build_box(@layout.left_w, list_text, focus == :left)
-
-        right_text = if view_mode == :databases
-                      'Data will appear here'
-                    else
-                      "// Selected: #{selected_db} // Tables: #{items.join(', ')}"
-                    end
-        right = build_box(@layout.right_w, right_text, focus == :right)
+        left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
+        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items), focus == :right)
 
         render_side_by_side(left, right)
+      end
+
+      def build_list_text(items, selected_index)
+        return 'No items found' if items.empty?
+
+        items.each_with_index.map do |item, idx|
+          idx == selected_index ? "> #{item}" : "  #{item}"
+        end.join("\n")
+      end
+
+      def build_right_text(view_mode, selected_db, items)
+        if view_mode == :databases
+          'Data will appear here'
+        else
+          "// Selected: #{selected_db} // Tables: #{items.join(', ')}"
+        end
       end
 
       def build_box(width, content, focused)
