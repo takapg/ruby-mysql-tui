@@ -4,7 +4,7 @@ module RubyMysqlTui
   module UI
     # ContentBuilder は TUI 画面に表示するためのテキスト構築ロジックを提供します。
     module ContentBuilder
-      extend self
+      module_function
 
       def build_list_text(items, selected_index, width)
         return 'No items found' if items.nil? || items.empty?
