@@ -8,7 +8,7 @@ require_relative '../../../lib/ruby_mysql_tui/ui/layout'
 RSpec.shared_context 'renderer setup' do
   let(:layout) { RubyMysqlTui::UI::Layout.new }
   let(:renderer) { described_class.new(layout) }
-  let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }) }
+  let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }, last_sql: nil) }
 
   before do
     allow(TTY::Screen).to receive(:width).and_return(100)
@@ -17,7 +17,7 @@ RSpec.shared_context 'renderer setup' do
     # TTY::Box.frame をモックして、色情報を文字列に含めることで検証可能にする
     allow(TTY::Box).to receive(:frame) do |args, &block|
       color = args[:style] ? args[:style][:border][:fg] : :none
-      content = block&.call
+      content = block ? block.call : args[:text]
       "Box(color: #{color}, content: #{content})"
     end
   end
@@ -118,6 +118,41 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - with data' do
       expect(output).to include('2')
       expect(output).to include('Bob')
     end
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
+  include_context 'renderer setup'
+  it 'displays the last executed SQL' do
+    client = double(
+      'Client',
+      last_sql: 'SELECT * FROM users',
+      config: { host: 'localhost', username: 'root', database: 'test' }
+    )
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    expect { renderer.render(client, state) }.to output(/Last SQL: SELECT \* FROM users/).to_stdout
+  end
+
+  it 'displays "No SQL executed" when no SQL has been run' do
+    client = double('Client', last_sql: nil, config: { host: 'localhost', username: 'root', database: 'test' })
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    expect { renderer.render(client, state) }.to output(/No SQL executed/).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log truncation' do
+  include_context 'renderer setup'
+  it 'truncates very long SQL queries' do
+    long_sql = "SELECT #{'a' * 200} FROM users"
+    client = double(
+      'Client',
+      last_sql: long_sql,
+      config: { host: 'localhost', username: 'root', database: 'test' }
+    )
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('...')
+    expect(output).not_to include(long_sql)
   end
 end
 
