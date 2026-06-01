@@ -60,41 +60,42 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content databases' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables - display' do
   include_context 'renderer setup'
-  describe '#render' do
-    context 'when view_mode is :tables' do
-      it 'displays table list in the right pane' do
-        state = {
-          focus: :left, items: %w[table1 table2], selected_index: 0,
-          view_mode: :tables, selected_db: 'test_db'
-        }
-        output = capture_stdout { renderer.render(client, state) }
-        expect(output).to include('Box(color: white, content: Database: test_db')
-        expect(output).to include('table1')
-        expect(output).to include('table2')
-      end
 
-      it 'displays "No tables found" when items are empty' do
-        state = {
-          focus: :left, items: [], selected_index: 0,
-          view_mode: :tables, selected_db: 'test_db'
-        }
-        output = capture_stdout { renderer.render(client, state) }
-        expect(output).to include('Box(color: white, content: Database: test_db')
-        expect(output).to include('No tables found')
-      end
+  it 'displays table list in the right pane' do
+    state = {
+      focus: :left, items: %w[table1 table2], selected_index: 0,
+      view_mode: :tables, selected_db: 'test_db'
+    }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('Box(color: white, content: Database: test_db')
+    expect(output).to include('table1')
+    expect(output).to include('table2')
+  end
+end
 
-      it 'truncates long table names' do
-        long_table = 'a' * 100
-        state = {
-          focus: :left, items: [long_table], selected_index: 0,
-          view_mode: :tables, selected_db: 'test_db'
-        }
-        output = capture_stdout { renderer.render(client, state) }
-        expect(output).to include('...')
-        expect(output).not_to include(long_table)
-      end
-    end
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables - edge cases' do
+  include_context 'renderer setup'
+
+  it 'displays "No tables found" when items are empty' do
+    state = {
+      focus: :left, items: [], selected_index: 0,
+      view_mode: :tables, selected_db: 'test_db'
+    }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('Box(color: white, content: Database: test_db')
+    expect(output).to include('No tables found')
+  end
+
+  it 'truncates long table names' do
+    long_table = 'a' * 100
+    state = {
+      focus: :left, items: [long_table], selected_index: 0,
+      view_mode: :tables, selected_db: 'test_db'
+    }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('...')
+    expect(output).not_to include(long_table)
   end
 end
