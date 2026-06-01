@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RubyMysqlTui
+  # InputHandler の SQL モードに関する処理を定義します。
   module InputHandler
     module_function
 
