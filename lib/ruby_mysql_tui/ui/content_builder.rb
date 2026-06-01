@@ -47,8 +47,7 @@ module RubyMysqlTui
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
         table_output = create_records_table(records, width, max_rows, offset).to_s
-        truncated_table = (table_output || '').lines.map { |line| truncate(line.chomp, width) }.join("\n")
-        "#{header}\n\n#{truncated_table}"
+        "#{header}\n\n#{table_output}"
       end
 
       def create_records_table(records, width, max_rows = nil, offset = 0)
