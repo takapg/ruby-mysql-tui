@@ -75,7 +75,7 @@ module RubyMysqlTui
         return [state, false]
       end
 
-      state[:sql_input] << event.value if event.value
+      state[:sql_input] += event.value if event.value
       return [state, false]
     end
 
