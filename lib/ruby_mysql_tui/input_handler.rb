@@ -49,9 +49,15 @@ module RubyMysqlTui
     end
 
     def update_records_offset(state, delta)
-      layout = RubyMysqlTui::UI::Layout.new
+      layout = current_layout
       max_offset = [0, state[:records].size - layout.main_h].max
       state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, max_offset)
+    end
+
+    def current_layout
+      @current_layout ||= RubyMysqlTui::UI::Layout.new
+      @current_layout.update_dimensions
+      @current_layout
     end
 
     def handle_return(state, client)

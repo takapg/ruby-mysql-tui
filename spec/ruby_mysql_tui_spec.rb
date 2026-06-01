@@ -77,6 +77,12 @@ RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
       state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
       expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
     end
+
+    it 'records_offset が最大値 (records.size - main_h) を超えないこと' do
+      allow_any_instance_of(RubyMysqlTui::UI::Layout).to receive(:main_h).and_return(10)
+      state = { focus: :right, view_mode: :records, records: Array.new(20), records_offset: 10 }
+      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(10)
+    end
   end
 end
 
