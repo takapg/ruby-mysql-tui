@@ -192,7 +192,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
     }
 
     output = capture_stdout { renderer.render(client, state) }
-    
+
     # 右ペインのコンテンツ部分を抽出して行数を確認
     # TTY::Box の出力形式 "Box(color: white, content: ...)" から中身を取り出す
     right_box_match = output.match(/Box\(color: white, content: (.*?)\)\n/m)
