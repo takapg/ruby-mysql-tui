@@ -57,6 +57,9 @@ module RubyMysqlTui
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
         # 表示可能件数でスライス
+        # max_rows が 0 の場合でも、offset 適用後のレコードが存在すれば、
+        # 少なくとも 1 件は表示させるか、あるいは厳密に 0 件にするか。
+        # ここでは仕様通り max_rows が指定されていればその件数分のみ取得します。
         display_records = max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
         display_records ||= []
 
