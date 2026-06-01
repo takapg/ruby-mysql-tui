@@ -3,6 +3,9 @@
 require 'logger'
 require 'mysql2'
 require_relative 'ruby_mysql_tui/client'
+require 'tty-reader'
+require_relative 'ruby_mysql_tui/ui/layout'
+require_relative 'ruby_mysql_tui/ui/renderer'
 
 # RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
 module RubyMysqlTui
@@ -28,12 +31,28 @@ module RubyMysqlTui
     logger.info 'Starting RubyMysqlTui...'
     begin
       client = Client.new
-      client.query('SELECT 1')
-      logger.info 'MySQL connection verified.'
+      verify_connection(client)
+      run_main_loop(client)
     rescue StandardError => e
       logger.error "Initialization failed: #{e.message}"
     ensure
       client&.close
+    end
+  end
+
+  def self.verify_connection(client)
+    client.query('SELECT 1')
+    logger.info 'MySQL connection verified.'
+  end
+
+  def self.run_main_loop(client)
+    reader = TTY::Reader.new
+    layout = UI::Layout.new
+    renderer = UI::Renderer.new(layout)
+
+    loop do
+      renderer.render(client)
+      break if reader.read_char == 'q'
     end
   end
 end
