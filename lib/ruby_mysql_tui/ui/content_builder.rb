@@ -47,6 +47,8 @@ module RubyMysqlTui
 
       def self.create_records_table(records, width)
         columns = records.first.keys
+        return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
+
         col_width = [(width / columns.size).floor - 1, 1].max
 
         TTY::Table.new(
