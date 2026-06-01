@@ -27,10 +27,14 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
 
   describe '#render' do
     it 'applies cyan color to the focused pane' do
-      expect { renderer.render(client, :left) }.to output(/Box\(color: cyan, content: Tables will appear here\)/).to_stdout
-      expect { renderer.render(client, :left) }.to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
-      expect { renderer.render(client, :right) }.to output(/Box\(color: white, content: Tables will appear here\)/).to_stdout
-      expect { renderer.render(client, :right) }.to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
+      expect { renderer.render(client, :left) }
+        .to output(/Box\(color: cyan, content: Tables will appear here\)/).to_stdout
+      expect { renderer.render(client, :left) }
+        .to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
+      expect { renderer.render(client, :right) }
+        .to output(/Box\(color: white, content: Tables will appear here\)/).to_stdout
+      expect { renderer.render(client, :right) }
+        .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
     end
   end
 end
