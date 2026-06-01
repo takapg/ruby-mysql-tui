@@ -40,7 +40,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
       # 右ペインフォーカス時: 左がwhite、右がcyan
       state_right = { focus: :right, items: databases, selected_index: 0, view_mode: :databases, selected_db: nil }
       expect { renderer.render(client, state_right) }
-        .to output(/Box\(color: white, content: db1/).to_stdout
+        .to output(/Box\(color: white, content: > db1/).to_stdout
       expect { renderer.render(client, state_right) }
         .to output(/db2\)/).to_stdout
       expect { renderer.render(client, state_right) }
