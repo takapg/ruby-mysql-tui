@@ -78,6 +78,18 @@ RSpec.describe RubyMysqlTui::Client, '#list_tables' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#list_records' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table_name) { 'users' }
+
+  it 'executes SELECT * FROM `table_name` and returns records' do
+    records = [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }]
+    expect(mock_mysql_client).to receive(:query).with("SELECT * FROM `#{table_name}`").and_return(records)
+    expect(client.list_records(table_name)).to eq(records)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#query' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
