@@ -23,7 +23,10 @@ module RubyMysqlTui
         case state[:view_mode]
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then build_records_text(state[:selected_table], state[:records], content_width, height, state[:records_offset] || 0)
+        when :records
+          build_records_text(
+            state[:selected_table], state[:records], content_width, height, state[:records_offset] || 0
+          )
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -56,19 +59,21 @@ module RubyMysqlTui
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
-        # 表示可能件数でスライス
-        # max_rows が 0 の場合でも、offset 適用後のレコードが存在すれば、
-        # 少なくとも 1 件は表示させるか、あるいは厳密に 0 件にするか。
-        # ここでは仕様通り max_rows が指定されていればその件数分のみ取得します。
-        display_records = max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
-        display_records ||= []
-
-        col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
+        display_records = slice_records(records, max_rows, offset)
+        col_width = calculate_col_width(width, columns.size)
 
         TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
           rows: format_records_rows(display_records, col_width)
         )
+      end
+
+      def slice_records(records, max_rows, offset)
+        max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
+      end
+
+      def calculate_col_width(width, columns_count)
+        [(width - (columns_count * 3) - 1) / columns_count, 1].max
       end
 
       def format_records_rows(records, col_width)

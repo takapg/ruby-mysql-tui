@@ -174,7 +174,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - empty' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination height' do
   include_context 'renderer setup'
 
   it 'does not exceed the main height when displaying many records' do
@@ -202,6 +202,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
     line_count = content.count("\n") + 1
     expect(line_count).to be <= layout.main_h
   end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination offset' do
+  include_context 'renderer setup'
 
   it 'displays records starting from the offset' do
     state = {
