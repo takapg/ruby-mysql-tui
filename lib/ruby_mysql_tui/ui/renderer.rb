@@ -14,21 +14,29 @@ module RubyMysqlTui
       # 画面全体をレンダリングします。
       def render(client)
         @layout.update_dimensions
-        # 画面クリアとカーソルをホームポジションへ
         print "\e[2J\e[H"
 
-        # ヘッダーの描画
-        header_text = "Host: #{client.config[:host]} | User: #{client.config[:username]} | DB: #{client.config[:database]}"
-        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h, title: 'Connection Info', align: :center) do
-          header_text
-        end
+        render_header(client)
+        render_main
+        render_log
+        render_footer
+      end
 
-        # メインエリア（左右2ペイン）の描画
+      private
+
+      def render_header(client)
+        text = "Host: #{client.config[:host]} | User: #{client.config[:username]} | DB: #{client.config[:database]}"
+        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h, title: 'Connection Info', align: :center) do
+          text
+        end
+      end
+
+      def render_main
         left_box = TTY::Box.frame(width: @layout.left_w, height: @layout.main_h, title: 'DB/Table Tree', align: :left) do
-          "Tables will appear here"
+          'Tables will appear here'
         end
         right_box = TTY::Box.frame(width: @layout.right_w, height: @layout.main_h, title: 'Record/Structure View', align: :left) do
-          "Data will appear here"
+          'Data will appear here'
         end
 
         left_lines = left_box.split("\n")
@@ -37,15 +45,17 @@ module RubyMysqlTui
         (0...@layout.main_h).each do |i|
           puts "#{left_lines[i]} #{right_lines[i]}"
         end
+      end
 
-        # SQLログエリアの描画
+      def render_log
         puts TTY::Box.frame(width: @layout.width, height: @layout.log_h, title: 'SQL Log / Input', align: :left) do
-          "Last SQL: SELECT 1"
+          'Last SQL: SELECT 1'
         end
+      end
 
-        # フッターの描画
+      def render_footer
         puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h, title: 'Footer', align: :center) do
-          " [q] Quit | [Tab] Switch Focus "
+          ' [q] Quit | [Tab] Switch Focus '
         end
       end
     end
