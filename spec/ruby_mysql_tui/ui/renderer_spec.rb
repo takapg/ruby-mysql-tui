@@ -17,7 +17,7 @@ RSpec.shared_context 'renderer setup' do
     # TTY::Box.frame をモックして、色情報を文字列に含めることで検証可能にする
     allow(TTY::Box).to receive(:frame) do |args, &block|
       color = args[:style] ? args[:style][:border][:fg] : :none
-      content = block&.call
+      content = block ? block.call : args[:text]
       "Box(color: #{color}, content: #{content})"
     end
   end
