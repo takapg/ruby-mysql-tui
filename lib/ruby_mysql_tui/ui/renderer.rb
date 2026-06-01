@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'tty-box'
+require 'tty-table'
 require_relative 'layout'
 
 module RubyMysqlTui
@@ -19,7 +20,7 @@ module RubyMysqlTui
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main(state[:focus], state[:items], state[:selected_index], state[:view_mode], state[:selected_db])
+        render_main(state[:focus], state[:items], state[:selected_index], state[:view_mode], state[:selected_db], state[:records], state[:selected_table])
         render_log
         render_footer
       end
@@ -33,10 +34,10 @@ module RubyMysqlTui
         end
       end
 
-      def render_main(focus, items, selected_index, view_mode, selected_db)
+      def render_main(focus, items, selected_index, view_mode, selected_db, records, selected_table)
         left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
         right = build_box(
-          @layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right
+          @layout.right_w, build_right_text(view_mode, selected_db, items, records, selected_table, @layout.right_w), focus == :right
         )
 
         render_side_by_side(left, right)
@@ -52,11 +53,12 @@ module RubyMysqlTui
         end.join("\n")
       end
 
-      def build_right_text(view_mode, selected_db, items, width)
+      def build_right_text(view_mode, selected_db, items, records, selected_table, width)
         content_width = width - 2
         case view_mode
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(selected_db, items, content_width)
+        when :records then build_records_text(selected_table, records, content_width)
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -73,6 +75,21 @@ module RubyMysqlTui
           table_list = items.map { |item| truncate(item, width) }.join("\n")
           "#{header}\n\n#{table_list}"
         end
+      end
+
+      def build_records_text(table_name, records, width)
+        header = truncate("Table: #{table_name}", width)
+        return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
+
+        columns = records.first.keys
+        col_width = (width / columns.size).floor - 1
+
+        rows = records.map do |row|
+          row.values.map { |val| truncate(val.to_s, col_width) }
+        end
+
+        table = TTY::Table.new(header: columns.map { |c| truncate(c, col_width) }, rows: rows)
+        "#{header}\n\n#{table.render}"
       end
 
       def build_box(width, content, focused)

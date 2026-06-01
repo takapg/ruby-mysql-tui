@@ -72,5 +72,16 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
       expect(result[:items]).to eq(%w[table1 table2])
       expect(result[:selected_index]).to eq(0)
     end
+
+    it 'フォーカス :left かつ view_mode :tables のとき、レコード一覧に遷移する' do
+      state = { focus: :left, view_mode: :tables, items: %w[table1], selected_index: 0 }
+      records = [{ 'id' => 1, 'name' => 'Alice' }]
+      allow(client).to receive(:list_records).with('table1').and_return(records)
+
+      result = RubyMysqlTui.handle_input(return_event, state, client)
+      expect(result[:view_mode]).to eq(:records)
+      expect(result[:selected_table]).to eq('table1')
+      expect(result[:records]).to eq(records)
+    end
   end
 end

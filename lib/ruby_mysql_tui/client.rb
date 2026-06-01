@@ -40,6 +40,11 @@ module RubyMysqlTui
       results.map { |row| row.values.first }
     end
 
+    # 指定したテーブルのレコード一覧を取得します。
+    def list_records(table_name)
+      query("SELECT * FROM `#{table_name}`")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
