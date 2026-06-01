@@ -19,9 +19,11 @@ module RubyMysqlTui
         @header_h = 3
         @footer_h = 3
         @log_h = 5
-        @main_h = [@height - @header_h - @footer_h - @log_h, 1].max
+        @main_h = [@height - @header_h - @footer_h - @log_h, 0].max
         @left_w = [(@width * 0.3).to_i, 10].max
-        @right_w = [@width - @left_w - 1, 1].max
+        @left_w = [@left_w, @width - 2].min
+        @left_w = [@left_w, 0].max
+        @right_w = [@width - @left_w - 1, 0].max
       end
     end
   end

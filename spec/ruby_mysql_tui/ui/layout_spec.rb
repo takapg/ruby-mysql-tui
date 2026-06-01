@@ -14,17 +14,16 @@ RSpec.describe RubyMysqlTui::UI::Layout do
       expect([layout.width, layout.height, layout.main_h, layout.left_w, layout.right_w]).to eq([100, 30, 19, 30, 69])
     end
 
-    it 'ensures main_h is at least 1 for small heights' do
+    it 'ensures main_h is at least 0 for small heights' do
       allow(TTY::Screen).to receive(:height).and_return(5)
       layout.update_dimensions
-      expect(layout.main_h).to be >= 1
+      expect(layout.main_h).to be >= 0
     end
 
-    it 'ensures minimum width for narrow terminals' do
+    it 'ensures total width does not exceed terminal width for narrow terminals' do
       allow(TTY::Screen).to receive(:width).and_return(5)
       layout.update_dimensions
-      expect(layout.left_w).to be >= 10
-      expect(layout.right_w).to be >= 1
+      expect(layout.left_w + 1 + layout.right_w).to eq(5)
     end
   end
 end
