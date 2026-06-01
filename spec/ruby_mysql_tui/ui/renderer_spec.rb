@@ -212,9 +212,6 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination' do
       records_offset: 1,
       items: []
     }
-    allow(TTY::Screen).to receive(:height).and_return(12)
-    layout = RubyMysqlTui::UI::Layout.new
-    renderer = described_class.new(layout)
 
     output = capture_stdout { renderer.render(client, state) }
     expect(output).to include('Bob')
