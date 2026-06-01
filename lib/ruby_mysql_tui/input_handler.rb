@@ -49,7 +49,6 @@ module RubyMysqlTui
       state[:selected_index] = (state[:selected_index] + delta).clamp(0, state[:items].size - 1)
     end
 
-
     def current_layout
       @current_layout ||= RubyMysqlTui::UI::Layout.new
       @current_layout.update_dimensions

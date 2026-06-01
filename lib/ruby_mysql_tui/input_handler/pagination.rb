@@ -2,6 +2,7 @@
 
 module RubyMysqlTui
   module InputHandler
+    # Pagination は レコードビューにおけるページネーション（オフセット管理とデータフェッチ）を提供します。
     module Pagination
       module_function
 
