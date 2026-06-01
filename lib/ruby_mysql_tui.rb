@@ -2,7 +2,7 @@
 
 require 'logger'
 
-# TODO 適切なコメントに変更
+# TODO: 適切なコメントに変更
 module RubyMysqlTui
   # ロガーの設定
   @logger_mutex = Mutex.new
@@ -23,6 +23,6 @@ module RubyMysqlTui
 
   def self.start
     logger.info 'Starting RubyMysqlTui...'
-    # TODO 実装
+    # TODO: 実装
   end
 end
