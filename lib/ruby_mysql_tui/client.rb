@@ -28,6 +28,12 @@ module RubyMysqlTui
       raise e
     end
 
+    # データベース一覧を取得します。
+    def list_databases
+      results = query('SHOW DATABASES')
+      results.map { |row| row.values.first }
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close

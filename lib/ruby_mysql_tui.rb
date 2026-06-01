@@ -49,9 +49,10 @@ module RubyMysqlTui
     reader = TTY::Reader.new
     renderer = UI::Renderer.new(UI::Layout.new)
     current_focus = :left
+    databases = client.list_databases
 
     loop do
-      renderer.render(client, current_focus)
+      renderer.render(client, current_focus, databases)
       char = reader.read_char
       break if char == 'q'
 
