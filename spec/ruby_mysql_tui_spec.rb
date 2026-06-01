@@ -151,14 +151,14 @@ RSpec.describe RubyMysqlTui::InputHandler, '.process_sql_keypress' do
 
   it 'Escキーが押されたとき、sql_mode を false にし、入力をクリアする' do
     event = double('Event', value: nil, key: double('Key', name: :escape))
-    result, should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    result, _should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
     expect(result[:sql_mode]).to eq(false)
     expect(result[:sql_input]).to eq('')
   end
 
   it 'qキーが押されたとき、即座に sql_mode を false にし、入力をクリアする' do
     event = double('Event', value: 'q', key: double('Key', name: :unknown))
-    result, should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    result, _should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
     expect(result[:sql_mode]).to eq(false)
     expect(result[:sql_input]).to eq('')
   end

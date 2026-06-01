@@ -43,9 +43,7 @@ module RubyMysqlTui
     end
 
     def handle_sql_return(state, client)
-      if state[:sql_input].strip.empty?
-        return [state.merge!(sql_mode: false, sql_input: ''), false]
-      end
+      return [state.merge!(sql_mode: false, sql_input: ''), false] if state[:sql_input].strip.empty?
 
       new_state = execute_sql(state[:sql_input], state, client)
       [new_state.merge!(sql_input: ''), false]
