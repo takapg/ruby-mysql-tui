@@ -84,6 +84,7 @@ module RubyMysqlTui
 
       def truncate(text, width)
         return text if text.nil? || width <= 0
+        return text[0...width] if width < 3
 
         text.length > width ? "#{text[0...(width - 3)]}..." : text
       end
@@ -96,7 +97,7 @@ module RubyMysqlTui
         max_lines.times do |i|
           left = left_lines[i] || ''
           right = right_lines[i] || ''
-          puts "#{left} #{right}"
+          puts "#{left}#{right}"
         end
       end
 
