@@ -28,7 +28,7 @@ module RubyMysqlTui
 
     def handle_up(state)
       if state[:focus] == :left && !state[:items].empty?
-        state[:selected_index] = (state[:selected_index] - 1).clamp(0, state[:items].size - 1)
+        update_selected_index(state, -1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
         update_records_offset(state, -1)
       end
@@ -37,11 +37,15 @@ module RubyMysqlTui
 
     def handle_down(state)
       if state[:focus] == :left && !state[:items].empty?
-        state[:selected_index] = (state[:selected_index] + 1).clamp(0, state[:items].size - 1)
+        update_selected_index(state, 1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
         update_records_offset(state, 1)
       end
       state
+    end
+
+    def update_selected_index(state, delta)
+      state[:selected_index] = (state[:selected_index] + delta).clamp(0, state[:items].size - 1)
     end
 
     def update_records_offset(state, delta)
