@@ -32,6 +32,8 @@ module RubyMysqlTui
       logger.info 'MySQL connection verified.'
     rescue StandardError => e
       logger.error "Initialization failed: #{e.message}"
+    ensure
+      client&.close
     end
   end
 end
