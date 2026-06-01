@@ -1,0 +1,138 @@
+name: Aider Code
+
+on:
+  workflow_dispatch:
+    inputs:
+      instruction:
+        description: 'AIに指示したい内容'
+        required: true
+        default: ''
+
+jobs:
+  aider-code:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+
+    steps:
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Start MySQL in background
+        run: docker compose up -d > /dev/null 2>&1 &
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '.ruby-version'
+          bundler-cache: true
+
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Aider
+        run: |
+          uv tool install aider-chat
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Wait for MySQL to be ready
+        run: |
+          MAX_ATTEMPTS=60
+          ATTEMPT_NUM=1
+          until docker compose exec -T mysql-real mysql -h 127.0.0.1 -u root -e "SELECT version();" > /dev/null 2>&1; do
+            if [ $ATTEMPT_NUM -ge $MAX_ATTEMPTS ]; then
+              echo "Error: MySQL did not start after $MAX_ATTEMPTS attempts."
+              docker compose ps
+              docker compose logs mysql-real --tail=200
+              exit 1
+            fi
+            echo "Waiting for MySQL to start (Attempt: $ATTEMPT_NUM/$MAX_ATTEMPTS)..."
+            sleep 1
+            ATTEMPT_NUM=$((ATTEMPT_NUM + 1))
+          done
+          echo "MySQL is up and running!"
+
+      - name: Run AI Agent CLI (With Self-Retry)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          INSTRUCTION: ${{ github.event.inputs.instruction }}
+        run: |
+          echo "Executing: $INSTRUCTION"
+          
+          MAX_RETRIES=5
+          RETRY_COUNT=1
+          SUCCESS=false
+
+          while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
+            echo "--------------------------------------------------"
+            echo "🔄 Aider 実行試行: $RETRY_COUNT / $MAX_RETRIES"
+            echo "--------------------------------------------------"
+
+            echo "## Branch Commit History and Diffs" > .aider.chat.history.md
+            echo "The following is a detailed commit history and diffs of the current branch compared to origin/main. Review this context before making changes." >> .aider.chat.history.md
+            echo "\`\`\`diff" >> .aider.chat.history.md
+            git log origin/main..HEAD -p >> .aider.chat.history.md
+            echo "\`\`\`" >> .aider.chat.history.md
+            echo "---" >> .aider.chat.history.md
+
+            aider --model gemini/gemma-4-31b-it \
+                  --edit-format diff-fenced \
+                  --thinking-tokens 1024 \
+                  --yes-always \
+                  --chat-language japanese \
+                  --test-cmd "bundle exec rspec && bundle exec rubocop" \
+                  --auto-test \
+                  --no-attribute-author \
+                  --no-attribute-committer \
+                  --no-attribute-co-authored-by \
+                  --disable-playwright \
+                  --no-detect-urls \
+                  --message "$INSTRUCTION (attempt: $RETRY_COUNT)"
+
+            if ! git diff --quiet "origin/${{ github.ref_name }}"; then
+              echo "✅ 変更が検出されました！ループを抜けます。"
+              SUCCESS=true
+              break
+            else
+              echo "⚠️ 差分がありません。次回の実行に向けて環境をクリアします。"
+              
+              # 書きかけのファイルとチャット履歴だけを掃除
+              git reset --hard HEAD
+              git clean -fd
+              rm -f .aider.chat.history.md
+              rm -f .aider.input.history
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -le $MAX_RETRIES ]; then
+              echo "再試行します..."
+              sleep 3
+            fi
+          done
+
+          if [ "$SUCCESS" = false ]; then
+            echo "❌ $MAX_RETRIES 回試行しましたが、コードの変更を生成できませんでした。"
+            exit 1
+          fi
+
+      - name: Push changes
+        run: |
+          git push -u origin HEAD
