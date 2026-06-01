@@ -60,10 +60,23 @@ module RubyMysqlTui
 
   def self.handle_loop_input(reader, state, client)
     if state[:sql_mode]
-      input = reader.read_line('')
-      return [state.merge!(sql_mode: false), false] if input == 'q' || input.nil?
+      event = reader.read_keypress
+      case event.key.name
+      when :escape
+        return [state.merge!(sql_mode: false, sql_input: ""), false]
+      when :return
+        if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
+          return [state.merge!(sql_mode: false, sql_input: ""), false]
+        end
+        new_state = InputHandler.execute_sql(state[:sql_input], state, client)
+        return [new_state.merge!(sql_input: ""), false]
+      when :backspace
+        state[:sql_input] = state[:sql_input].chop
+        return [state, false]
+      end
 
-      return [InputHandler.execute_sql(input, state, client), false]
+      state[:sql_input] << event.value if event.value
+      return [state, false]
     end
 
     event = reader.read_keypress
@@ -81,7 +94,8 @@ module RubyMysqlTui
       selected_table: nil,
       records: [],
       items: client.list_databases,
-      sql_mode: false
+      sql_mode: false,
+      sql_input: ""
     }
   end
 
