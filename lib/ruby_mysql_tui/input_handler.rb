@@ -85,16 +85,13 @@ module RubyMysqlTui
     def execute_sql(sql, state, client)
       return state if sql.nil? || sql.strip.empty?
 
-      begin
-        results = client.query(sql)
-        state[:records] = results
-        state[:view_mode] = :records
-        state[:sql_mode] = false
+      results = begin
+        client.query(sql)
       rescue StandardError => e
-        state[:records] = [{ 'Error' => e.message }]
-        state[:view_mode] = :records
-        state[:sql_mode] = false
+        [{ 'Error' => e.message }]
       end
+
+      state.merge!(records: results, view_mode: :records, sql_mode: false)
       state
     end
   end

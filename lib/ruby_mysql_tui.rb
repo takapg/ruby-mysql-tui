@@ -53,20 +53,23 @@ module RubyMysqlTui
 
     loop do
       renderer.render(client, state)
-      if state[:sql_mode]
-        input = reader.read_line("")
-        if input == 'q' || input.nil?
-          state[:sql_mode] = false
-        else
-          state = InputHandler.execute_sql(input, state, client)
-        end
-      else
-        event = reader.read_keypress
-        break if event.value == 'q'
-
-        state = handle_input(event, state, client)
-      end
+      state, should_break = handle_loop_input(reader, state, client)
+      break if should_break
     end
+  end
+
+  def self.handle_loop_input(reader, state, client)
+    if state[:sql_mode]
+      input = reader.read_line('')
+      return [state.merge(sql_mode: false), false] if input == 'q' || input.nil?
+
+      return [InputHandler.execute_sql(input, state, client), false]
+    end
+
+    event = reader.read_keypress
+    return [state, true] if event.value == 'q'
+
+    [handle_input(event, state, client), false]
   end
 
   def self.initial_state(client)
