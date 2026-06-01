@@ -48,13 +48,7 @@ module RubyMysqlTui
   def self.run_main_loop(client)
     reader = TTY::Reader.new
     renderer = UI::Renderer.new(UI::Layout.new)
-    state = {
-      focus: :left,
-      selected_index: 0,
-      view_mode: :databases,
-      selected_db: nil,
-      items: client.list_databases
-    }
+    state = initial_state(client)
 
     loop do
       renderer.render(client, state)
@@ -65,26 +59,48 @@ module RubyMysqlTui
     end
   end
 
+  def self.initial_state(client)
+    {
+      focus: :left,
+      selected_index: 0,
+      view_mode: :databases,
+      selected_db: nil,
+      items: client.list_databases
+    }
+  end
+
   def self.handle_input(event, state, client)
     case event.key.name
-    when :tab
-      state[:focus] = (state[:focus] == :left ? :right : :left)
-    when :up
-      if state[:focus] == :left
-        state[:selected_index] = [0, state[:selected_index] - 1].max
-      end
-    when :down
-      if state[:focus] == :left
-        state[:selected_index] = [state[:items].size - 1, state[:selected_index] + 1].min
-      end
-    when :return
-      if state[:focus] == :left && state[:view_mode] == :databases
-        db_name = state[:items][state[:selected_index]]
-        state[:selected_db] = db_name
-        state[:view_mode] = :tables
-        state[:items] = client.list_tables(db_name)
-        state[:selected_index] = 0
-      end
+    when :tab then handle_tab(state)
+    when :up then handle_up(state)
+    when :down then handle_down(state)
+    when :return then handle_return(state, client)
+    else state
+    end
+  end
+
+  def self.handle_tab(state)
+    state[:focus] = (state[:focus] == :left ? :right : :left)
+    state
+  end
+
+  def self.handle_up(state)
+    state[:selected_index] = [0, state[:selected_index] - 1].max if state[:focus] == :left
+    state
+  end
+
+  def self.handle_down(state)
+    state[:selected_index] = [state[:items].size - 1, state[:selected_index] + 1].min if state[:focus] == :left
+    state
+  end
+
+  def self.handle_return(state, client)
+    if state[:focus] == :left && state[:view_mode] == :databases
+      db_name = state[:items][state[:selected_index]]
+      state[:selected_db] = db_name
+      state[:view_mode] = :tables
+      state[:items] = client.list_tables(db_name)
+      state[:selected_index] = 0
     end
     state
   end
