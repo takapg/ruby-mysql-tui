@@ -3,8 +3,7 @@
 require 'spec_helper'
 require_relative '../lib/ruby_mysql_tui'
 
-RSpec.describe RubyMysqlTui do
-  describe '.handle_input (focus)' do
+RSpec.describe RubyMysqlTui, '.handle_input (focus)' do
     let(:client) { double('Client') }
     let(:tab_event) { double('Event', key: double('Key', name: :tab)) }
     let(:other_event) { double('Event', key: double('Key', name: :other)) }
@@ -30,7 +29,7 @@ RSpec.describe RubyMysqlTui do
     end
   end
 
-  describe '.handle_input (navigation)' do
+RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
     let(:client) { double('Client') }
     context '方向キーによる選択移動' do
       let(:up_event) { double('Event', key: double('Key', name: :up)) }
@@ -47,8 +46,9 @@ RSpec.describe RubyMysqlTui do
       end
     end
   end
+end
 
-  describe '.handle_input (selection)' do
+RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
     let(:client) { double('Client') }
     context 'EnterキーによるDB確定' do
       let(:return_event) { double('Event', key: double('Key', name: :return)) }
