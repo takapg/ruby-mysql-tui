@@ -48,21 +48,44 @@ module RubyMysqlTui
   def self.run_main_loop(client)
     reader = TTY::Reader.new
     renderer = UI::Renderer.new(UI::Layout.new)
-    current_focus = :left
-    databases = client.list_databases
+    state = {
+      focus: :left,
+      selected_index: 0,
+      view_mode: :databases,
+      selected_db: nil,
+      items: client.list_databases
+    }
 
     loop do
-      renderer.render(client, current_focus, databases)
-      char = reader.read_char
-      break if char == 'q'
+      renderer.render(client, state)
+      event = reader.read_keypress
+      break if event.value == 'q'
 
-      current_focus = handle_input(char, current_focus)
+      state = handle_input(event, state, client)
     end
   end
 
-  def self.handle_input(char, current_focus)
-    return (current_focus == :left ? :right : :left) if char == "\t"
-
-    current_focus
+  def self.handle_input(event, state, client)
+    case event.key.name
+    when :tab
+      state[:focus] = (state[:focus] == :left ? :right : :left)
+    when :up
+      if state[:focus] == :left
+        state[:selected_index] = [0, state[:selected_index] - 1].max
+      end
+    when :down
+      if state[:focus] == :left
+        state[:selected_index] = [state[:items].size - 1, state[:selected_index] + 1].min
+      end
+    when :return
+      if state[:focus] == :left && state[:view_mode] == :databases
+        db_name = state[:items][state[:selected_index]]
+        state[:selected_db] = db_name
+        state[:view_mode] = :tables
+        state[:items] = client.list_tables(db_name)
+        state[:selected_index] = 0
+      end
+    end
+    state
   end
 end
