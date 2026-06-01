@@ -14,8 +14,8 @@ module RubyMysqlTui
 
       case event.key.name
       when :tab then handle_tab(state)
-      when :up then handle_up(state)
-      when :down then handle_down(state)
+      when :up then handle_up(state, client)
+      when :down then handle_down(state, client)
       when :return then handle_return(state, client)
       else state
       end
@@ -26,20 +26,20 @@ module RubyMysqlTui
       state
     end
 
-    def handle_up(state)
+    def handle_up(state, client)
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, -1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        update_records_offset(state, -1)
+        update_records_offset(state, -1, client)
       end
       state
     end
 
-    def handle_down(state)
+    def handle_down(state, client)
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, 1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        update_records_offset(state, 1)
+        update_records_offset(state, 1, client)
       end
       state
     end
@@ -48,10 +48,24 @@ module RubyMysqlTui
       state[:selected_index] = (state[:selected_index] + delta).clamp(0, state[:items].size - 1)
     end
 
-    def update_records_offset(state, delta)
-      layout = current_layout
-      max_offset = [0, state[:records].size - layout.main_h].max
-      state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, max_offset)
+    def update_records_offset(state, delta, client)
+      state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, Float::INFINITY)
+
+      page_offset = state[:page_offset] || 0
+      records = state[:records] || []
+
+      if state[:records_offset] >= page_offset + records.size
+        new_offset = (state[:records_offset] / 100) * 100
+        state[:page_offset] = new_offset
+        state[:records] = client.list_records(state[:selected_table], new_offset)
+        if state[:records].empty?
+          state[:records_offset] = [0, page_offset + records.size - 1].max
+        end
+      elsif state[:records_offset] < page_offset
+        new_offset = [0, page_offset - 100].max
+        state[:page_offset] = new_offset
+        state[:records] = client.list_records(state[:selected_table], new_offset)
+      end
     end
 
     def current_layout
@@ -86,7 +100,9 @@ module RubyMysqlTui
       table_name = state[:items][state[:selected_index]]
       state[:selected_table] = table_name
       state[:view_mode] = :records
-      state[:records] = client.list_records(table_name)
+      state[:page_offset] = 0
+      state[:records_offset] = 0
+      state[:records] = client.list_records(table_name, 0)
     end
 
     def handle_back_navigation(state, client)
@@ -97,6 +113,8 @@ module RubyMysqlTui
       state[:selected_index] = 0
       state[:selected_db] = nil
       state[:selected_table] = nil
+      state[:page_offset] = 0
+      state[:records_offset] = 0
       state
     end
 

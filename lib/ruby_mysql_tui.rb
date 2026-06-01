@@ -71,7 +71,8 @@ module RubyMysqlTui
     {
       focus: :left, selected_index: 0, view_mode: :databases,
       selected_db: nil, selected_table: nil, records: [],
-      items: client.list_databases, sql_mode: false, sql_input: ''
+      items: client.list_databases, sql_mode: false, sql_input: '',
+      records_offset: 0, page_offset: 0
     }
   end
 
