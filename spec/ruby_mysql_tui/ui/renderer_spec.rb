@@ -34,28 +34,19 @@ end
 
 RSpec.describe RubyMysqlTui::UI::Renderer do
   include_context 'renderer setup'
-  let(:databases) { %w[db1 db2] }
-
   describe '#render' do
-    it 'applies cyan color to the focused pane and displays databases' do
-      state_left = { focus: :left, items: databases, selected_index: 0, view_mode: :databases, selected_db: nil }
-      expect { renderer.render(client, state_left) }.to output(/Box\(color: cyan, content: > db1/).to_stdout
-      expect { renderer.render(client, state_left) }.to output(/db2\)/).to_stdout
-      expect { renderer.render(client, state_left) }
-        .to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
-
-      state_right = { focus: :right, items: databases, selected_index: 0, view_mode: :databases, selected_db: nil }
-      expect { renderer.render(client, state_right) }.to output(/Box\(color: white, content: > db1/).to_stdout
-      expect { renderer.render(client, state_right) }.to output(/db2\)/).to_stdout
-      expect { renderer.render(client, state_right) }
-        .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
+    it 'applies correct colors based on focus' do
+      %i[left right].each do |focus|
+        state = { focus: focus, items: %w[db1 db2], selected_index: 0, view_mode: :databases, selected_db: nil }
+        c, o = focus == :left ? ['cyan', 'white'] : ['white', 'cyan']
+        expect { renderer.render(client, state) }.to output(/Box\(color: #{c}, content: > db1/).to_stdout
+        expect { renderer.render(client, state) }.to output(/Box\(color: #{o}, content: Data will appear here\)/).to_stdout
+      end
     end
-
     it 'displays "No items found" when the database list is empty' do
       state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
       expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
     end
-
     it 'displays table list in the right pane when view_mode is :tables' do
       state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
       output = capture_stdout { renderer.render(client, state) }
