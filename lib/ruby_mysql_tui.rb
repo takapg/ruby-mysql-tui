@@ -72,6 +72,10 @@ module RubyMysqlTui
   end
 
   def self.handle_input(event, state, client)
+    if event.value == 'b'
+      return handle_back_navigation(state, client)
+    end
+
     case event.key.name
     when :tab then handle_tab(state)
     when :up then handle_up(state)
@@ -127,5 +131,16 @@ module RubyMysqlTui
     state[:selected_table] = table_name
     state[:view_mode] = :records
     state[:records] = client.list_records(table_name)
+  end
+
+  def self.handle_back_navigation(state, client)
+    return state if state[:view_mode] == :databases
+
+    state[:view_mode] = :databases
+    state[:items] = client.list_databases
+    state[:selected_index] = 0
+    state[:selected_db] = nil
+    state[:selected_table] = nil
+    state
   end
 end

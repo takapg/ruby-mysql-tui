@@ -85,3 +85,27 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui, '.handle_input (back navigation)' do
+  let(:client) { double('Client') }
+  let(:back_event) { double('Event', value: 'b', key: double('Key', name: :unknown)) }
+
+  it 'bキーが押されたとき、:tables ビューから :databases ビューに戻る' do
+    state = { view_mode: :tables, items: %w[table1], selected_index: 0 }
+    allow(client).to receive(:list_databases).and_return(%w[db1 db2])
+
+    result = RubyMysqlTui.handle_input(back_event, state, client)
+    expect(result[:view_mode]).to eq(:databases)
+    expect(result[:items]).to eq(%w[db1 db2])
+    expect(result[:selected_index]).to eq(0)
+  end
+
+  it 'bキーが押されたとき、:records ビューから :databases ビューに戻る' do
+    state = { view_mode: :records, records: [], selected_index: 0 }
+    allow(client).to receive(:list_databases).and_return(%w[db1 db2])
+
+    result = RubyMysqlTui.handle_input(back_event, state, client)
+    expect(result[:view_mode]).to eq(:databases)
+    expect(result[:items]).to eq(%w[db1 db2])
+  end
+end
