@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'stringio'
 require_relative '../../../lib/ruby_mysql_tui/ui/renderer'
 require_relative '../../../lib/ruby_mysql_tui/ui/layout'
 
@@ -10,9 +11,21 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   let(:client) { double('Client', config: { host: 'localhost', username: 'root', database: 'test' }) }
 
   describe '#render' do
-    it 'accepts focus state and renders without error' do
-      expect { renderer.render(client, :left) }.not_to raise_error
-      expect { renderer.render(client, :right) }.not_to raise_error
+    it 'renders different output based on focus state' do
+      left_output = StringIO.new
+      right_output = StringIO.new
+
+      original_stdout = $stdout
+
+      $stdout = left_output
+      renderer.render(client, :left)
+      $stdout = original_stdout
+
+      $stdout = right_output
+      renderer.render(client, :right)
+      $stdout = original_stdout
+
+      expect(left_output.string).not_to eq(right_output.string)
     end
   end
 end

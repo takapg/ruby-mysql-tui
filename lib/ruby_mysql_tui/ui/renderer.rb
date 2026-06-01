@@ -34,13 +34,13 @@ module RubyMysqlTui
       end
 
       def render_main(focus)
-        left = build_box(@layout.left_w, 'DB/Table Tree', 'Tables will appear here', focus == :left)
-        right = build_box(@layout.right_w, 'Record/Structure View', 'Data will appear here', focus == :right)
+        left = build_box(@layout.left_w, 'Tables will appear here', focus == :left)
+        right = build_box(@layout.right_w, 'Data will appear here', focus == :right)
 
         render_side_by_side(left, right)
       end
 
-      def build_box(width, _title, content, focused)
+      def build_box(width, content, focused)
         TTY::Box.frame(
           width: width, height: @layout.main_h,
           style: { border: { fg: focused ? :cyan : :white } }
