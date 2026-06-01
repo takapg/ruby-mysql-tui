@@ -19,7 +19,7 @@ module RubyMysqlTui
         @header_h = 3
         @footer_h = 3
         @log_h = 5
-        @main_h = @height - @header_h - @footer_h - @log_h
+        @main_h = [@height - @header_h - @footer_h - @log_h, 1].max
         @left_w = (@width * 0.3).to_i
         @right_w = @width - @left_w - 1
       end
