@@ -45,5 +45,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
       state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
       expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
     end
+
+    it 'displays table list in the right pane when view_mode is :tables' do
+      state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+      expect { renderer.render(client, state) }.to output(/Box\(color: white, content: Database: test_db\n\ntable1\ntable2\)/).to_stdout
+    end
   end
 end

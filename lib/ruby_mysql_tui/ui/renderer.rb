@@ -49,10 +49,15 @@ module RubyMysqlTui
       end
 
       def build_right_text(view_mode, selected_db, items)
-        if view_mode == :databases
+        case view_mode
+        when :databases
           'Data will appear here'
+        when :tables
+          return "Database: #{selected_db}\n\nNo tables found" if items.empty?
+
+          "Database: #{selected_db}\n\n" + items.join("\n")
         else
-          "// Selected: #{selected_db} // Tables: #{items.join(', ')}"
+          'Unknown view mode'
         end
       end
 
