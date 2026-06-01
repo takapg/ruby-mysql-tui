@@ -28,7 +28,7 @@ module RubyMysqlTui
 
       def render_header(client)
         text = "Host: #{client.config[:host]} | User: #{client.config[:username]} | DB: #{client.config[:database]}"
-        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h, title: 'Connection Info', align: :center) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h, title: 'Connection Info', align: :center, border: :unicode) do
           text
         end
       end
@@ -43,6 +43,7 @@ module RubyMysqlTui
       def build_box(width, title, content, focused)
         TTY::Box.frame(
           width: width, height: @layout.main_h, title: title, align: :left,
+          border: :unicode,
           style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
       end
@@ -57,13 +58,13 @@ module RubyMysqlTui
       end
 
       def render_log
-        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h, title: 'SQL Log / Input', align: :left) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h, title: 'SQL Log / Input', align: :left, border: :unicode) do
           'Last SQL: SELECT 1'
         end
       end
 
       def render_footer
-        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h, title: 'Footer', align: :center) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h, title: 'Footer', align: :center, border: :unicode) do
           ' [q] Quit | [Tab] Switch Focus '
         end
       end
