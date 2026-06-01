@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'input_handler/sql'
+
 module RubyMysqlTui
   # InputHandler は ユーザー入力を処理し、状態を更新します。
   module InputHandler
@@ -7,6 +9,7 @@ module RubyMysqlTui
 
     def handle_input(event, state, client)
       return handle_back_navigation(state, client) if event.value == 'b'
+      return handle_sql_mode_toggle(state) if event.value == 's'
 
       case event.key.name
       when :tab then handle_tab(state)
@@ -73,6 +76,12 @@ module RubyMysqlTui
       state[:selected_index] = 0
       state[:selected_db] = nil
       state[:selected_table] = nil
+      state
+    end
+
+    def handle_sql_mode_toggle(state)
+      state[:sql_mode] = !state[:sql_mode]
+      state[:sql_input] = '' if state[:sql_mode]
       state
     end
   end

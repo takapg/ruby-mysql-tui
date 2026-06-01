@@ -109,3 +109,99 @@ RSpec.describe RubyMysqlTui, '.handle_input (back navigation)' do
     expect(result[:items]).to eq(%w[db1 db2])
   end
 end
+
+RSpec.describe RubyMysqlTui, '.handle_input (sql_mode)' do
+  let(:client) { double('Client') }
+  let(:s_event) { double('Event', value: 's', key: double('Key', name: :unknown)) }
+
+  it 'sキーが押されたとき、sql_mode を切り替える' do
+    state = { sql_mode: false }
+    expect(RubyMysqlTui.handle_input(s_event, state, client)[:sql_mode]).to eq(true)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
+  let(:client) { double('Client') }
+  let(:sql) { 'SELECT * FROM users' }
+  let(:results) { [{ 'id' => 1, 'name' => 'Alice' }] }
+
+  it 'SQLを実行し、結果を records に格納して view_mode を :records に変更する' do
+    state = { sql_mode: true }
+    allow(client).to receive(:query).with(sql).and_return(results)
+
+    result = RubyMysqlTui::InputHandler.execute_sql(sql, state, client)
+    expect(result[:records]).to eq(results)
+    expect(result[:view_mode]).to eq(:records)
+    expect(result[:sql_mode]).to eq(false)
+  end
+
+  it 'SQL実行時にエラーが発生した場合、エラーメッセージを records に格納する' do
+    state = { sql_mode: true }
+    allow(client).to receive(:query).with(sql).and_raise(StandardError, 'Query Error')
+
+    result = RubyMysqlTui::InputHandler.execute_sql(sql, state, client)
+    expect(result[:records]).to eq([{ 'Error' => 'Query Error' }])
+    expect(result[:view_mode]).to eq(:records)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.process_sql_keypress' do
+  let(:client) { double('Client') }
+  let(:state) { { sql_mode: true, sql_input: '' } }
+
+  it 'Escキーが押されたとき、sql_mode を false にし、入力をクリアする' do
+    event = double('Event', value: nil, key: double('Key', name: :escape))
+    result, _should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    expect(result[:sql_mode]).to eq(false)
+    expect(result[:sql_input]).to eq('')
+  end
+
+  it 'qキーが押されたとき、即座に sql_mode を false にし、入力をクリアする' do
+    event = double('Event', value: 'q', key: double('Key', name: :unknown))
+    result, _should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    expect(result[:sql_mode]).to eq(false)
+    expect(result[:sql_input]).to eq('')
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Transition' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it 'sキーでSQLモードに移行できること' do
+    s_event = double('Event', value: 's', key: double('Key', name: :unknown))
+    state = RubyMysqlTui.handle_input(s_event, initial_state, client)
+    expect(state[:sql_mode]).to eq(true)
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Execution' do
+  let(:client) { double('Client') }
+  let(:reader) { double('Reader') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it 'SQLを入力して実行し、結果が反映されて通常モードに戻ること' do
+    state = initial_state.merge(sql_mode: true)
+    sql = 'SELECT * FROM users'
+    results = [{ 'id' => 1, 'name' => 'Alice' }]
+    allow(client).to receive(:query).with(sql).and_return(results)
+
+    events = sql.chars.map { |c| double('Event', value: c, key: double('Key', name: :unknown)) }
+    events << double('Event', value: nil, key: double('Key', name: :return))
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    current_state = state
+    loop do
+      current_state = RubyMysqlTui.handle_loop_input(reader, current_state, client).first
+      break unless current_state[:sql_mode]
+    end
+
+    expect(current_state[:records]).to eq(results)
+    expect(current_state[:view_mode]).to eq(:records)
+    expect(current_state[:sql_mode]).to eq(false)
+  end
+end
