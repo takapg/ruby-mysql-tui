@@ -32,9 +32,10 @@ RSpec.describe RubyMysqlTui::Client do
     end
 
     it 'logs the executed SQL' do
-      expect(RubyMysqlTui.logger).to receive(:info).with("Executing SQL: #{sql}")
+      allow(RubyMysqlTui.logger).to receive(:info)
       allow(mock_mysql_client).to receive(:query).and_return([])
       client.query(sql)
+      expect(RubyMysqlTui.logger).to have_received(:info).with("Executing SQL: #{sql}")
     end
 
     it 'handles Mysql2::Error and logs it' do
