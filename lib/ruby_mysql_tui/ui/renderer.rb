@@ -35,7 +35,9 @@ module RubyMysqlTui
 
       def render_main(focus, items, selected_index, view_mode, selected_db)
         left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
-        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items), focus == :right)
+        right = build_box(
+          @layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right
+        )
 
         render_side_by_side(left, right)
       end
@@ -43,16 +45,33 @@ module RubyMysqlTui
       def build_list_text(items, selected_index)
         return 'No items found' if items.empty?
 
+        content_width = @layout.left_w - 2
         items.each_with_index.map do |item, idx|
-          idx == selected_index ? "> #{item}" : "  #{item}"
+          text = idx == selected_index ? "> #{item}" : "  #{item}"
+          truncate(text, content_width)
         end.join("\n")
       end
 
-      def build_right_text(view_mode, selected_db, items)
-        if view_mode == :databases
-          'Data will appear here'
+      def build_right_text(view_mode, selected_db, items, width)
+        content_width = width - 2
+        case view_mode
+        when :databases then build_databases_text(content_width)
+        when :tables then build_tables_text(selected_db, items, content_width)
+        else truncate('Unknown view mode', content_width)
+        end
+      end
+
+      def build_databases_text(width)
+        truncate('Data will appear here', width)
+      end
+
+      def build_tables_text(selected_db, items, width)
+        header = truncate("Database: #{selected_db}", width)
+        if items.nil? || items.empty?
+          "#{header}\n\n#{truncate('No tables found', width)}"
         else
-          "// Selected: #{selected_db} // Tables: #{items.join(', ')}"
+          table_list = items.map { |item| truncate(item, width) }.join("\n")
+          "#{header}\n\n#{table_list}"
         end
       end
 
@@ -63,12 +82,20 @@ module RubyMysqlTui
         ) { content }
       end
 
-      def render_side_by_side(left_box, right_box)
-        left_lines = left_box.split("\n")
-        right_lines = right_box.split("\n")
+      def truncate(text, width)
+        return text if text.nil? || width <= 0
+        return text[0...width] if width < 3
 
-        left_lines.zip(right_lines).each do |left, right|
-          puts "#{left} #{right}"
+        text.length > width ? "#{text[0...(width - 3)]}..." : text
+      end
+
+      def render_side_by_side(left_box, right_box)
+        left_lines = left_box.split("\n", -1)
+        right_lines = right_box.split("\n", -1)
+        max_lines = [left_lines.length, right_lines.length].max
+
+        (0...max_lines).each do |i|
+          puts "#{left_lines[i]}#{right_lines[i]}"
         end
       end
 
