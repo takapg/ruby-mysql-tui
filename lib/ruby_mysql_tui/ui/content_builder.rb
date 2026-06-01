@@ -42,14 +42,17 @@ module RubyMysqlTui
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
+        "#{header}\n\n#{create_records_table(records, width).render}"
+      end
+
+      def self.create_records_table(records, width)
         columns = records.first.keys
         col_width = [(width / columns.size).floor - 1, 1].max
 
-        table = TTY::Table.new(
+        TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
           rows: format_records_rows(records, col_width)
         )
-        "#{header}\n\n#{table.render}"
       end
 
       def self.format_records_rows(records, col_width)

@@ -100,7 +100,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables - edge cases' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'content records' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - with data' do
   include_context 'renderer setup'
   describe '#render' do
     it 'displays records in a table format in the right pane' do
@@ -118,7 +118,12 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records' do
       expect(output).to include('2')
       expect(output).to include('Bob')
     end
+  end
+end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - empty' do
+  include_context 'renderer setup'
+  describe '#render' do
     it 'displays "No records found" when records are empty' do
       state = {
         focus: :left,
