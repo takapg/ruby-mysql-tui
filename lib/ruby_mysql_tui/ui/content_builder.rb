@@ -10,7 +10,7 @@ module RubyMysqlTui
         return 'No items found' if items.nil? || items.empty?
 
         content_width = width - 2
-        items.each_with_index.map do |item, idx|
+        items.map.with_index do |item, idx|
           text = idx == selected_index ? "> #{item}" : "  #{item}"
           truncate(text, content_width)
         end.join("\n")
