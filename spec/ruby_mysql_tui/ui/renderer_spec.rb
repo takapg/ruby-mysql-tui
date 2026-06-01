@@ -173,3 +173,53 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - empty' do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination height' do
+  include_context 'renderer setup'
+
+  it 'does not exceed the main height when displaying many records' do
+    # ターミナルの高さを小さく設定 (main_h が小さくなるように)
+    allow(TTY::Screen).to receive(:height).and_return(15)
+    layout = RubyMysqlTui::UI::Layout.new
+    renderer = described_class.new(layout)
+
+    state = {
+      focus: :left,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { |i| { 'id' => i, 'name' => "User #{i}" } },
+      items: []
+    }
+
+    output = capture_stdout { renderer.render(client, state) }
+
+    # 右ペインのコンテンツ部分を抽出して行数を確認
+    # TTY::Box の出力形式 "Box(color: white, content: ...)" から中身を取り出す
+    right_box_match = output.match(/Box\(color: white, content: (.*?)\)\n/m)
+    expect(right_box_match).not_to be_nil
+
+    content = right_box_match[1]
+    line_count = content.count("\n") + 1
+    expect(line_count).to be <= layout.main_h
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination offset' do
+  include_context 'renderer setup'
+
+  it 'displays records starting from the offset' do
+    state = {
+      focus: :left,
+      view_mode: :records,
+      selected_table: 'users',
+      records: [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }, { 'id' => 3, 'name' => 'Charlie' }],
+      records_offset: 1,
+      items: []
+    }
+
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('Bob')
+    expect(output).to include('Charlie')
+    expect(output).not_to include('Alice')
+  end
+end

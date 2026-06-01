@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'tty-table'
+
 module RubyMysqlTui
   module UI
     # ContentBuilder は TUI 画面に表示するためのテキスト構築ロジックを提供します。
@@ -16,12 +18,15 @@ module RubyMysqlTui
         end.join("\n")
       end
 
-      def build_right_text(state, width)
+      def build_right_text(state, width, height = nil)
         content_width = width - 2
         case state[:view_mode]
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then build_records_text(state[:selected_table], state[:records], content_width)
+        when :records
+          build_records_text(
+            state[:selected_table], state[:records], content_width, height, state[:records_offset] || 0
+          )
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -40,25 +45,35 @@ module RubyMysqlTui
         end
       end
 
-      def build_records_text(table_name, records, width)
+      def build_records_text(table_name, records, width, height = nil, offset = 0)
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
-        table_output = create_records_table(records, width).render
-        truncated_table = table_output.lines.map { |line| truncate(line.chomp, width) }.join("\n")
-        "#{header}\n\n#{truncated_table}"
+        # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
+        max_rows = height ? [0, height - 4].max : nil
+        table_output = create_records_table(records, width, max_rows, offset).to_s
+        "#{header}\n\n#{table_output}"
       end
 
-      def create_records_table(records, width)
+      def create_records_table(records, width, max_rows = nil, offset = 0)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
-        col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
+        display_records = slice_records(records, max_rows, offset)
+        col_width = calculate_col_width(width, columns.size)
 
         TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
-          rows: format_records_rows(records, col_width)
+          rows: format_records_rows(display_records, col_width)
         )
+      end
+
+      def slice_records(records, max_rows, offset)
+        max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
+      end
+
+      def calculate_col_width(width, columns_count)
+        [(width - (columns_count * 3) - 1) / columns_count, 1].max
       end
 
       def format_records_rows(records, col_width)

@@ -45,7 +45,7 @@ module RubyMysqlTui
       end
 
       def right_content(state)
-        ContentBuilder.build_right_text(state, @layout.right_w)
+        ContentBuilder.build_right_text(state, @layout.right_w, @layout.main_h)
       end
 
       def build_box(width, content, focused)
