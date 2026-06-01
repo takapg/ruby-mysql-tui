@@ -23,13 +23,9 @@ module RubyMysqlTui
         @left_w = (@width * 0.3).to_i
         @right_w = @width - @left_w - 1
       end
-      end
     end
   end
 end
-
-```ruby
-lib/ruby_mysql_tui/ui/renderer.rb
 # frozen_string_literal: true
 
 require 'tty-box'
