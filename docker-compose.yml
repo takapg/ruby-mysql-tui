@@ -1,5 +1,5 @@
 services:
-  mysql-real:
+  mysql:
     image: mysql:8.0-debian
     container_name: mysql
     environment:
