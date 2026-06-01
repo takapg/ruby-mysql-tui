@@ -42,7 +42,7 @@ module RubyMysqlTui
 
       def build_box(width, title, content, focused)
         TTY::Box.frame(
-          width: width, height: @layout.main_h,
+          width: width, height: @layout.main_h, title: title,
           style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
       end
