@@ -44,6 +44,16 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
       state = { focus: :left, selected_index: 0, items: %w[a b] }
       expect(RubyMysqlTui.handle_input(down_event, state, client)[:selected_index]).to eq(1)
     end
+
+    it 'Upキーが押されたとき、selected_index が 0 の場合は 0 を維持する' do
+      state = { focus: :left, selected_index: 0, items: %w[a b] }
+      expect(RubyMysqlTui.handle_input(up_event, state, client)[:selected_index]).to eq(0)
+    end
+
+    it 'Downキーが押されたとき、selected_index が末尾の場合は末尾を維持する' do
+      state = { focus: :left, selected_index: 1, items: %w[a b] }
+      expect(RubyMysqlTui.handle_input(down_event, state, client)[:selected_index]).to eq(1)
+    end
   end
 end
 

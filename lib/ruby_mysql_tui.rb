@@ -85,7 +85,9 @@ module RubyMysqlTui
   end
 
   def self.handle_up(state)
-    state[:selected_index] = [0, state[:selected_index] - 1].max if state[:focus] == :left
+    if state[:focus] == :left && !state[:items].empty?
+      state[:selected_index] = (state[:selected_index] - 1).clamp(0, state[:items].size - 1)
+    end
     state
   end
 
