@@ -53,6 +53,18 @@ RSpec.describe RubyMysqlTui::Client, '#initialize configuration' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#list_databases' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes SHOW DATABASES and returns a list of database names' do
+    expect(mock_mysql_client).to receive(:query).with('SHOW DATABASES').and_return(
+      [{ 'Database' => 'db1' }, { 'Database' => 'db2' }]
+    )
+    expect(client.list_databases).to eq(%w[db1 db2])
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#query' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

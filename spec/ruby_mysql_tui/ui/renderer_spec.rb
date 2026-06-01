@@ -26,15 +26,29 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   include_context 'renderer setup'
 
   describe '#render' do
-    it 'applies cyan color to the focused pane' do
-      expect { renderer.render(client, :left) }
-        .to output(/Box\(color: cyan, content: Tables will appear here\)/).to_stdout
-      expect { renderer.render(client, :left) }
+    it 'applies cyan color to the focused pane and displays databases' do
+      databases = %w[db1 db2]
+      # 左ペインフォーカス時: 左がcyan、右がwhite
+      expect { renderer.render(client, :left, databases) }
+        .to output(/Box\(color: cyan, content: db1/).to_stdout
+      expect { renderer.render(client, :left, databases) }
+        .to output(/db2\)/).to_stdout
+      expect { renderer.render(client, :left, databases) }
         .to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
-      expect { renderer.render(client, :right) }
-        .to output(/Box\(color: white, content: Tables will appear here\)/).to_stdout
-      expect { renderer.render(client, :right) }
+
+      # 右ペインフォーカス時: 左がwhite、右がcyan
+      expect { renderer.render(client, :right, databases) }
+        .to output(/Box\(color: white, content: db1/).to_stdout
+      expect { renderer.render(client, :right, databases) }
+        .to output(/db2\)/).to_stdout
+      expect { renderer.render(client, :right, databases) }
         .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
+    end
+
+    it 'displays "No databases found" when the database list is empty' do
+      databases = []
+      expect { renderer.render(client, :left, databases) }
+        .to output(/Box\(color: cyan, content: No databases found\)/).to_stdout
     end
   end
 end

@@ -14,12 +14,12 @@ module RubyMysqlTui
       end
 
       # 画面全体をレンダリングします。
-      def render(client, focus)
+      def render(client, focus, databases)
         @layout.update_dimensions
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main(focus)
+        render_main(focus, databases)
         render_log
         render_footer
       end
@@ -33,8 +33,9 @@ module RubyMysqlTui
         end
       end
 
-      def render_main(focus)
-        left = build_box(@layout.left_w, 'Tables will appear here', focus == :left)
+      def render_main(focus, databases)
+        db_list = databases.empty? ? 'No databases found' : databases.join("\n")
+        left = build_box(@layout.left_w, db_list, focus == :left)
         right = build_box(@layout.right_w, 'Data will appear here', focus == :right)
 
         render_side_by_side(left, right)
