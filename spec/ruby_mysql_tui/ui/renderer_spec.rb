@@ -24,31 +24,26 @@ end
 
 RSpec.describe RubyMysqlTui::UI::Renderer do
   include_context 'renderer setup'
+  let(:databases) { %w[db1 db2] }
 
   describe '#render' do
     it 'applies cyan color to the focused pane and displays databases' do
-      databases = %w[db1 db2]
-      # 左ペインフォーカス時: 左がcyan、右がwhite
-      expect { renderer.render(client, :left, databases) }
-        .to output(/Box\(color: cyan, content: db1/).to_stdout
-      expect { renderer.render(client, :left, databases) }
-        .to output(/db2\)/).to_stdout
-      expect { renderer.render(client, :left, databases) }
+      state_left = { focus: :left, items: databases, selected_index: 0, view_mode: :databases, selected_db: nil }
+      expect { renderer.render(client, state_left) }.to output(/Box\(color: cyan, content: > db1/).to_stdout
+      expect { renderer.render(client, state_left) }.to output(/db2\)/).to_stdout
+      expect { renderer.render(client, state_left) }
         .to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
 
-      # 右ペインフォーカス時: 左がwhite、右がcyan
-      expect { renderer.render(client, :right, databases) }
-        .to output(/Box\(color: white, content: db1/).to_stdout
-      expect { renderer.render(client, :right, databases) }
-        .to output(/db2\)/).to_stdout
-      expect { renderer.render(client, :right, databases) }
+      state_right = { focus: :right, items: databases, selected_index: 0, view_mode: :databases, selected_db: nil }
+      expect { renderer.render(client, state_right) }.to output(/Box\(color: white, content: > db1/).to_stdout
+      expect { renderer.render(client, state_right) }.to output(/db2\)/).to_stdout
+      expect { renderer.render(client, state_right) }
         .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
     end
 
-    it 'displays "No databases found" when the database list is empty' do
-      databases = []
-      expect { renderer.render(client, :left, databases) }
-        .to output(/Box\(color: cyan, content: No databases found\)/).to_stdout
+    it 'displays "No items found" when the database list is empty' do
+      state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+      expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
     end
   end
 end

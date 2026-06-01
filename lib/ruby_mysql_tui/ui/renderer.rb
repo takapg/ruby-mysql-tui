@@ -14,12 +14,12 @@ module RubyMysqlTui
       end
 
       # 画面全体をレンダリングします。
-      def render(client, focus, databases)
+      def render(client, state)
         @layout.update_dimensions
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main(focus, databases)
+        render_main(state[:focus], state[:items], state[:selected_index], state[:view_mode], state[:selected_db])
         render_log
         render_footer
       end
@@ -33,12 +33,27 @@ module RubyMysqlTui
         end
       end
 
-      def render_main(focus, databases)
-        db_list = databases.empty? ? 'No databases found' : databases.join("\n")
-        left = build_box(@layout.left_w, db_list, focus == :left)
-        right = build_box(@layout.right_w, 'Data will appear here', focus == :right)
+      def render_main(focus, items, selected_index, view_mode, selected_db)
+        left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
+        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items), focus == :right)
 
         render_side_by_side(left, right)
+      end
+
+      def build_list_text(items, selected_index)
+        return 'No items found' if items.empty?
+
+        items.each_with_index.map do |item, idx|
+          idx == selected_index ? "> #{item}" : "  #{item}"
+        end.join("\n")
+      end
+
+      def build_right_text(view_mode, selected_db, items)
+        if view_mode == :databases
+          'Data will appear here'
+        else
+          "// Selected: #{selected_db} // Tables: #{items.join(', ')}"
+        end
       end
 
       def build_box(width, content, focused)
@@ -65,7 +80,7 @@ module RubyMysqlTui
 
       def render_footer
         puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) do
-          ' [q] Quit | [Tab] Switch Focus '
+          ' [q] Quit | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select '
         end
       end
     end

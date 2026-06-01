@@ -65,6 +65,19 @@ RSpec.describe RubyMysqlTui::Client, '#list_databases' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#list_tables' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:db_name) { 'test_db' }
+
+  it 'executes SHOW TABLES FROM `db_name` and returns a list of table names' do
+    expect(mock_mysql_client).to receive(:query).with("SHOW TABLES FROM `#{db_name}`").and_return(
+      [{ 'Tables_in_test_db' => 'table1' }, { 'Tables_in_test_db' => 'table2' }]
+    )
+    expect(client.list_tables(db_name)).to eq(%w[table1 table2])
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#query' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

@@ -48,21 +48,64 @@ module RubyMysqlTui
   def self.run_main_loop(client)
     reader = TTY::Reader.new
     renderer = UI::Renderer.new(UI::Layout.new)
-    current_focus = :left
-    databases = client.list_databases
+    state = initial_state(client)
 
     loop do
-      renderer.render(client, current_focus, databases)
-      char = reader.read_char
-      break if char == 'q'
+      renderer.render(client, state)
+      event = reader.read_keypress
+      break if event.value == 'q'
 
-      current_focus = handle_input(char, current_focus)
+      state = handle_input(event, state, client)
     end
   end
 
-  def self.handle_input(char, current_focus)
-    return (current_focus == :left ? :right : :left) if char == "\t"
+  def self.initial_state(client)
+    {
+      focus: :left,
+      selected_index: 0,
+      view_mode: :databases,
+      selected_db: nil,
+      items: client.list_databases
+    }
+  end
 
-    current_focus
+  def self.handle_input(event, state, client)
+    case event.key.name
+    when :tab then handle_tab(state)
+    when :up then handle_up(state)
+    when :down then handle_down(state)
+    when :return then handle_return(state, client)
+    else state
+    end
+  end
+
+  def self.handle_tab(state)
+    state[:focus] = (state[:focus] == :left ? :right : :left)
+    state
+  end
+
+  def self.handle_up(state)
+    if state[:focus] == :left && !state[:items].empty?
+      state[:selected_index] = (state[:selected_index] - 1).clamp(0, state[:items].size - 1)
+    end
+    state
+  end
+
+  def self.handle_down(state)
+    if state[:focus] == :left && !state[:items].empty?
+      state[:selected_index] = (state[:selected_index] + 1).clamp(0, state[:items].size - 1)
+    end
+    state
+  end
+
+  def self.handle_return(state, client)
+    if state[:focus] == :left && state[:view_mode] == :databases && !state[:items].empty?
+      db_name = state[:items][state[:selected_index]]
+      state[:selected_db] = db_name
+      state[:view_mode] = :tables
+      state[:items] = client.list_tables(db_name)
+      state[:selected_index] = 0
+    end
+    state
   end
 end
