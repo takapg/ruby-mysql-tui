@@ -43,8 +43,10 @@ module RubyMysqlTui
       def build_list_text(items, selected_index)
         return 'No items found' if items.empty?
 
+        content_width = @layout.left_w - 2
         items.each_with_index.map do |item, idx|
-          idx == selected_index ? "> #{item}" : "  #{item}"
+          text = idx == selected_index ? "> #{item}" : "  #{item}"
+          truncate(text, content_width)
         end.join("\n")
       end
 
@@ -82,7 +84,10 @@ module RubyMysqlTui
         left_lines = left_box.split("\n")
         right_lines = right_box.split("\n")
 
-        left_lines.zip(right_lines).each do |left, right|
+        max_lines = [left_lines.size, right_lines.size].max
+        max_lines.times do |i|
+          left = left_lines[i] || ""
+          right = right_lines[i] || ""
           puts "#{left} #{right}"
         end
       end
