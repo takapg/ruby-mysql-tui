@@ -5,8 +5,8 @@ require_relative '../lib/ruby_mysql_tui'
 
 RSpec.describe RubyMysqlTui, '.handle_input (focus)' do
   let(:client) { double('Client') }
-  let(:tab_event) { double('Event', key: double('Key', name: :tab)) }
-  let(:other_event) { double('Event', key: double('Key', name: :other)) }
+  let(:tab_event) { double('Event', value: nil, key: double('Key', name: :tab)) }
+  let(:other_event) { double('Event', value: nil, key: double('Key', name: :other)) }
 
   it 'Tabキーが押されたとき、フォーカスを :left から :right に切り替える' do
     state = { focus: :left }
@@ -32,8 +32,8 @@ end
 RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
   let(:client) { double('Client') }
   context '方向キーによる選択移動' do
-    let(:up_event) { double('Event', key: double('Key', name: :up)) }
-    let(:down_event) { double('Event', key: double('Key', name: :down)) }
+    let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+    let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
 
     it 'Upキーが押されたとき、フォーカス :left で selected_index を減少させる' do
       state = { focus: :left, selected_index: 1, items: %w[a b] }
@@ -60,7 +60,7 @@ end
 RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
   let(:client) { double('Client') }
   context 'EnterキーによるDB確定' do
-    let(:return_event) { double('Event', key: double('Key', name: :return)) }
+    let(:return_event) { double('Event', value: nil, key: double('Key', name: :return)) }
 
     it 'フォーカス :left かつ view_mode :databases のとき、テーブル一覧に遷移する' do
       state = { focus: :left, view_mode: :databases, items: %w[db1], selected_index: 0 }
