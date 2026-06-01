@@ -92,9 +92,10 @@ module RubyMysqlTui
       def render_side_by_side(left_box, right_box)
         left_lines = left_box.split("\n", -1)
         right_lines = right_box.split("\n", -1)
+        max_lines = [left_lines.length, right_lines.length].max
 
-        left_lines.zip(right_lines).each do |left, right|
-          puts "#{left}#{right}"
+        (0...max_lines).each do |i|
+          puts "#{left_lines[i]}#{right_lines[i]}"
         end
       end
 
