@@ -90,12 +90,12 @@ module RubyMysqlTui
   end
 
   def self.handle_down(state)
-    state[:selected_index] = [state[:items].size - 1, state[:selected_index] + 1].min if state[:focus] == :left
+    state[:selected_index] = [0, [state[:items].size - 1, state[:selected_index] + 1].min].max if state[:focus] == :left
     state
   end
 
   def self.handle_return(state, client)
-    if state[:focus] == :left && state[:view_mode] == :databases
+    if state[:focus] == :left && state[:view_mode] == :databases && !state[:items].empty?
       db_name = state[:items][state[:selected_index]]
       state[:selected_db] = db_name
       state[:view_mode] = :tables
