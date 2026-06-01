@@ -8,7 +8,7 @@ module RubyMysqlTui
     # Renderer は Layout に基づいて TUI 画面を描画します。
     class Renderer
       CLEAR_SCREEN = "\e[2J\e[H"
-      UNICODE_BORDER = :unicode
+      UNICODE_BORDER = :single
 
       def initialize(layout)
         @layout = layout
