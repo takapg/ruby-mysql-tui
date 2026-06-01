@@ -31,5 +31,15 @@ RSpec.describe RubyMysqlTui::UI::Layout do
 
       expect(layout.main_h).to be >= 1
     end
+
+    it 'ensures left_w and right_w have minimum values even for very narrow terminal widths' do
+      allow(TTY::Screen).to receive(:width).and_return(5)
+      allow(TTY::Screen).to receive(:height).and_return(30)
+
+      layout.update_dimensions
+
+      expect(layout.left_w).to be >= 10
+      expect(layout.right_w).to be >= 1
+    end
   end
 end

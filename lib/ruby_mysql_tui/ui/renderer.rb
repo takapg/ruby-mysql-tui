@@ -48,8 +48,8 @@ module RubyMysqlTui
         left_lines = left_box.split("\n")
         right_lines = right_box.split("\n")
 
-        (0...@layout.main_h).each do |i|
-          puts "#{left_lines[i]} #{right_lines[i]}"
+        left_lines.zip(right_lines).each do |left, right|
+          puts "#{left} #{right}"
         end
       end
 
