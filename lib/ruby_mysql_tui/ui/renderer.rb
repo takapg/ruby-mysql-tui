@@ -30,9 +30,7 @@ module RubyMysqlTui
 
       def render_header(client)
         text = "Host: #{client.config[:host]} | User: #{client.config[:username]} | DB: #{client.config[:database]}"
-        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h) do
-          text
-        end
+        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h) { text }
       end
 
       def render_main(state)
@@ -71,15 +69,11 @@ module RubyMysqlTui
         sql = client.last_sql || 'No SQL executed'
         text = "Last SQL: #{sql}"
         truncated_text = ContentBuilder.truncate(text, @layout.width - 2)
-        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) do
-          truncated_text
-        end
+        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { truncated_text }
       end
 
       def render_footer
-        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) do
-          ' [q] Quit | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select '
-        end
+        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { ' [q] Quit | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select ' }
       end
     end
   end
