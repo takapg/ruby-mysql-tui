@@ -16,12 +16,12 @@ module RubyMysqlTui
         end.join("\n")
       end
 
-      def build_right_text(state, width)
+      def build_right_text(state, width, height = nil)
         content_width = width - 2
         case state[:view_mode]
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records then build_records_text(state[:selected_table], state[:records], content_width)
+        when :records then build_records_text(state[:selected_table], state[:records], content_width, height)
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -40,24 +40,29 @@ module RubyMysqlTui
         end
       end
 
-      def build_records_text(table_name, records, width)
+      def build_records_text(table_name, records, width, height = nil)
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
-        table_output = create_records_table(records, width).render
+        # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
+        max_rows = height ? [0, height - 4].max : nil
+        table_output = create_records_table(records, width, max_rows).render
         truncated_table = table_output.lines.map { |line| truncate(line.chomp, width) }.join("\n")
         "#{header}\n\n#{truncated_table}"
       end
 
-      def create_records_table(records, width)
+      def create_records_table(records, width, max_rows = nil)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
+
+        # 表示可能件数でスライス
+        display_records = max_rows ? records.first(max_rows) : records
 
         col_width = [(width - (columns.size * 3) - 1) / columns.size, 1].max
 
         TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
-          rows: format_records_rows(records, col_width)
+          rows: format_records_rows(display_records, col_width)
         )
       end
 
