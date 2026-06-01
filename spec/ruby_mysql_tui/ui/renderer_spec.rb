@@ -27,7 +27,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
 
   describe '#render' do
     it 'applies cyan color to the focused pane and displays databases' do
-      databases = ['db1', 'db2']
+      databases = %w[db1 db2]
       # 左ペインフォーカス時: 左がcyan、右がwhite
       expect { renderer.render(client, :left, databases) }
         .to output(/Box\(color: cyan, content: db1/).to_stdout
