@@ -134,6 +134,34 @@ RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
     expect(result[:view_mode]).to eq(:records)
     expect(result[:sql_mode]).to eq(false)
   end
+
+  it 'SQL実行時にエラーが発生した場合、エラーメッセージを records に格納する' do
+    state = { sql_mode: true }
+    allow(client).to receive(:query).with(sql).and_raise(StandardError, 'Query Error')
+
+    result = RubyMysqlTui::InputHandler.execute_sql(sql, state, client)
+    expect(result[:records]).to eq([{ 'Error' => 'Query Error' }])
+    expect(result[:view_mode]).to eq(:records)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.process_sql_keypress' do
+  let(:client) { double('Client') }
+  let(:state) { { sql_mode: true, sql_input: '' } }
+
+  it 'Escキーが押されたとき、sql_mode を false にし、入力をクリアする' do
+    event = double('Event', value: nil, key: double('Key', name: :escape))
+    result, should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    expect(result[:sql_mode]).to eq(false)
+    expect(result[:sql_input]).to eq('')
+  end
+
+  it 'qキーが押されたとき、即座に sql_mode を false にし、入力をクリアする' do
+    event = double('Event', value: 'q', key: double('Key', name: :unknown))
+    result, should_break = RubyMysqlTui::InputHandler.process_sql_keypress(event, state, client)
+    expect(result[:sql_mode]).to eq(false)
+    expect(result[:sql_input]).to eq('')
+  end
 end
 
 RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Transition' do

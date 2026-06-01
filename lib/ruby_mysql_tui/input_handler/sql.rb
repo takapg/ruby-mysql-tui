@@ -24,6 +24,8 @@ module RubyMysqlTui
     end
 
     def process_sql_keypress(event, state, client)
+      return [state.merge!(sql_mode: false, sql_input: ''), false] if event.value == 'q'
+
       case event.key.name
       when :escape then [state.merge!(sql_mode: false, sql_input: ''), false]
       when :return then handle_sql_return(state, client)
@@ -41,7 +43,7 @@ module RubyMysqlTui
     end
 
     def handle_sql_return(state, client)
-      if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
+      if state[:sql_input].strip.empty?
         return [state.merge!(sql_mode: false, sql_input: ''), false]
       end
 
