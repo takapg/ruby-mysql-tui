@@ -27,7 +27,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   include_context 'renderer setup'
 
   describe '#render' do
-    it 'renders different output based on focus state' do
+    it 'applies cyan color to the focused pane' do
       left_output = StringIO.new
       right_output = StringIO.new
 
@@ -41,7 +41,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
       renderer.render(client, :right)
       $stdout = original_stdout
 
-      expect(left_output.string).not_to eq(right_output.string)
+      expect(left_output.string).to include('Box(color: cyan, content: Tables will appear here)')
+      expect(left_output.string).to include('Box(color: white, content: Data will appear here)')
+      expect(right_output.string).to include('Box(color: white, content: Tables will appear here)')
+      expect(right_output.string).to include('Box(color: cyan, content: Data will appear here)')
     end
   end
 end
