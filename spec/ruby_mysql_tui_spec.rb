@@ -55,7 +55,10 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
       expect(RubyMysqlTui.handle_input(down_event, state, client)[:selected_index]).to eq(1)
     end
   end
+end
 
+RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
+  let(:client) { double('Client') }
   context '右ペインでのレコードスクロール' do
     let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
     let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }

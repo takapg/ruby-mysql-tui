@@ -30,9 +30,7 @@ module RubyMysqlTui
       if state[:focus] == :left && !state[:items].empty?
         state[:selected_index] = (state[:selected_index] - 1).clamp(0, state[:items].size - 1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        layout = RubyMysqlTui::UI::Layout.new
-        max_offset = [0, state[:records].size - layout.main_h].max
-        state[:records_offset] = ((state[:records_offset] || 0) - 1).clamp(0, max_offset)
+        update_records_offset(state, -1)
       end
       state
     end
@@ -41,11 +39,15 @@ module RubyMysqlTui
       if state[:focus] == :left && !state[:items].empty?
         state[:selected_index] = (state[:selected_index] + 1).clamp(0, state[:items].size - 1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        layout = RubyMysqlTui::UI::Layout.new
-        max_offset = [0, state[:records].size - layout.main_h].max
-        state[:records_offset] = ((state[:records_offset] || 0) + 1).clamp(0, max_offset)
+        update_records_offset(state, 1)
       end
       state
+    end
+
+    def update_records_offset(state, delta)
+      layout = RubyMysqlTui::UI::Layout.new
+      max_offset = [0, state[:records].size - layout.main_h].max
+      state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, max_offset)
     end
 
     def handle_return(state, client)
