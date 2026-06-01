@@ -46,7 +46,6 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
       end
     end
   end
-end
 
 RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
     let(:client) { double('Client') }
@@ -65,4 +64,3 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
       end
     end
   end
-end
