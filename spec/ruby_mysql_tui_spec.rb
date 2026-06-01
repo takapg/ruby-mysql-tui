@@ -135,3 +135,32 @@ RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
     expect(result[:sql_mode]).to eq(false)
   end
 end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
+  let(:client) { double('Client') }
+  let(:reader) { double('Reader') }
+
+  it 'sキーでSQLモードに入り、SQLを入力して実行し、通常モードに戻る一連の流れを検証する' do
+    state = RubyMysqlTui.initial_state(client)
+
+    # 1. 's' キーで SQL モードへ
+    s_event = double('Event', value: 's', key: double('Key', name: :unknown))
+    state = RubyMysqlTui.handle_input(s_event, state, client)
+    expect(state[:sql_mode]).to eq(true)
+
+    # 2. SQL 入力と実行
+    sql = 'SELECT * FROM users'
+    results = [{ 'id' => 1, 'name' => 'Alice' }]
+    allow(client).to receive(:query).with(sql).and_return(results)
+
+    # handle_loop_input を使用して SQL モード時の挙動をシミュレート
+    allow(reader).to receive(:read_line).with('').and_return(sql)
+
+    new_state, should_break = RubyMysqlTui.handle_loop_input(reader, state, client)
+
+    expect(new_state[:records]).to eq(results)
+    expect(new_state[:view_mode]).to eq(:records)
+    expect(new_state[:sql_mode]).to eq(false)
+    expect(should_break).to eq(false)
+  end
+end

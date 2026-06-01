@@ -61,7 +61,7 @@ module RubyMysqlTui
   def self.handle_loop_input(reader, state, client)
     if state[:sql_mode]
       input = reader.read_line('')
-      return [state.merge(sql_mode: false), false] if input == 'q' || input.nil?
+      return [state.merge!(sql_mode: false), false] if input == 'q' || input.nil?
 
       return [InputHandler.execute_sql(input, state, client), false]
     end
