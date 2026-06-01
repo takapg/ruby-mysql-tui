@@ -34,9 +34,13 @@ module RubyMysqlTui
       end
 
       def render_main(focus, items, selected_index, view_mode, selected_db)
-        list_text = items.empty? ? 'No items found' : items.each_with_index.map do |item, idx|
-          idx == selected_index ? "> #{item}" : "  #{item}"
-        end.join("\n")
+        list_text = if items.empty?
+                      'No items found'
+                    else
+                      items.each_with_index.map do |item, idx|
+                        idx == selected_index ? "> #{item}" : "  #{item}"
+                      end.join("\n")
+                    end
 
         left = build_box(@layout.left_w, list_text, focus == :left)
 
