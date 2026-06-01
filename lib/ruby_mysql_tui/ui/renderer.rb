@@ -36,18 +36,18 @@ module RubyMysqlTui
       end
 
       def render_main(state)
-        left = build_box(
-          @layout.left_w,
-          ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w),
-          state[:focus] == :left
-        )
-        right = build_box(
-          @layout.right_w,
-          ContentBuilder.build_right_text(state, @layout.right_w),
-          state[:focus] == :right
-        )
+        left = build_box(@layout.left_w, left_content(state), state[:focus] == :left)
+        right = build_box(@layout.right_w, right_content(state), state[:focus] == :right)
 
         render_side_by_side(left, right)
+      end
+
+      def left_content(state)
+        ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w)
+      end
+
+      def right_content(state)
+        ContentBuilder.build_right_text(state, @layout.right_w)
       end
 
       def build_box(width, content, focused)
