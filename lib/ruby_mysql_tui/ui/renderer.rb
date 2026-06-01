@@ -73,7 +73,7 @@ module RubyMysqlTui
       end
 
       def render_footer
-        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { ' [q] Quit | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select ' }
+        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { ' [q] Quit | [b] Back | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select ' }
       end
     end
   end
