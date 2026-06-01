@@ -5,7 +5,7 @@ require 'mysql2'
 module RubyMysqlTui
   # Client は MySQL 接続を管理し、クエリの実行を提供します。
   class Client
-    attr_reader :connection
+    attr_reader :connection, :config
 
     def initialize(config = {})
       @config = {
