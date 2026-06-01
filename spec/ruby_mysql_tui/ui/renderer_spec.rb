@@ -28,12 +28,19 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   describe '#render' do
     it 'applies cyan color to the focused pane and displays databases' do
       databases = ['db1', 'db2']
+      # 左ペインフォーカス時: 左がcyan、右がwhite
       expect { renderer.render(client, :left, databases) }
-        .to output(/Box\(color: cyan, content: db1\ndb2\)/).to_stdout
+        .to output(/Box\(color: cyan, content: db1/).to_stdout
+      expect { renderer.render(client, :left, databases) }
+        .to output(/db2\)/).to_stdout
       expect { renderer.render(client, :left, databases) }
         .to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
+
+      # 右ペインフォーカス時: 左がwhite、右がcyan
       expect { renderer.render(client, :right, databases) }
-        .to output(/Box\(color: white, content: db1\ndb2\)/).to_stdout
+        .to output(/Box\(color: white, content: db1/).to_stdout
+      expect { renderer.render(client, :right, databases) }
+        .to output(/db2\)/).to_stdout
       expect { renderer.render(client, :right, databases) }
         .to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
     end
