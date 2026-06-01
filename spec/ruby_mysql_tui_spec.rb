@@ -4,7 +4,7 @@ require 'spec_helper'
 require_relative '../lib/ruby_mysql_tui'
 
 RSpec.describe RubyMysqlTui do
-  describe '.handle_input' do
+  describe '.handle_input (focus)' do
     let(:client) { double('Client') }
     let(:tab_event) { double('Event', key: double('Key', name: :tab)) }
     let(:other_event) { double('Event', key: double('Key', name: :other)) }
@@ -28,33 +28,39 @@ RSpec.describe RubyMysqlTui do
       state = { focus: :right }
       expect(RubyMysqlTui.handle_input(other_event, state, client)[:focus]).to eq(:right)
     end
+  end
 
+  describe '.handle_input (navigation)' do
+    let(:client) { double('Client') }
     context '方向キーによる選択移動' do
       let(:up_event) { double('Event', key: double('Key', name: :up)) }
       let(:down_event) { double('Event', key: double('Key', name: :down)) }
 
       it 'Upキーが押されたとき、フォーカス :left で selected_index を減少させる' do
-        state = { focus: :left, selected_index: 1, items: ['a', 'b'] }
+        state = { focus: :left, selected_index: 1, items: %w[a b] }
         expect(RubyMysqlTui.handle_input(up_event, state, client)[:selected_index]).to eq(0)
       end
 
       it 'Downキーが押されたとき、フォーカス :left で selected_index を増加させる' do
-        state = { focus: :left, selected_index: 0, items: ['a', 'b'] }
+        state = { focus: :left, selected_index: 0, items: %w[a b] }
         expect(RubyMysqlTui.handle_input(down_event, state, client)[:selected_index]).to eq(1)
       end
     end
+  end
 
+  describe '.handle_input (selection)' do
+    let(:client) { double('Client') }
     context 'EnterキーによるDB確定' do
       let(:return_event) { double('Event', key: double('Key', name: :return)) }
 
       it 'フォーカス :left かつ view_mode :databases のとき、テーブル一覧に遷移する' do
-        state = { focus: :left, view_mode: :databases, items: ['db1'], selected_index: 0 }
-        allow(client).to receive(:list_tables).with('db1').and_return(['table1', 'table2'])
+        state = { focus: :left, view_mode: :databases, items: %w[db1], selected_index: 0 }
+        allow(client).to receive(:list_tables).with('db1').and_return(%w[table1 table2])
 
         result = RubyMysqlTui.handle_input(return_event, state, client)
         expect(result[:view_mode]).to eq(:tables)
         expect(result[:selected_db]).to eq('db1')
-        expect(result[:items]).to eq(['table1', 'table2'])
+        expect(result[:items]).to eq(%w[table1 table2])
         expect(result[:selected_index]).to eq(0)
       end
     end
