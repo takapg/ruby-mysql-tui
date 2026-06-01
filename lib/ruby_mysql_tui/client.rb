@@ -44,7 +44,7 @@ module RubyMysqlTui
     # 指定したテーブルのレコード一覧を取得します。
     def list_records(table_name, offset = 0)
       escaped_table_name = table_name.gsub('`', '``')
-      query("SELECT * FROM `#{escaped_table_name}` LIMIT 100 OFFSET #{offset}")
+      query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE} OFFSET #{offset}")
     end
 
     # 接続を閉じます。

@@ -10,6 +10,8 @@ require_relative 'ruby_mysql_tui/input_handler'
 
 # RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
 module RubyMysqlTui
+  PAGE_SIZE = 100
+
   # ロガーの設定
   @logger_mutex = Mutex.new
 

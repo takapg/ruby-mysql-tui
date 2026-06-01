@@ -24,14 +24,14 @@ module RubyMysqlTui
       end
 
       def fetch_next_page(state, client, page_offset, records_size)
-        new_offset = (state[:records_offset] / 100) * 100
+        new_offset = (state[:records_offset] / RubyMysqlTui::PAGE_SIZE) * RubyMysqlTui::PAGE_SIZE
         state[:page_offset] = new_offset
         state[:records] = client.list_records(state[:selected_table], new_offset)
         state[:records_offset] = [0, page_offset + records_size - 1].max if state[:records].empty?
       end
 
       def fetch_prev_page(state, client)
-        new_offset = [0, (state[:page_offset] || 0) - 100].max
+        new_offset = [0, (state[:page_offset] || 0) - RubyMysqlTui::PAGE_SIZE].max
         state[:page_offset] = new_offset
         state[:records] = client.list_records(state[:selected_table], new_offset)
       end
