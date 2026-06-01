@@ -13,6 +13,12 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
   before do
     allow(TTY::Screen).to receive(:width).and_return(100)
     allow(TTY::Screen).to receive(:height).and_return(30)
+
+    # TTY::Box.frame をモックして、色情報を文字列に含めることで検証可能にする
+    allow(TTY::Box).to receive(:frame) do |args, &block|
+      color = args[:style] ? args[:style][:border][:fg] : :none
+      "Box(color: #{color}, content: #{block.call})"
+    end
   end
 
   describe '#render' do
