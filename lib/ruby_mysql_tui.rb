@@ -54,6 +54,7 @@ module RubyMysqlTui
       renderer.render(client, current_focus)
       char = reader.read_char
       break if char == 'q'
+
       current_focus = handle_input(char, current_focus)
     end
   end
