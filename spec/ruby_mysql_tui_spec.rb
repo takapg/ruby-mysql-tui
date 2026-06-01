@@ -55,6 +55,26 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
       expect(RubyMysqlTui.handle_input(down_event, state, client)[:selected_index]).to eq(1)
     end
   end
+
+  context '右ペインでのレコードスクロール' do
+    let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+    let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
+
+    it '右ペインフォーカスかつレコードビューのとき、Upキーで records_offset を減少させる' do
+      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(9)
+    end
+
+    it '右ペインフォーカスかつレコードビューのとき、Downキーで records_offset を増加させる' do
+      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
+    end
+
+    it 'records_offset が 0 未満にならないこと' do
+      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
+      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
+    end
+  end
 end
 
 RSpec.describe RubyMysqlTui, '.handle_input (selection)' do

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'input_handler/sql'
+require_relative 'ui/layout'
 
 module RubyMysqlTui
   # InputHandler は ユーザー入力を処理し、状態を更新します。
@@ -28,6 +29,10 @@ module RubyMysqlTui
     def handle_up(state)
       if state[:focus] == :left && !state[:items].empty?
         state[:selected_index] = (state[:selected_index] - 1).clamp(0, state[:items].size - 1)
+      elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
+        layout = RubyMysqlTui::UI::Layout.new
+        max_offset = [0, state[:records].size - layout.main_h].max
+        state[:records_offset] = ((state[:records_offset] || 0) - 1).clamp(0, max_offset)
       end
       state
     end
@@ -35,6 +40,10 @@ module RubyMysqlTui
     def handle_down(state)
       if state[:focus] == :left && !state[:items].empty?
         state[:selected_index] = (state[:selected_index] + 1).clamp(0, state[:items].size - 1)
+      elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
+        layout = RubyMysqlTui::UI::Layout.new
+        max_offset = [0, state[:records].size - layout.main_h].max
+        state[:records_offset] = ((state[:records_offset] || 0) + 1).clamp(0, max_offset)
       end
       state
     end
