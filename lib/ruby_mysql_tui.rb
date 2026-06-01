@@ -59,25 +59,7 @@ module RubyMysqlTui
   end
 
   def self.handle_loop_input(reader, state, client)
-    if state[:sql_mode]
-      event = reader.read_keypress
-      case event.key.name
-      when :escape
-        return [state.merge!(sql_mode: false, sql_input: ""), false]
-      when :return
-        if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
-          return [state.merge!(sql_mode: false, sql_input: ""), false]
-        end
-        new_state = InputHandler.execute_sql(state[:sql_input], state, client)
-        return [new_state.merge!(sql_input: ""), false]
-      when :backspace
-        state[:sql_input] = state[:sql_input].chop
-        return [state, false]
-      end
-
-      state[:sql_input] += event.value if event.value
-      return [state, false]
-    end
+    return handle_sql_mode_input(reader, state, client) if state[:sql_mode]
 
     event = reader.read_keypress
     return [state, true] if event.value == 'q'
@@ -85,17 +67,31 @@ module RubyMysqlTui
     [handle_input(event, state, client), false]
   end
 
+  private_class_method def self.handle_sql_mode_input(reader, state, client)
+    event = reader.read_keypress
+    case event.key.name
+    when :escape
+      [state.merge!(sql_mode: false, sql_input: ''), false]
+    when :return
+      if state[:sql_input].strip == 'q' || state[:sql_input].strip.empty?
+        return [state.merge!(sql_mode: false, sql_input: ''), false]
+      end
+      new_state = InputHandler.execute_sql(state[:sql_input], state, client)
+      [new_state.merge!(sql_input: ''), false]
+    when :backspace
+      state[:sql_input] = state[:sql_input].chop
+      [state, false]
+    else
+      state[:sql_input] += event.value if event.value
+      [state, false]
+    end
+  end
+
   def self.initial_state(client)
     {
-      focus: :left,
-      selected_index: 0,
-      view_mode: :databases,
-      selected_db: nil,
-      selected_table: nil,
-      records: [],
-      items: client.list_databases,
-      sql_mode: false,
-      sql_input: ""
+      focus: :left, selected_index: 0, view_mode: :databases,
+      selected_db: nil, selected_table: nil, records: [],
+      items: client.list_databases, sql_mode: false, sql_input: ''
     }
   end
 

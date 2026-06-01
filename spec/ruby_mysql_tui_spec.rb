@@ -139,39 +139,34 @@ end
 RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
   let(:client) { double('Client') }
   let(:reader) { double('Reader') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
-  it 'sキーでSQLモードに入り、SQLを入力して実行し、通常モードに戻る一連の流れを検証する' do
-    allow(client).to receive(:list_databases).and_return([])
-    state = RubyMysqlTui.initial_state(client)
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
-    # 1. 's' キーで SQL モードへ
+  it 'sキーでSQLモードに移行できること' do
     s_event = double('Event', value: 's', key: double('Key', name: :unknown))
-    state = RubyMysqlTui.handle_input(s_event, state, client)
+    state = RubyMysqlTui.handle_input(s_event, initial_state, client)
     expect(state[:sql_mode]).to eq(true)
+  end
 
-    # 2. SQL 入力と実行
+  it 'SQLを入力して実行し、結果が反映されて通常モードに戻ること' do
+    state = initial_state.merge(sql_mode: true)
     sql = 'SELECT * FROM users'
     results = [{ 'id' => 1, 'name' => 'Alice' }]
     allow(client).to receive(:query).with(sql).and_return(results)
 
-    # 各文字の入力イベントと、最後にEnterキーのイベントを作成
     events = sql.chars.map { |c| double('Event', value: c, key: double('Key', name: :unknown)) }
     events << double('Event', value: nil, key: double('Key', name: :return))
-
     allow(reader).to receive(:read_keypress).and_return(*events)
 
-    # SQLモードが終了するまで handle_loop_input を繰り返し呼び出す
     current_state = state
-    should_break = false
     loop do
-      current_state, should_break = RubyMysqlTui.handle_loop_input(reader, current_state, client)
-      break if !current_state[:sql_mode] || should_break
+      current_state, _ = RubyMysqlTui.handle_loop_input(reader, current_state, client)
+      break unless current_state[:sql_mode]
     end
-    new_state = current_state
 
-    expect(new_state[:records]).to eq(results)
-    expect(new_state[:view_mode]).to eq(:records)
-    expect(new_state[:sql_mode]).to eq(false)
-    expect(should_break).to eq(false)
+    expect(current_state[:records]).to eq(results)
+    expect(current_state[:view_mode]).to eq(:records)
+    expect(current_state[:sql_mode]).to eq(false)
   end
 end
