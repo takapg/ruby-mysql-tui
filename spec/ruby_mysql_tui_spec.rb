@@ -141,6 +141,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
   let(:reader) { double('Reader') }
 
   it 'sキーでSQLモードに入り、SQLを入力して実行し、通常モードに戻る一連の流れを検証する' do
+    allow(client).to receive(:list_databases).and_return([])
     state = RubyMysqlTui.initial_state(client)
 
     # 1. 's' キーで SQL モードへ
