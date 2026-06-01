@@ -32,13 +32,19 @@ module RubyMysqlTui
       end
 
       def render_main
-        left_box = TTY::Box.frame(width: @layout.left_w, height: @layout.main_h, title: 'DB/Table Tree', align: :left) do
-          'Tables will appear here'
-        end
-        right_box = TTY::Box.frame(width: @layout.right_w, height: @layout.main_h, title: 'Record/Structure View', align: :left) do
-          'Data will appear here'
-        end
+        left = build_box(@layout.left_w, 'DB/Table Tree', 'Tables will appear here')
+        right = build_box(@layout.right_w, 'Record/Structure View', 'Data will appear here')
 
+        render_side_by_side(left, right)
+      end
+
+      def build_box(width, title, content)
+        TTY::Box.frame(
+          width: width, height: @layout.main_h, title: title, align: :left
+        ) { content }
+      end
+
+      def render_side_by_side(left_box, right_box)
         left_lines = left_box.split("\n")
         right_lines = right_box.split("\n")
 
