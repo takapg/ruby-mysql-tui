@@ -22,7 +22,7 @@ module RubyMysqlTui
 
         render_header(client)
         render_main(state)
-        render_log
+        render_log(client)
         render_footer
       end
 
@@ -67,9 +67,12 @@ module RubyMysqlTui
         end
       end
 
-      def render_log
+      def render_log(client)
+        sql = client.last_sql || 'No SQL executed'
+        text = "Last SQL: #{sql}"
+        truncated_text = ContentBuilder.truncate(text, @layout.width - 2)
         puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) do
-          'Last SQL: SELECT 1'
+          truncated_text
         end
       end
 

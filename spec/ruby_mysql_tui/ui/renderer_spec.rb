@@ -121,6 +121,21 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - with data' do
   end
 end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
+  include_context 'renderer setup'
+  it 'displays the last executed SQL' do
+    client = double('Client', last_sql: 'SELECT * FROM users', config: { host: 'localhost', username: 'root', database: 'test' })
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    expect { renderer.render(client, state) }.to output(/Last SQL: SELECT \* FROM users/).to_stdout
+  end
+
+  it 'displays "No SQL executed" when no SQL has been run' do
+    client = double('Client', last_sql: nil, config: { host: 'localhost', username: 'root', database: 'test' })
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
+    expect { renderer.render(client, state) }.to output(/No SQL executed/).to_stdout
+  end
+end
+
 RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - empty' do
   include_context 'renderer setup'
   describe '#render' do

@@ -114,6 +114,12 @@ RSpec.describe RubyMysqlTui::Client, '#query' do
     expect(RubyMysqlTui.logger).to have_received(:info).with("Executing SQL: #{sql}")
   end
 
+  it 'stores the last executed SQL' do
+    allow(mock_mysql_client).to receive(:query).and_return([])
+    client.query(sql)
+    expect(client.last_sql).to eq(sql)
+  end
+
   it 'handles Mysql2::Error and logs it' do
     allow(mock_mysql_client).to receive(:query).and_raise(Mysql2::Error, 'Query failed')
     expect(RubyMysqlTui.logger).to receive(:error).with(/MySQL Query Error: Query failed/)
