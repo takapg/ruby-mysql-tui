@@ -40,9 +40,9 @@ module RubyMysqlTui
         render_side_by_side(left, right)
       end
 
-      def build_box(width, title, content, focused)
+      def build_box(width, _title, content, focused)
         TTY::Box.frame(
-          width: width, height: @layout.main_h, title: title,
+          width: width, height: @layout.main_h,
           style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
       end
