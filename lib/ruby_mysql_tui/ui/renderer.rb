@@ -35,7 +35,9 @@ module RubyMysqlTui
 
       def render_main(focus, items, selected_index, view_mode, selected_db)
         left = build_box(@layout.left_w, build_list_text(items, selected_index), focus == :left)
-        right = build_box(@layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right)
+        right = build_box(
+          @layout.right_w, build_right_text(view_mode, selected_db, items, @layout.right_w), focus == :right
+        )
 
         render_side_by_side(left, right)
       end
@@ -82,7 +84,8 @@ module RubyMysqlTui
 
       def truncate(text, width)
         return text if text.nil? || width <= 0
-        text.length > width ? "#{text[0...width - 3]}..." : text
+
+        text.length > width ? "#{text[0...(width - 3)]}..." : text
       end
 
       def render_side_by_side(left_box, right_box)
@@ -91,8 +94,8 @@ module RubyMysqlTui
 
         max_lines = [left_lines.size, right_lines.size].max
         max_lines.times do |i|
-          left = left_lines[i] || ""
-          right = right_lines[i] || ""
+          left = left_lines[i] || ''
+          right = right_lines[i] || ''
           puts "#{left} #{right}"
         end
       end

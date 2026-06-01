@@ -48,7 +48,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'focus' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'content' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content databases' do
   include_context 'renderer setup'
   describe '#render' do
     context 'when view_mode is :databases' do
@@ -57,10 +57,18 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content' do
         expect { renderer.render(client, state) }.to output(/Box\(color: cyan, content: No items found\)/).to_stdout
       end
     end
+  end
+end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables' do
+  include_context 'renderer setup'
+  describe '#render' do
     context 'when view_mode is :tables' do
       it 'displays table list in the right pane' do
-        state = { focus: :left, items: %w[table1 table2], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        state = {
+          focus: :left, items: %w[table1 table2], selected_index: 0,
+          view_mode: :tables, selected_db: 'test_db'
+        }
         output = capture_stdout { renderer.render(client, state) }
         expect(output).to include('Box(color: white, content: Database: test_db')
         expect(output).to include('table1')
@@ -68,7 +76,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content' do
       end
 
       it 'displays "No tables found" when items are empty' do
-        state = { focus: :left, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        state = {
+          focus: :left, items: [], selected_index: 0,
+          view_mode: :tables, selected_db: 'test_db'
+        }
         output = capture_stdout { renderer.render(client, state) }
         expect(output).to include('Box(color: white, content: Database: test_db')
         expect(output).to include('No tables found')
@@ -76,7 +87,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content' do
 
       it 'truncates long table names' do
         long_table = 'a' * 100
-        state = { focus: :left, items: [long_table], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+        state = {
+          focus: :left, items: [long_table], selected_index: 0,
+          view_mode: :tables, selected_db: 'test_db'
+        }
         output = capture_stdout { renderer.render(client, state) }
         expect(output).to include('...')
         expect(output).not_to include(long_table)
