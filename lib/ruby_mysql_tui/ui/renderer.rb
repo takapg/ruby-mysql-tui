@@ -93,7 +93,10 @@ module RubyMysqlTui
         left_lines = left_box.split("\n")
         right_lines = right_box.split("\n")
 
-        left_lines.zip(right_lines).each do |left, right|
+        max_lines = [left_lines.size, right_lines.size].max
+        max_lines.times do |i|
+          left = left_lines[i] || ''
+          right = right_lines[i] || ''
           puts "#{left}#{right}"
         end
       end
