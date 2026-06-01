@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'stringio'
 require_relative '../../../lib/ruby_mysql_tui/ui/renderer'
 require_relative '../../../lib/ruby_mysql_tui/ui/layout'
 
@@ -28,23 +27,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer do
 
   describe '#render' do
     it 'applies cyan color to the focused pane' do
-      left_output = StringIO.new
-      right_output = StringIO.new
-
-      original_stdout = $stdout
-
-      $stdout = left_output
-      renderer.render(client, :left)
-      $stdout = original_stdout
-
-      $stdout = right_output
-      renderer.render(client, :right)
-      $stdout = original_stdout
-
-      expect(left_output.string).to include('Box(color: cyan, content: Tables will appear here)')
-      expect(left_output.string).to include('Box(color: white, content: Data will appear here)')
-      expect(right_output.string).to include('Box(color: white, content: Tables will appear here)')
-      expect(right_output.string).to include('Box(color: cyan, content: Data will appear here)')
+      expect { renderer.render(client, :left) }.to output(/Box\(color: cyan, content: Tables will appear here\)/).to_stdout
+      expect { renderer.render(client, :left) }.to output(/Box\(color: white, content: Data will appear here\)/).to_stdout
+      expect { renderer.render(client, :right) }.to output(/Box\(color: white, content: Tables will appear here\)/).to_stdout
+      expect { renderer.render(client, :right) }.to output(/Box\(color: cyan, content: Data will appear here\)/).to_stdout
     end
   end
 end
