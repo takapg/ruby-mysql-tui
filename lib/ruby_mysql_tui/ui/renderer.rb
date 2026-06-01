@@ -14,12 +14,12 @@ module RubyMysqlTui
       end
 
       # 画面全体をレンダリングします。
-      def render(client)
+      def render(client, focus)
         @layout.update_dimensions
         print CLEAR_SCREEN
 
         render_header(client)
-        render_main
+        render_main(focus)
         render_log
         render_footer
       end
@@ -28,21 +28,22 @@ module RubyMysqlTui
 
       def render_header(client)
         text = "Host: #{client.config[:host]} | User: #{client.config[:username]} | DB: #{client.config[:database]}"
-        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h, title: 'Connection Info', align: :center) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.header_h) do
           text
         end
       end
 
-      def render_main
-        left = build_box(@layout.left_w, 'DB/Table Tree', 'Tables will appear here')
-        right = build_box(@layout.right_w, 'Record/Structure View', 'Data will appear here')
+      def render_main(focus)
+        left = build_box(@layout.left_w, 'Tables will appear here', focus == :left)
+        right = build_box(@layout.right_w, 'Data will appear here', focus == :right)
 
         render_side_by_side(left, right)
       end
 
-      def build_box(width, title, content)
+      def build_box(width, content, focused)
         TTY::Box.frame(
-          width: width, height: @layout.main_h, title: title, align: :left
+          width: width, height: @layout.main_h,
+          style: { border: { fg: focused ? :cyan : :white } }
         ) { content }
       end
 
@@ -56,13 +57,13 @@ module RubyMysqlTui
       end
 
       def render_log
-        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h, title: 'SQL Log / Input', align: :left) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) do
           'Last SQL: SELECT 1'
         end
       end
 
       def render_footer
-        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h, title: 'Footer', align: :center) do
+        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) do
           ' [q] Quit | [Tab] Switch Focus '
         end
       end

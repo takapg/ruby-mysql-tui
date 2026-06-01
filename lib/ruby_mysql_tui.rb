@@ -47,12 +47,21 @@ module RubyMysqlTui
 
   def self.run_main_loop(client)
     reader = TTY::Reader.new
-    layout = UI::Layout.new
-    renderer = UI::Renderer.new(layout)
+    renderer = UI::Renderer.new(UI::Layout.new)
+    current_focus = :left
 
     loop do
-      renderer.render(client)
-      break if reader.read_char == 'q'
+      renderer.render(client, current_focus)
+      char = reader.read_char
+      break if char == 'q'
+
+      current_focus = handle_input(char, current_focus)
     end
+  end
+
+  def self.handle_input(char, current_focus)
+    return (current_focus == :left ? :right : :left) if char == "\t"
+
+    current_focus
   end
 end
