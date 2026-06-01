@@ -43,7 +43,7 @@ module RubyMysqlTui
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
         columns = records.first.keys
-        col_width = (width / columns.size).floor - 1
+        col_width = [(width / columns.size).floor - 1, 1].max
 
         table = TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },

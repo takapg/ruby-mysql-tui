@@ -99,3 +99,37 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content tables - edge cases' do
     expect(output).not_to include(long_table)
   end
 end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content records' do
+  include_context 'renderer setup'
+  describe '#render' do
+    it 'displays records in a table format in the right pane' do
+      state = {
+        focus: :left,
+        view_mode: :records,
+        selected_table: 'users',
+        records: [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }],
+        items: []
+      }
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include('Box(color: white, content: Table: users')
+      expect(output).to include('1')
+      expect(output).to include('Alice')
+      expect(output).to include('2')
+      expect(output).to include('Bob')
+    end
+
+    it 'displays "No records found" when records are empty' do
+      state = {
+        focus: :left,
+        view_mode: :records,
+        selected_table: 'users',
+        records: [],
+        items: []
+      }
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include('Box(color: white, content: Table: users')
+      expect(output).to include('No records found')
+    end
+  end
+end
