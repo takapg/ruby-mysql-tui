@@ -154,10 +154,19 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode)' do
     results = [{ 'id' => 1, 'name' => 'Alice' }]
     allow(client).to receive(:query).with(sql).and_return(results)
 
-    # handle_loop_input を使用して SQL モード時の挙動をシミュレート
-    allow(reader).to receive(:read_line).with('').and_return(sql)
+    # 各文字の入力イベントと、最後にEnterキーのイベントを作成
+    events = sql.chars.map { |c| double('Event', value: c, key: double('Key', name: :unknown)) }
+    events << double('Event', value: nil, key: double('Key', name: :return))
 
-    new_state, should_break = RubyMysqlTui.handle_loop_input(reader, state, client)
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    # SQLモードが終了するまで handle_loop_input を繰り返し呼び出す
+    current_state = state
+    loop do
+      current_state, should_break = RubyMysqlTui.handle_loop_input(reader, current_state, client)
+      break if !current_state[:sql_mode] || should_break
+    end
+    new_state = current_state
 
     expect(new_state[:records]).to eq(results)
     expect(new_state[:view_mode]).to eq(:records)
