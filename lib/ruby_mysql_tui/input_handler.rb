@@ -7,6 +7,7 @@ module RubyMysqlTui
 
     def handle_input(event, state, client)
       return handle_back_navigation(state, client) if event.value == 'b'
+      return handle_sql_mode_toggle(state) if event.value == 's'
 
       case event.key.name
       when :tab then handle_tab(state)
@@ -73,6 +74,27 @@ module RubyMysqlTui
       state[:selected_index] = 0
       state[:selected_db] = nil
       state[:selected_table] = nil
+      state
+    end
+
+    def handle_sql_mode_toggle(state)
+      state[:sql_mode] = !state[:sql_mode]
+      state
+    end
+
+    def execute_sql(sql, state, client)
+      return state if sql.nil? || sql.strip.empty?
+
+      begin
+        results = client.query(sql)
+        state[:records] = results
+        state[:view_mode] = :records
+        state[:sql_mode] = false
+      rescue StandardError => e
+        state[:records] = [{ 'Error' => e.message }]
+        state[:view_mode] = :records
+        state[:sql_mode] = false
+      end
       state
     end
   end

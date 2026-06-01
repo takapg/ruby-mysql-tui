@@ -109,3 +109,29 @@ RSpec.describe RubyMysqlTui, '.handle_input (back navigation)' do
     expect(result[:items]).to eq(%w[db1 db2])
   end
 end
+
+RSpec.describe RubyMysqlTui, '.handle_input (sql_mode)' do
+  let(:client) { double('Client') }
+  let(:s_event) { double('Event', value: 's', key: double('Key', name: :unknown)) }
+
+  it 'sキーが押されたとき、sql_mode を切り替える' do
+    state = { sql_mode: false }
+    expect(RubyMysqlTui.handle_input(s_event, state, client)[:sql_mode]).to eq(true)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
+  let(:client) { double('Client') }
+  let(:sql) { 'SELECT * FROM users' }
+  let(:results) { [{ 'id' => 1, 'name' => 'Alice' }] }
+
+  it 'SQLを実行し、結果を records に格納して view_mode を :records に変更する' do
+    state = { sql_mode: true }
+    allow(client).to receive(:query).with(sql).and_return(results)
+
+    result = RubyMysqlTui::InputHandler.execute_sql(sql, state, client)
+    expect(result[:records]).to eq(results)
+    expect(result[:view_mode]).to eq(:records)
+    expect(result[:sql_mode]).to eq(false)
+  end
+end
