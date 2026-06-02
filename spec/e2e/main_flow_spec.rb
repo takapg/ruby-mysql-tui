@@ -211,7 +211,7 @@ RSpec.describe 'E2E Record Edit - Duplicate PK' do
     # 1回目は 1062 エラー、2回目は成功
     error = Mysql2::Error.new('Duplicate entry')
     allow(error).to receive(:errno).and_return(1062)
-    
+
     expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'duplicate_id').and_raise(error)
     expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'valid_id').and_return(true)
 
