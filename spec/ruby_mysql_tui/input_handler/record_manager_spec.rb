@@ -15,7 +15,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
       state[:records] = [{ 'id' => '1', 'name' => 'Alice' }]
       state[:selected_record_index] = 0
       allow(client).to receive(:primary_key_for).with('users').and_return('id')
-      
+
       allow(prompt).to receive(:select).and_return('name')
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:yes?).and_return(true)
@@ -26,7 +26,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
         .and_raise(Mysql2::Error, 'Invalid value')
       expect(client).to receive(:update_record).with('users', 'id', '1', 'name', 'valid').and_return(true)
       allow(client).to receive(:list_records).and_return(state[:records])
-      
+
       described_class.handle_edit_record(state, client, prompt)
     end
   end

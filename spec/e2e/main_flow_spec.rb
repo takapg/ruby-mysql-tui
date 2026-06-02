@@ -5,12 +5,7 @@ require 'timeout'
 require_relative 'e2e_helper'
 require 'ruby_mysql_tui'
 
-RSpec.shared_context 'e2e setup' do
-  before(:all) { E2EHelper.setup_test_db }
-  after(:all) { E2EHelper.cleanup_test_db }
-  let(:client) { RubyMysqlTui::Client.new(host: ENV.fetch('MYSQL_HOST', '127.0.0.1'), database: E2EHelper::TEST_DB) }
-  let(:reader) { instance_double(TTY::Reader) }
-
+module E2EFlowHelpers
   def track_states(client)
     states = [RubyMysqlTui.initial_state(client).dup]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
@@ -21,7 +16,7 @@ RSpec.shared_context 'e2e setup' do
     states
   end
 
-  def setup_record_creation_retry_mocks(reader)
+  def setup_retry_reader(reader)
     allow(TTY::Reader).to receive(:new).and_return(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -31,7 +26,9 @@ RSpec.shared_context 'e2e setup' do
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
+  end
 
+  def setup_retry_prompt
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('invalid', 'valid')
@@ -39,6 +36,19 @@ RSpec.shared_context 'e2e setup' do
     allow(prompt).to receive(:say)
     prompt
   end
+
+  def setup_record_creation_retry_mocks(reader)
+    setup_retry_reader(reader)
+    setup_retry_prompt
+  end
+end
+
+RSpec.shared_context 'e2e setup' do
+  include E2EFlowHelpers
+  before(:all) { E2EHelper.setup_test_db }
+  after(:all) { E2EHelper.cleanup_test_db }
+  let(:client) { RubyMysqlTui::Client.new(host: ENV.fetch('MYSQL_HOST', '127.0.0.1'), database: E2EHelper::TEST_DB) }
+  let(:reader) { instance_double(TTY::Reader) }
 end
 
 RSpec.describe 'E2E Navigation' do
