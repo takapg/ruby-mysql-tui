@@ -63,6 +63,13 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
 
     described_class.handle_edit_record(state, client, prompt)
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record duplicate entry' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+  end
 
   it 'handles duplicate entry error specifically' do
     allow(prompt).to receive(:select).and_return('id')
