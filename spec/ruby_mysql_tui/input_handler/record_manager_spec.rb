@@ -60,6 +60,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record g
       end
     end
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record primary key guard' do
+  include_context 'record manager setup'
 
   it 'returns state if primary key is not found' do
     Timeout.timeout(10) do
@@ -83,6 +87,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       described_class.handle_create_record(state, client, prompt)
     end
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record error handling' do
+  include_context 'record manager setup'
 
   it 'handles MySQL error during insertion' do
     Timeout.timeout(10) do

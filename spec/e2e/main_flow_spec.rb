@@ -20,6 +20,25 @@ RSpec.shared_context 'e2e setup' do
     end
     states
   end
+
+  def setup_record_creation_retry_mocks(reader)
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('invalid', 'valid')
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(prompt).to receive(:say)
+    prompt
+  end
 end
 
 RSpec.describe 'E2E Navigation' do
@@ -105,23 +124,7 @@ RSpec.describe 'E2E Record Creation - Retry' do
 
   it 'retries record creation when an error occurs' do
     Timeout.timeout(10) do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      # 1. DB選択 -> 2. テーブル選択 -> 3. 右ペインフォーカス -> 4. 新規作成(n) -> 5. 1回目入力 -> 6. エラー後再試行(y) -> 7. 2回目入力 -> 8. 終了(q)
-      events = [
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\t", key: double('Key', name: :tab)),
-        double('Event', value: 'n', key: double('Key', name: :n)),
-        double('Event', value: 'q', key: double('Key', name: :q))
-      ]
-      allow(reader).to receive(:read_keypress).and_return(*events)
-
-      prompt = instance_double(TTY::Prompt)
-      allow(TTY::Prompt).to receive(:new).and_return(prompt)
-      allow(prompt).to receive(:ask).and_return('invalid', 'valid')
-      allow(prompt).to receive(:yes?).and_return(true)
-      allow(prompt).to receive(:say)
-
+      setup_record_creation_retry_mocks(reader)
       states = track_states(client)
       allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
       allow(client).to receive(:list_tables).and_return(['test_table'])
