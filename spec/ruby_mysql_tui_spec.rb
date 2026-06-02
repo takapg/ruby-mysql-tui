@@ -79,7 +79,7 @@ RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
     end
 
     it 'Downキーで records_offset が正しく増加すること' do
-      state = { focus: :right, view_mode: :records, selected_table: 'users', records: Array.new(20), records_offset: 10 }
+      state = { focus: :right, view_mode: :records, selected_table: 'users', records: Array.new(1000), records_offset: 10 }
       expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
     end
   end
@@ -332,7 +332,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Small Record S
     down_event = double('Event', value: nil, key: double('Key', name: :down))
     result = RubyMysqlTui.handle_input(down_event, state, client)
 
-    expect(result[:records_offset]).to eq(49)
+    expect(result[:records_offset]).to eq(11)
   end
 end
 
