@@ -60,11 +60,20 @@ module RubyMysqlTui
       end
 
       def execute_update(state, client, prompt, info)
-        client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
-        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
-      rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
-        prompt.say("更新に失敗しました: #{e.message}", color: :red)
+        begin
+          client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
+        rescue Mysql2::Error => e
+          RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
+          prompt.say("更新に失敗しました: #{e.message}", color: :red)
+          return
+        end
+
+        begin
+          state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
+        rescue Mysql2::Error => e
+          RubyMysqlTui.logger.error("Failed to refresh records: #{e.message}")
+          prompt.say("更新は成功しましたが、一覧の再取得に失敗しました: #{e.message}", color: :yellow)
+        end
       end
     end
   end
