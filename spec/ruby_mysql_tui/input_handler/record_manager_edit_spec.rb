@@ -58,8 +58,22 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
     allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('Bob', nil)
     allow(client).to receive(:update_record).and_raise(Mysql2::Error, 'Update failed')
-    expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to update record: Update failed/)
+    expect(RubyMysqlTui.logger).to receive(:error).with(/更新に失敗しました: Update failed/)
     expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
+
+  it 'handles duplicate entry error specifically' do
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id', nil)
+    
+    # errno 1062 を持つエラーをシミュレート
+    error = Mysql2::Error.new('Duplicate entry')
+    allow(error).to receive(:errno).and_return(1062)
+    allow(client).to receive(:update_record).and_raise(error)
+    
+    expect(prompt).to receive(:say).with(/主キーまたはユニーク制約違反です/, color: :red)
 
     described_class.handle_edit_record(state, client, prompt)
   end
