@@ -19,25 +19,22 @@ RSpec.describe 'E2E Main Flow' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
 
     # シミュレートするキー入力シーケンス:
-    # 1. Down (DB選択)
-    # 2. Enter (DB決定)
-    # 3. Down (テーブル選択)
-    # 4. Enter (テーブル決定)
-    # 5. 'q' (終了)
+    # 1. Enter (DB決定)
+    # 2. Enter (テーブル決定)
+    # 3. 'q' (終了)
     events = [
-      double('Event', value: "\e[B", key: double('Key', name: :down)),
       double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\e[B", key: double('Key', name: :down)),
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
     # 内部状態の遷移を追跡するために handle_input をラップして記録する
-    states = [RubyMysqlTui.initial_state(client)]
+    # 状態が破壊的に変更される可能性があるため、dup して保存する
+    states = [RubyMysqlTui.initial_state(client).dup]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
       res = m.call(*args)
-      states << res
+      states << res.dup if res.is_a?(Hash)
       res
     end
 
