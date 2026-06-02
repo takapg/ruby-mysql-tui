@@ -60,7 +60,7 @@ module E2EFlowHelpers
   end
 
   def setup_edit_prompt_mocks(prompt)
-    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
   end
@@ -212,8 +212,8 @@ RSpec.describe 'E2E Record Edit - Duplicate PK' do
     error = Mysql2::Error.new('Duplicate entry')
     allow(error).to receive(:errno).and_return(1062)
 
-    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'duplicate_id').and_raise(error)
-    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'valid_id').and_return(true)
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'name', 'duplicate_id').and_raise(error)
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'name', 'valid_id').and_return(true)
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
