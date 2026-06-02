@@ -56,14 +56,15 @@ module RubyMysqlTui
           break
         rescue Mysql2::Error => e
           break if (retries += 1) >= 5
+
           data = retry_insert(e, columns, prompt, data)
           break if data.nil? || data.empty?
         end
       end
 
-      def retry_insert(e, columns, prompt, data)
-        RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
-        prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+      def retry_insert(error, columns, prompt, data)
+        RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
+        prompt.say("挿入に失敗しました: #{error.message}", color: :red)
         prompt_for_record_data(columns, prompt, data)
       end
 
@@ -103,6 +104,7 @@ module RubyMysqlTui
             break
           end
           break if (retries += 1) >= 5
+
           info[:val] = retry_update_value(prompt, info)
           break if info[:val].nil? || (info[:val].is_a?(Hash) && info[:val].empty?)
         end
