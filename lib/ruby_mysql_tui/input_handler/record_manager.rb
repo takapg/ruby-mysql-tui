@@ -39,7 +39,7 @@ module RubyMysqlTui
       def edit_and_update(state, client, record, pk_column, prompt)
         columns = record.keys
         column_to_edit = prompt.select('編集するカラムを選択してください:', columns)
-        new_value = prompt.ask("新しい値を入力してください (#{column_to_edit}):")
+        new_value = prompt.ask("新しい値を入力してください (#{column_to_edit}):") { |q| q.required true }
 
         return if new_value.nil?
 
@@ -48,6 +48,7 @@ module RubyMysqlTui
           state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
         rescue Mysql2::Error => e
           RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
+          prompt.say("更新に失敗しました: #{e.message}", color: :red)
         end
       end
 
