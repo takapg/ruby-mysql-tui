@@ -42,6 +42,28 @@ module E2EFlowHelpers
     setup_retry_reader(reader)
     setup_retry_prompt
   end
+
+  def setup_record_edit_retry_mocks(reader, prompt)
+    setup_edit_events(reader)
+    setup_edit_prompt_mocks(prompt)
+  end
+
+  def setup_edit_events(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+  end
+
+  def setup_edit_prompt_mocks(prompt)
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
+    allow(prompt).to receive(:say)
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -165,6 +187,33 @@ RSpec.describe 'E2E Record Creation - Retry' do
       .with('test_table', { 'col1' => 'invalid' })
       .and_raise(Mysql2::Error, 'Invalid value')
     expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'valid' }).and_return(true)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Edit - Duplicate PK' do
+  include_context 'e2e setup'
+
+  it 'retries record update when a duplicate primary key error occurs' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    setup_record_edit_retry_mocks(reader, prompt)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+
+    # 1回目は 1062 エラー、2回目は成功
+    error = Mysql2::Error.new('Duplicate entry')
+    allow(error).to receive(:errno).and_return(1062)
+
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'duplicate_id').and_raise(error)
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'id', 'valid_id').and_return(true)
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
