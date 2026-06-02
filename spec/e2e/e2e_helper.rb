@@ -5,7 +5,7 @@ module E2EHelper
 
   def self.setup_test_db
     client = Mysql2::Client.new(
-      host: ENV.fetch('MYSQL_HOST', 'localhost'),
+      host: ENV.fetch('MYSQL_HOST', '127.0.0.1'),
       username: ENV.fetch('MYSQL_USER', 'root'),
       password: ENV.fetch('MYSQL_PASSWORD', '')
     )
@@ -19,7 +19,7 @@ module E2EHelper
 
   def self.cleanup_test_db
     client = Mysql2::Client.new(
-      host: ENV.fetch('MYSQL_HOST', 'localhost'),
+      host: ENV.fetch('MYSQL_HOST', '127.0.0.1'),
       username: ENV.fetch('MYSQL_USER', 'root'),
       password: ENV.fetch('MYSQL_PASSWORD', '')
     )
