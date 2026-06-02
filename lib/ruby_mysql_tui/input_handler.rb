@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require 'tty-prompt'
 require_relative 'input_handler/sql'
 require_relative 'input_handler/pagination'
+require_relative 'input_handler/record_manager'
 require_relative 'ui/layout'
 
 module RubyMysqlTui
@@ -10,10 +12,17 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
-      return handle_back_navigation(state, client) if event.value == 'b'
-      return handle_sql_mode_toggle(state) if event.value == 's'
+      case event.value
+      when 'b' then return handle_back_navigation(state, client)
+      when 's' then return handle_sql_mode_toggle(state)
+      when 'd' then return RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
+      end
 
-      case event.key.name
+      handle_key_input(event.key.name, state, client)
+    end
+
+    def handle_key_input(key_name, state, client)
+      case key_name
       when :tab then handle_tab(state)
       when :up then handle_up(state, client)
       when :down then handle_down(state, client)
@@ -83,6 +92,7 @@ module RubyMysqlTui
       state[:page_offset] = 0
       state[:records_offset] = 0
       state[:records] = client.list_records(table_name, 0)
+      state[:selected_record_index] = 0
     end
 
     def handle_back_navigation(state, client)

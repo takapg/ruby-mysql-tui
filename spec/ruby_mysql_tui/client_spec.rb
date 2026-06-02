@@ -144,3 +144,33 @@ RSpec.describe RubyMysqlTui::Client, '#close' do
     client.close
   end
 end
+
+RSpec.describe RubyMysqlTui::Client, '#delete_record' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table) { 'users' }
+  let(:pk_col) { 'id' }
+  let(:pk_val) { 1 }
+
+  it 'uses a prepared statement to delete a record' do
+    sql = "DELETE FROM `#{table}` WHERE `#{pk_col}` = ?"
+    statement = instance_double('Mysql2::Statement')
+
+    expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
+    expect(statement).to receive(:execute).with(pk_val)
+
+    client.delete_record(table, pk_col, pk_val)
+  end
+
+  it 'escapes backticks in table and column names' do
+    table_with_tick = 'user`s'
+    col_with_tick = 'id`s'
+    sql = 'DELETE FROM `user``s` WHERE `id``s` = ?'
+    statement = instance_double('Mysql2::Statement')
+
+    expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
+    expect(statement).to receive(:execute).with(pk_val)
+
+    client.delete_record(table_with_tick, col_with_tick, pk_val)
+  end
+end

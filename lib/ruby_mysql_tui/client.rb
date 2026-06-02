@@ -47,12 +47,35 @@ module RubyMysqlTui
       query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE} OFFSET #{offset}")
     end
 
+    # テーブルの主キー列名を取得します。
+    def primary_key_for(table_name)
+      escaped_table_name = table_name.gsub('`', '``')
+      results = query("SHOW KEYS FROM `#{escaped_table_name}` WHERE Key_name = 'PRIMARY'")
+      results.first ? results.first['Column_name'] : nil
+    end
+
+    # レコードを削除します。
+    def delete_record(table_name, pk_column, pk_value)
+      sql = "DELETE FROM `#{table_name.gsub('`', '``')}` WHERE `#{pk_column.gsub('`', '``')}` = ?"
+      log_delete_sql(sql, pk_value)
+      @connection.prepare(sql).execute(pk_value)
+    rescue Mysql2::Error => e
+      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
+      raise e
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
     end
 
     private
+
+    def log_delete_sql(sql, pk_value)
+      val = pk_value.is_a?(Numeric) ? pk_value : "'#{pk_value.to_s.gsub("'", "''")}'"
+      @last_sql = sql.gsub('?', val.to_s)
+      RubyMysqlTui.logger.info("Executing SQL: #{@last_sql}")
+    end
 
     def connect!
       @connection = Mysql2::Client.new(@config)
