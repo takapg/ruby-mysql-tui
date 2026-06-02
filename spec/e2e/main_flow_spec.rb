@@ -11,7 +11,7 @@ RSpec.describe 'E2E Main Flow' do
     E2EHelper.cleanup_test_db
   end
 
-  let(:client) { RubyMysqlTui::Client.new(database: E2EHelper::TEST_DB) }
+  let(:client) { RubyMysqlTui::Client.new(host: ENV.fetch('MYSQL_HOST', '127.0.0.1'), database: E2EHelper::TEST_DB) }
   let(:reader) { instance_double(TTY::Reader) }
 
   it 'navigates from databases to tables to records' do
