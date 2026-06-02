@@ -70,6 +70,7 @@ RSpec.describe 'E2E Record Creation' do
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
       double('Event', value: 'n', key: double('Key', name: :n)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]

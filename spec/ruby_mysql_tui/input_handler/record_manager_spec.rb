@@ -37,10 +37,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
   include_context 'record manager setup'
 
   it 'prompts for all columns and inserts a record' do
-    allow(client).to receive(:list_columns).with('test_table').and_return(%w[id name])
+    allow(client).to receive(:list_columns).with('users').and_return(%w[id name])
     allow(prompt).to receive(:ask).with(/id/).and_return('1')
     allow(prompt).to receive(:ask).with(/name/).and_return('Alice')
-    expect(client).to receive(:insert_record).with('test_table', { 'id' => '1', 'name' => 'Alice' })
+    expect(client).to receive(:insert_record).with('users', { 'id' => '1', 'name' => 'Alice' })
     expect(client).to receive(:list_records)
 
     described_class.handle_create_record(state, client, prompt)
