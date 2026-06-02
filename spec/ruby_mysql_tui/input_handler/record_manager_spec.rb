@@ -3,27 +3,10 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler/record_manager'
 
-RSpec.shared_context 'record manager setup' do
-  let(:client) { instance_double('RubyMysqlTui::Client') }
-  let(:prompt) { instance_double('TTY::Prompt') }
-  let(:table_name) { 'users' }
-  let(:pk_column) { 'id' }
-  let(:record) { { 'id' => 1, 'name' => 'Alice' } }
-  let(:state) do
-    {
-      focus: :right,
-      view_mode: :records,
-      selected_table: table_name,
-      selected_record_index: 0,
-      records: [record],
-      records_offset: 0
-    }
-  end
-end
+require_relative '../support/record_manager_setup'
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordManager do
-  describe '.handle_edit_record guards' do
-    include_context 'record manager setup'
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record guards' do
+  include_context 'record manager setup'
     context 'when record management is not possible' do
       it 'returns state immediately if focus is :left' do
         state[:focus] = :left
