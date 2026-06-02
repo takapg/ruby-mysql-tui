@@ -404,16 +404,16 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
 end
 
 RSpec.describe 'Happy Path Integration', 'Real MySQL' do
-  let(:client) { RubyMysqlTui::Client.new(database: 'tui_test_db') }
+  let(:client) { RubyMysqlTui::Client.new(host: '127.0.0.1', database: 'tui_test_db') }
   let(:return_event) { double('Event', value: nil, key: double('Key', name: :return)) }
 
   before(:all) do
     # 管理者権限でテストDBを作成
-    admin_client = RubyMysqlTui::Client.new(database: nil)
+    admin_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: nil)
     admin_client.query('CREATE DATABASE IF NOT EXISTS tui_test_db')
 
     # テストDBに接続してテーブルを作成し、データを投入
-    test_client = RubyMysqlTui::Client.new(database: 'tui_test_db')
+    test_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: 'tui_test_db')
     test_client.query('CREATE TABLE IF NOT EXISTS test_table (id INT PRIMARY KEY, name VARCHAR(255))')
     test_client.query('TRUNCATE TABLE test_table')
     test_client.query('INSERT INTO test_table (id, name) VALUES (1, "Alice"), (2, "Bob")')
