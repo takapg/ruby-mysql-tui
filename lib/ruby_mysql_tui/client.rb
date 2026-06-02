@@ -42,9 +42,9 @@ module RubyMysqlTui
     end
 
     # 指定したテーブルのレコード一覧を取得します。
-    def list_records(table_name, _offset = 0)
+    def list_records(table_name, offset = 0)
       escaped_table_name = table_name.gsub('`', '``')
-      query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE}")
+      query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE} OFFSET #{offset}")
     end
 
     # テーブルの主キー列名を取得します。
