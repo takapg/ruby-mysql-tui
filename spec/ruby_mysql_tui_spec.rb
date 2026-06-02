@@ -57,37 +57,41 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
   end
 end
 
-RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
+RSpec.describe RubyMysqlTui, '.handle_input (record scroll - basic)' do
   let(:client) { double('Client') }
-  context '右ペインでのレコードスクロール' do
-    let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
-    let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
+  let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+  let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
 
-    it '右ペインフォーカスかつレコードビューのとき、Upキーで records_offset を減少させる' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(9)
-    end
+  it '右ペインフォーカスかつレコードビューのとき、Upキーで records_offset を減少させる' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+    expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(9)
+  end
 
-    it '右ペインフォーカスかつレコードビューのとき、Downキーで records_offset を増加させる' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
-    end
+  it '右ペインフォーカスかつレコードビューのとき、Downキーで records_offset を増加させる' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+    expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
+  end
+end
 
-    it 'records_offset が 0 未満にならないこと' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
-      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
-    end
+RSpec.describe RubyMysqlTui, '.handle_input (record scroll - boundaries)' do
+  let(:client) { double('Client') }
+  let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+  let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
 
-    it 'Downキーで records_offset が正しく増加すること' do
-      state = {
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(1000),
-        records_offset: 10
-      }
-      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
-    end
+  it 'records_offset が 0 未満にならないこと' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
+    expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
+  end
+
+  it 'Downキーで records_offset が正しく増加すること' do
+    state = {
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(1000),
+      records_offset: 10
+    }
+    expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
   end
 end
 
