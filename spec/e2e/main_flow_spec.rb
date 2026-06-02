@@ -138,15 +138,7 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
 
   it 'cancels record creation retry when an error occurs' do
     Timeout.timeout(10) do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      events = [
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\t", key: double('Key', name: :tab)),
-        double('Event', value: 'n', key: double('Key', name: :n)),
-        double('Event', value: 'q', key: double('Key', name: :q))
-      ]
-      allow(reader).to receive(:read_keypress).and_return(*events)
+      setup_retry_reader(reader)
 
       prompt = instance_double(TTY::Prompt)
       allow(TTY::Prompt).to receive(:new).and_return(prompt)
