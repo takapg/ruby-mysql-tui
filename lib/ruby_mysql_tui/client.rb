@@ -47,6 +47,21 @@ module RubyMysqlTui
       query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE} OFFSET #{offset}")
     end
 
+    # テーブルの主キー列名を取得します。
+    def primary_key_for(table_name)
+      escaped_table_name = table_name.gsub('`', '``')
+      results = query("SHOW KEYS FROM `#{escaped_table_name}` WHERE Key_name = 'PRIMARY'")
+      results.first ? results.first['Column_name'] : nil
+    end
+
+    # レコードを削除します。
+    def delete_record(table_name, pk_column, pk_value)
+      escaped_table_name = table_name.gsub('`', '``')
+      escaped_pk_column = pk_column.gsub('`', '``')
+      val = pk_value.is_a?(Numeric) ? pk_value : "'#{pk_value.to_s.gsub("'", "''")}'"
+      query("DELETE FROM `#{escaped_table_name}` WHERE `#{escaped_pk_column}` = #{val}")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
