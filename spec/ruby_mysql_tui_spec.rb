@@ -403,16 +403,11 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
   end
 end
 
-RSpec.describe 'Happy Path Integration', 'Real MySQL' do
-  let(:client) { RubyMysqlTui::Client.new(host: '127.0.0.1', database: 'tui_test_db') }
-  let(:return_event) { double('Event', value: nil, key: double('Key', name: :return)) }
-
+RSpec.shared_context 'real mysql setup' do
   before(:all) do
-    # 管理者権限でテストDBを作成
     admin_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: nil)
     admin_client.query('CREATE DATABASE IF NOT EXISTS tui_test_db')
 
-    # テストDBに接続してテーブルを作成し、データを投入
     test_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: 'tui_test_db')
     test_client.query('CREATE TABLE IF NOT EXISTS test_table (id INT PRIMARY KEY, name VARCHAR(255))')
     test_client.query('TRUNCATE TABLE test_table')
@@ -423,25 +418,26 @@ RSpec.describe 'Happy Path Integration', 'Real MySQL' do
     admin_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: nil)
     admin_client.query('DROP DATABASE IF EXISTS tui_test_db')
   end
+end
 
+RSpec.describe 'Happy Path Integration', 'Real MySQL' do
+  include_context 'real mysql setup'
+  let(:client) { RubyMysqlTui::Client.new(host: '127.0.0.1', database: 'tui_test_db') }
+  let(:return_event) { double('Event', value: nil, key: double('Key', name: :return)) }
   it 'ハッピーパス: データベース選択 -> テーブル選択 -> レコード表示 の遷移が正しく行われること' do
     # 1. 初期状態 (データベース一覧)
     state = RubyMysqlTui.initial_state(client)
     expect(state[:view_mode]).to eq(:databases)
     expect(state[:items]).to include('tui_test_db')
-
     # tui_test_db を選択して Enter
     state[:selected_index] = state[:items].index('tui_test_db')
     state = RubyMysqlTui.handle_input(return_event, state, client)
-
     # 2. テーブル一覧ビューに遷移
     expect(state[:view_mode]).to eq(:tables)
     expect(state[:items]).to include('test_table')
-
     # test_table を選択して Enter
     state[:selected_index] = state[:items].index('test_table')
     state = RubyMysqlTui.handle_input(return_event, state, client)
-
     # 3. レコードビューに遷移し、データが取得できていること
     expect(state[:view_mode]).to eq(:records)
     expect(state[:records].size).to eq(2)
