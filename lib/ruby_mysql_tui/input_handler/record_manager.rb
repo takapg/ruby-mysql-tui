@@ -112,9 +112,11 @@ module RubyMysqlTui
       end
 
       def retry_update(error, prompt, info)
-        msg = error.respond_to?(:errno) && error.errno == 1062 ?
-              "主キーまたはユニーク制約違反です: #{error.message}" :
-              "更新に失敗しました: #{error.message}"
+        msg = if error.respond_to?(:errno) && error.errno == 1062
+                "主キーまたはユニーク制約違反です: #{error.message}"
+              else
+                "更新に失敗しました: #{error.message}"
+              end
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
         prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])

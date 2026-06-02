@@ -42,6 +42,20 @@ module E2EFlowHelpers
     setup_retry_reader(reader)
     setup_retry_prompt
   end
+
+  def setup_record_edit_retry_mocks(reader, prompt)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
+    allow(prompt).to receive(:say)
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -176,21 +190,9 @@ RSpec.describe 'E2E Record Edit - Duplicate PK' do
 
   it 'retries record update when a duplicate primary key error occurs' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'e', key: double('Key', name: :e)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
-
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:select).and_return('id')
-    # 1回目は重複値、2回目は有効な値
-    allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
-    allow(prompt).to receive(:say)
+    setup_record_edit_retry_mocks(reader, prompt)
 
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
