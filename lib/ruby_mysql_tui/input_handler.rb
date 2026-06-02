@@ -114,6 +114,5 @@ module RubyMysqlTui
       state[:sql_input] = '' if state[:sql_mode]
       state
     end
-
   end
 end
