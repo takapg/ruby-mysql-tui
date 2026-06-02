@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler/record_manager'
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordManager do
+RSpec.shared_context 'record manager setup' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:table_name) { 'users' }
@@ -19,8 +19,11 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager do
       records_offset: 0
     }
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager do
   describe '.handle_edit_record execution' do
+    include_context 'record manager setup'
     before do
       allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
     end
