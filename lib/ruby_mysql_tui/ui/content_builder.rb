@@ -23,17 +23,22 @@ module RubyMysqlTui
         case state[:view_mode]
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
-        when :records
-          build_records_text(
-            table_name: state[:selected_table],
-            records: state[:records],
-            width: content_width,
+        when :records then build_records_view(state, content_width, height)
+        else truncate('Unknown view mode', content_width)
+        end
+      end
+
+      def build_records_view(state, width, height)
+        build_records_text(
+          table_name: state[:selected_table],
+          records: state[:records],
+          width: width,
+          options: {
             height: height,
             offset: state[:records_offset] || 0,
             selected_index: state[:selected_record_index]
-          )
-        else truncate('Unknown view mode', content_width)
-        end
+          }
+        )
       end
 
       def build_databases_text(width)
@@ -50,7 +55,11 @@ module RubyMysqlTui
         end
       end
 
-      def build_records_text(table_name:, records:, width:, height: nil, offset: 0, selected_index: nil)
+      def build_records_text(table_name:, records:, width:, options: {})
+        height = options[:height]
+        offset = options[:offset] || 0
+        selected_index = options[:selected_index]
+
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
