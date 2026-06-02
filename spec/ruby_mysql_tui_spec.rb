@@ -238,78 +238,82 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down Boundary)' do
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
   before { allow(client).to receive(:list_databases).and_return([]) }
-
 end
 
-RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up)' do
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Page Offset)' do
   let(:client) { double('Client') }
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
-
   before { allow(client).to receive(:list_databases).and_return([]) }
 
-  context 'when page offset exists' do
-    it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
-      state = initial_state.merge(
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(100) { { 'id' => 1 } },
-        page_offset: 100,
-        records_offset: 100
-      )
+  it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 1 } },
+      page_offset: 100,
+      records_offset: 100
+    )
 
-      prev_page = Array.new(100) { { 'id' => 0 } }
-      allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
+    prev_page = Array.new(100) { { 'id' => 0 } }
+    allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
 
-      up_event = double('Event', value: nil, key: double('Key', name: :up))
-      result = RubyMysqlTui.handle_input(up_event, state, client)
+    up_event = double('Event', value: nil, key: double('Key', name: :up))
+    result = RubyMysqlTui.handle_input(up_event, state, client)
 
-      expect(result[:records_offset]).to eq(99)
-      expect(result[:page_offset]).to eq(0)
-      expect(result[:records]).to eq(prev_page)
-    end
+    expect(result[:records_offset]).to eq(99)
+    expect(result[:page_offset]).to eq(0)
+    expect(result[:records]).to eq(prev_page)
   end
+end
 
-  context 'when next page is empty' do
-    it '次ページが空の場合、records_offset が前ページの末尾に固定され、page_offset は更新されないこと' do
-      state = initial_state.merge(
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(100) { { 'id' => 0 } },
-        page_offset: 0,
-        records_offset: 99
-      )
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Empty Next Page)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
-      allow(client).to receive(:list_records).with('users', 100).and_return([])
+  it '次ページが空の場合、records_offset が前ページの末尾に固定され、page_offset は更新されないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 99
+    )
 
-      down_event = double('Event', value: nil, key: double('Key', name: :down))
-      result = RubyMysqlTui.handle_input(down_event, state, client)
+    allow(client).to receive(:list_records).with('users', 100).and_return([])
 
-      expect(result[:records_offset]).to eq(99)
-      expect(result[:page_offset]).to eq(0)
-      expect(result[:records]).to eq(Array.new(100) { { 'id' => 0 } })
-    end
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(99)
+    expect(result[:page_offset]).to eq(0)
+    expect(result[:records]).to eq(Array.new(100) { { 'id' => 0 } })
   end
+end
 
-  context 'when total records are less than PAGE_SIZE' do
-    it 'レコード総数が PAGE_SIZE 未満のとき、Downキーでフェッチが発生しないこと' do
-      state = initial_state.merge(
-        focus: :right,
-        view_mode: :records,
-        selected_table: 'users',
-        records: Array.new(50) { { 'id' => 0 } },
-        page_offset: 0,
-        records_offset: 48
-      )
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Small Record Set)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+  before { allow(client).to receive(:list_databases).and_return([]) }
 
-      expect(client).not_to receive(:list_records)
+  it 'レコード総数が PAGE_SIZE 未満のとき、Downキーでフェッチが発生しないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(50) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 48
+    )
 
-      down_event = double('Event', value: nil, key: double('Key', name: :down))
-      result = RubyMysqlTui.handle_input(down_event, state, client)
+    expect(client).not_to receive(:list_records)
 
-      expect(result[:records_offset]).to eq(49)
-    end
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(49)
   end
 end
 
