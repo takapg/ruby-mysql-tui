@@ -56,6 +56,24 @@ RSpec.describe 'E2E Focus' do
     states = track_states(client)
     initial_focus = RubyMysqlTui.initial_state(client)[:focus]
     RubyMysqlTui.run_main_loop(client)
-    expect(states.last[:focus]).not_to eq(initial_focus)
+    expected_focus = initial_focus == :left ? :right : :left
+    expect(states.last[:focus]).to eq(expected_focus)
+  end
+end
+
+RSpec.describe 'E2E Connection Error' do
+  include_context 'e2e setup'
+
+  it 'handles connection failure gracefully' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 即座に終了するように 'q' キーをシミュレート
+    allow(reader).to receive(:read_keypress).and_return(
+      double('Event', value: 'q', key: double('Key', name: :q))
+    )
+
+    # 接続エラーをシミュレート
+    allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new("Connection failed"))
+
+    expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
   end
 end
