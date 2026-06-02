@@ -28,17 +28,15 @@ module RubyMysqlTui
 
         retries = 0
         loop do
-          begin
-            RecordExecutor.execute_insert(state, client, prompt, data)
-            break
-          rescue Mysql2::Error => e
-            break if (retries += 1) >= 5
+          RecordExecutor.execute_insert(state, client, prompt, data)
+          break
+        rescue Mysql2::Error => e
+          break if (retries += 1) >= 5
 
-            RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
-            prompt.say("挿入に失敗しました: #{e.message}", color: :red)
-            data = prompt_for_record_data(columns, prompt, data)
-            break if data.nil? || data.empty?
-          end
+          RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
+          prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+          data = prompt_for_record_data(columns, prompt, data)
+          break if data.nil? || data.empty?
         end
         state
       end
@@ -74,22 +72,20 @@ module RubyMysqlTui
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
         retries = 0
         loop do
-          begin
-            RecordExecutor.execute_update(state, client, prompt, info)
-            break
-          rescue Mysql2::Error => e
-            break if (retries += 1) >= 5
+          RecordExecutor.execute_update(state, client, prompt, info)
+          break
+        rescue Mysql2::Error => e
+          break if (retries += 1) >= 5
 
-            msg = if e.respond_to?(:errno) && e.errno == 1062
-                    "主キーまたはユニーク制約違反です: #{e.message}"
-                  else
-                    "更新に失敗しました: #{e.message}"
-                  end
-            RubyMysqlTui.logger.error(msg)
-            prompt.say(msg, color: :red)
-            info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
-            break if info[:val].nil?
-          end
+          msg = if e.respond_to?(:errno) && e.errno == 1062
+                  "主キーまたはユニーク制約違反です: #{e.message}"
+                else
+                  "更新に失敗しました: #{e.message}"
+                end
+          RubyMysqlTui.logger.error(msg)
+          prompt.say(msg, color: :red)
+          info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+          break if info[:val].nil?
         end
       end
 
