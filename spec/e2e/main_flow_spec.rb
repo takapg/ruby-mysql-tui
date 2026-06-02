@@ -63,10 +63,13 @@ module E2EFlowHelpers
   end
 
   def setup_edit_client_mocks
-    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'test' }])
-    allow(client).to receive(:primary_key_for).and_return('id')
+    mocks = {
+      list_databases: [E2EHelper::TEST_DB],
+      list_tables: ['test_table'],
+      list_records: [{ 'id' => 1, 'name' => 'test' }],
+      primary_key_for: 'id'
+    }
+    mocks.each { |method, value| allow(client).to receive(method).and_return(value) }
   end
 end
 

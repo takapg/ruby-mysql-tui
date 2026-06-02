@@ -2,6 +2,15 @@
 
 module RubyMysqlTui
   module InputHandler
+    # RecordManagerHelpers は RecordManager のためのヘルパーメソッドを提供します。
+    module RecordManagerHelpers
+      module_function
+
+
+
+
+    end
+
     # RecordManager は レコードの削除などの操作を提供します。
     module RecordManager
       module_function
@@ -21,7 +30,7 @@ module RubyMysqlTui
         return state unless can_manage_record?(state)
 
         columns = client.list_columns(state[:selected_table])
-        data = prompt_for_record_data(columns, prompt)
+        data = RecordManagerHelpers.prompt_for_record_data(columns, prompt)
         return state if data.nil? || data.empty?
 
         execute_insert(state, client, prompt, columns, data)
@@ -52,12 +61,12 @@ module RubyMysqlTui
         retries = 0
         loop do
           client.insert_record(state[:selected_table], data)
-          refresh_records_safe(state, client, prompt)
+          RecordManagerHelpers.refresh_records_safe(state, client, prompt)
           break
         rescue Mysql2::Error => e
           break if (retries += 1) >= 5
 
-          data = retry_insert(e, columns, prompt, data)
+          data = RecordManagerHelpers.retry_insert(e, columns, prompt, data)
           break if data.nil? || data.empty?
         end
       end
@@ -102,12 +111,12 @@ module RubyMysqlTui
         retries = 0
         loop do
           client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
-          refresh_records_safe(state, client, prompt)
+          RecordManagerHelpers.refresh_records_safe(state, client, prompt)
           break
         rescue Mysql2::Error => e
           break if (retries += 1) >= 5
 
-          info[:val] = retry_update(e, prompt, info)
+          info[:val] = RecordManagerHelpers.retry_update(e, prompt, info)
           break if info[:val].nil?
         end
       end
