@@ -32,7 +32,7 @@ module RubyMysqlTui
 
       def execute_insert_with_retry(state, client, prompt, data, columns)
         context = { data: data }
-        with_retry(error_handler: ->(e) {
+        with_retry(error_handler: lambda { |e|
           context[:data] = handle_insert_error(e, prompt, columns, context[:data])
           context[:data].nil? || context[:data].empty?
         }) do
@@ -53,9 +53,7 @@ module RubyMysqlTui
         pk_column = client.primary_key_for(state[:selected_table])
         return state unless record && pk_column
 
-        if RecordExecutor.confirm_and_delete(state, client, prompt, record, pk_column)
-          state[:selected_record_index] = 0
-        end
+        state[:selected_record_index] = 0 if RecordExecutor.confirm_and_delete(state, client, prompt, record, pk_column)
         state
       end
 
@@ -81,7 +79,7 @@ module RubyMysqlTui
       end
 
       def execute_update_with_retry(state, client, prompt, info)
-        with_retry(error_handler: ->(e) {
+        with_retry(error_handler: lambda { |e|
           handle_update_error(e, prompt, info)
           info[:val].nil?
         }) do
@@ -115,13 +113,11 @@ module RubyMysqlTui
       def with_retry(max_retries = 5, error_handler:)
         retries = 0
         loop do
-          begin
-            yield
-            break
-          rescue Mysql2::Error => e
-            break if (retries += 1) >= max_retries
-            break if error_handler.call(e)
-          end
+          yield
+          break
+        rescue Mysql2::Error => e
+          break if (retries += 1) >= max_retries
+          break if error_handler.call(e)
         end
       end
       private_class_method :with_retry
