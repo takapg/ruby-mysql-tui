@@ -35,10 +35,10 @@ module RubyMysqlTui
         loop do
           RecordExecutor.execute_insert(state, client, prompt, data)
           break
-        rescue Mysql2::Error => error
+        rescue Mysql2::Error => e
           break if (retries += 1) >= 5
 
-          data = handle_insert_error(error, prompt, columns, data)
+          data = handle_insert_error(e, prompt, columns, data)
           break if data.nil? || data.empty?
         end
       end
@@ -86,10 +86,10 @@ module RubyMysqlTui
         loop do
           RecordExecutor.execute_update(state, client, prompt, info)
           break
-        rescue Mysql2::Error => error
+        rescue Mysql2::Error => e
           break if (retries += 1) >= 5
 
-          handle_update_error(error, prompt, info)
+          handle_update_error(e, prompt, info)
           break if info[:val].nil?
         end
       end
