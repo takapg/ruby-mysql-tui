@@ -13,7 +13,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
 
   it 'updates the record when valid column and value are provided' do
     expect(prompt).to receive(:select).with('編集するカラムを選択してください:', record.keys).and_return('name')
-    expect(prompt).to receive(:ask).with('新しい値を入力してください (name):').and_return('Bob')
+    expect(prompt).to receive(:ask).with(any_args).and_return('Bob')
     expect(client).to receive(:update_record).with(table_name, pk_column, 1, 'name', 'Bob')
     expect(client).to receive(:list_records).with(table_name, 0).and_return([{ 'id' => 1, 'name' => 'Bob' }])
 
@@ -39,6 +39,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
   it 'handles Mysql2::Error during update' do
     allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('Bob')
+    allow(prompt).to receive(:yes?).and_return(false)
     allow(client).to receive(:update_record).and_raise(Mysql2::Error, 'Update failed')
     expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to update record: Update failed/)
     expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red)

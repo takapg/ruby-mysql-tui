@@ -24,7 +24,7 @@ module RubyMysqlTui
         data = prompt_for_record_data(columns, prompt)
         return state if data.empty?
 
-        execute_insert(state, client, prompt, data)
+        execute_insert(state, client, prompt, columns, data)
         state
       end
 
@@ -39,16 +39,22 @@ module RubyMysqlTui
         state
       end
 
-      def prompt_for_record_data(columns, prompt)
-        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):")] }
+      def prompt_for_record_data(columns, prompt, default_data = {})
+        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):", default: default_data[col])] }
       end
 
-      def execute_insert(state, client, prompt, data)
-        client.insert_record(state[:selected_table], data)
-        refresh_records_safe(state, client, prompt)
-      rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
-        prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+      def execute_insert(state, client, prompt, columns, data)
+        loop do
+          client.insert_record(state[:selected_table], data)
+          refresh_records_safe(state, client, prompt)
+          break
+        rescue Mysql2::Error => e
+          RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
+          prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+          break unless prompt.yes?('値を修正して再試行しますか？')
+
+          data = prompt_for_record_data(columns, prompt, data)
+        end
       end
 
       def can_manage_record?(state)
@@ -78,14 +84,21 @@ module RubyMysqlTui
 
       def prompt_for_edit(record, prompt)
         column = prompt.select('編集するカラムを選択してください:', record.keys)
-        value = prompt.ask("新しい値を入力してください (#{column}):") { |q| q.required true }
+        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]
       end
 
       def execute_update(state, client, prompt, info)
-        return unless update_record_safe(client, prompt, state[:selected_table], info)
+        loop do
+          if update_record_safe(client, prompt, state[:selected_table], info)
+            refresh_records_safe(state, client, prompt)
+            break
+          end
 
-        refresh_records_safe(state, client, prompt)
+          break unless prompt.yes?('値を修正して再試行しますか？')
+
+          info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
+        end
       end
 
       def update_record_safe(client, prompt, table, info)
