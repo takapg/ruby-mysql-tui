@@ -28,8 +28,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
 
     described_class.handle_edit_record(state, client, prompt)
   end
-
-  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record retry limit' do
