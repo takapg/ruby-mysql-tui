@@ -51,8 +51,16 @@ module RubyMysqlTui
   def self.run_main_loop(client)
     reader = TTY::Reader.new
     renderer = UI::Renderer.new(UI::Layout.new)
-    state = initial_state(client)
 
+    begin
+      execute_main_loop(reader, renderer, client)
+    rescue StandardError => e
+      logger.error "Runtime error in main loop: #{e.message}"
+    end
+  end
+
+  def self.execute_main_loop(reader, renderer, client)
+    state = initial_state(client)
     loop do
       renderer.render(client, state)
       state, should_break = handle_loop_input(reader, state, client)

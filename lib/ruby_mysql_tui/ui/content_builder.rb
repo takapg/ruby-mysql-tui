@@ -61,7 +61,7 @@ module RubyMysqlTui
         offset = options[:offset] || 0
 
         header = truncate("Table: #{table_name}", width)
-        return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
+        return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.none?
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
