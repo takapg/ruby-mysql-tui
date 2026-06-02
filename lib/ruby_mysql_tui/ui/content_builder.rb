@@ -35,7 +35,8 @@ module RubyMysqlTui
           width: width,
           options: {
             height: height,
-            selected_index: state[:selected_record_index]
+            selected_index: state[:selected_record_index],
+            offset: state[:records_offset] || 0
           }
         )
       end
@@ -57,21 +58,22 @@ module RubyMysqlTui
       def build_records_text(table_name:, records:, width:, options: {})
         height = options[:height]
         selected_index = options[:selected_index]
+        offset = options[:offset] || 0
 
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_records_table(records, width, max_rows, selected_index).to_s
+        table_output = create_records_table(records, width, max_rows, selected_index, offset).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_records_table(records, width, max_rows = nil, selected_index = nil)
+      def create_records_table(records, width, max_rows = nil, selected_index = nil, offset = 0)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
-        display_records = slice_records(records, max_rows)
+        display_records = slice_records(records, max_rows, offset)
         col_width = calculate_col_width(width, columns.size)
 
         TTY::Table.new(
@@ -80,8 +82,8 @@ module RubyMysqlTui
         )
       end
 
-      def slice_records(records, max_rows)
-        max_rows ? records.take(max_rows) : records
+      def slice_records(records, max_rows, offset = 0)
+        records.drop(offset).take(max_rows || records.size)
       end
 
       def calculate_col_width(width, columns_count)
