@@ -39,8 +39,8 @@ module RubyMysqlTui
         state
       end
 
-      def prompt_for_record_data(columns, prompt)
-        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):")] }
+      def prompt_for_record_data(columns, prompt, default_data = {})
+        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):", default: default_data[col])] }
       end
 
       def execute_insert(state, client, prompt, columns, data)
@@ -54,7 +54,7 @@ module RubyMysqlTui
             prompt.say("挿入に失敗しました: #{e.message}", color: :red)
             break unless prompt.yes?('値を修正して再試行しますか？')
 
-            data = prompt_for_record_data(columns, prompt)
+            data = prompt_for_record_data(columns, prompt, data)
           end
         end
       end
