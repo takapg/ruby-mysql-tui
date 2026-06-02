@@ -119,7 +119,7 @@ module RubyMysqlTui
               end
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
-        prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
+        prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
       end
 
       def refresh_records_safe(state, client, prompt)

@@ -77,4 +77,17 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
 
     described_class.handle_edit_record(state, client, prompt)
   end
+
+  it 'stops record editing after 5 failed duplicate entry retries' do
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id')
+    allow(prompt).to receive(:say)
+    allow(RubyMysqlTui.logger).to receive(:error)
+
+    error = Mysql2::Error.new('Duplicate entry')
+    allow(error).to receive(:errno).and_return(1062)
+    expect(client).to receive(:update_record).exactly(5).times.and_raise(error)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
 end
