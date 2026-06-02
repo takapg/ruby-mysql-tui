@@ -7,7 +7,7 @@ module RubyMysqlTui
       module_function
 
       def handle_edit_record(state, client, prompt)
-        return state unless can_edit_record?(state)
+        return state unless can_manage_record?(state)
 
         record = state[:records][state[:selected_record_index]]
         pk_column = client.primary_key_for(state[:selected_table])
@@ -18,7 +18,7 @@ module RubyMysqlTui
       end
 
       def handle_delete_record(state, client, prompt)
-        return state unless can_delete_record?(state)
+        return state unless can_manage_record?(state)
 
         record = state[:records][state[:selected_record_index]]
         pk_column = client.primary_key_for(state[:selected_table])
@@ -28,11 +28,7 @@ module RubyMysqlTui
         state
       end
 
-      def can_edit_record?(state)
-        state[:focus] == :right && state[:view_mode] == :records && state[:records]
-      end
-
-      def can_delete_record?(state)
+      def can_manage_record?(state)
         state[:focus] == :right && state[:view_mode] == :records && state[:records]
       end
 

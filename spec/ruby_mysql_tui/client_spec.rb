@@ -193,4 +193,16 @@ RSpec.describe RubyMysqlTui::Client, '#update_record' do
 
     client.update_record(table, pk_col, pk_val, edit_col, new_val)
   end
+
+  it 'escapes backticks in table and column names' do
+    table_with_tick = 'user`s'
+    col_with_tick = 'name`s'
+    sql = "UPDATE `user``s` SET `name``s` = ? WHERE `#{pk_col}` = ?"
+    statement = instance_double('Mysql2::Statement')
+
+    expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
+    expect(statement).to receive(:execute).with(new_val, pk_val)
+
+    client.update_record(table_with_tick, pk_col, pk_val, col_with_tick, new_val)
+  end
 end

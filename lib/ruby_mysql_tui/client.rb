@@ -87,7 +87,7 @@ module RubyMysqlTui
       interpolated = sql.dup
       values.each do |val|
         quoted = val.is_a?(Numeric) ? val.to_s : "'#{val.to_s.gsub("'", "''")}'"
-        interpolated.sub('?', quoted)
+        interpolated.sub!('?', quoted)
       end
       @last_sql = interpolated
       RubyMysqlTui.logger.info("Executing SQL: #{@last_sql}")
