@@ -17,6 +17,17 @@ module RubyMysqlTui
         state
       end
 
+      def handle_create_record(state, client, prompt)
+        return state unless can_manage_record?(state)
+
+        columns = client.list_columns(state[:selected_table])
+        data = prompt_for_record_data(columns, prompt)
+        return state if data.empty?
+
+        execute_insert(state, client, prompt, data)
+        state
+      end
+
       def handle_delete_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
@@ -26,6 +37,18 @@ module RubyMysqlTui
 
         confirm_and_delete(state, client, record, pk_column, prompt)
         state
+      end
+
+      def prompt_for_record_data(columns, prompt)
+        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):")] }
+      end
+
+      def execute_insert(state, client, prompt, data)
+        client.insert_record(state[:selected_table], data)
+        refresh_records_safe(state, client, prompt)
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
+        prompt.say("挿入に失敗しました: #{e.message}", color: :red)
       end
 
       def can_manage_record?(state)
