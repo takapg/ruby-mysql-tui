@@ -113,3 +113,18 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
     described_class.handle_edit_record(state, client, prompt)
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record primary key guard' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+  end
+
+  it 'shows warning and does not update when primary key is somehow selected' do
+    allow(described_class).to receive(:prompt_for_edit).and_return([pk_column, 'new_pk_value'])
+    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
+    expect(client).not_to receive(:update_record)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
+end
