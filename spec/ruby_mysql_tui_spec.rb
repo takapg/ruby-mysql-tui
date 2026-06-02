@@ -402,3 +402,45 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
     RubyMysqlTui.handle_input(delete_event, state, client)
   end
 end
+
+RSpec.describe 'Happy Path Integration', 'Real MySQL' do
+  let(:client) { RubyMysqlTui::Client.new(database: 'tui_test_db') }
+  let(:return_event) { double('Event', value: nil, key: double('Key', name: :return)) }
+
+  before(:all) do
+    # 管理者権限でテストDBを作成
+    admin_client = RubyMysqlTui::Client.new(database: nil)
+    admin_client.query('CREATE DATABASE IF NOT EXISTS tui_test_db')
+
+    # テストDBに接続してテーブルを作成し、データを投入
+    test_client = RubyMysqlTui::Client.new(database: 'tui_test_db')
+    test_client.query('CREATE TABLE IF NOT EXISTS test_table (id INT PRIMARY KEY, name VARCHAR(255))')
+    test_client.query('TRUNCATE TABLE test_table')
+    test_client.query('INSERT INTO test_table (id, name) VALUES (1, "Alice"), (2, "Bob")')
+  end
+
+  it 'ハッピーパス: データベース選択 -> テーブル選択 -> レコード表示 の遷移が正しく行われること' do
+    # 1. 初期状態 (データベース一覧)
+    state = RubyMysqlTui.initial_state(client)
+    expect(state[:view_mode]).to eq(:databases)
+    expect(state[:items]).to include('tui_test_db')
+
+    # tui_test_db を選択して Enter
+    state[:selected_index] = state[:items].index('tui_test_db')
+    state = RubyMysqlTui.handle_input(return_event, state, client)
+
+    # 2. テーブル一覧ビューに遷移
+    expect(state[:view_mode]).to eq(:tables)
+    expect(state[:items]).to include('test_table')
+
+    # test_table を選択して Enter
+    state[:selected_index] = state[:items].index('test_table')
+    state = RubyMysqlTui.handle_input(return_event, state, client)
+
+    # 3. レコードビューに遷移し、データが取得できていること
+    expect(state[:view_mode]).to eq(:records)
+    expect(state[:records].size).to eq(2)
+    expect(state[:records].any? { |r| r['name'] == 'Alice' }).to be true
+    expect(state[:records].any? { |r| r['name'] == 'Bob' }).to be true
+  end
+end
