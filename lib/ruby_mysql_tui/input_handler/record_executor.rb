@@ -11,7 +11,6 @@ module RubyMysqlTui
         refresh_records_safe(state, client, prompt)
       end
 
-
       def confirm_and_delete(state, client, record, pk_column, prompt)
         return unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
 
@@ -27,7 +26,6 @@ module RubyMysqlTui
         client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
         refresh_records_safe(state, client, prompt)
       end
-
 
       def refresh_records_safe(state, client, prompt)
         state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
