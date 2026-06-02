@@ -73,7 +73,7 @@ module RubyMysqlTui
       end
 
       def edit_and_update(state, client, record, pk_column, prompt)
-        column, value = prompt_for_edit(record, prompt)
+        column, value = prompt_for_edit(record, prompt, pk_column)
         return if value.nil?
 
         execute_update(state, client, prompt, pk_col: pk_column, pk_val: record[pk_column], col: column, val: value)
@@ -90,9 +90,11 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error("Failed to delete record: #{e.message}")
       end
 
-      def prompt_for_edit(record, prompt)
+      def prompt_for_edit(record, prompt, pk_column = nil)
         column = prompt.select('編集するカラムを選択してください:', record.keys)
-        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
+        prompt_text = "新しい値を入力してください (#{column}):"
+        prompt_text += " [主キー]" if column == pk_column
+        value = prompt.ask(prompt_text, default: record[column]) { |q| q.required true }
         [column, value]
       end
 
@@ -112,7 +114,13 @@ module RubyMysqlTui
 
       def retry_update(error, prompt, info)
         RubyMysqlTui.logger.error("Failed to update record: #{error.message}")
-        prompt.say("更新に失敗しました: #{error.message}", color: :red)
+
+        error_msg = error.message
+        display_msg = error_msg.include?('Duplicate entry') ?
+                     "主キーまたはユニーク制約違反（重複）です: #{error_msg}" :
+                     "更新に失敗しました: #{error_msg}"
+
+        prompt.say(display_msg, color: :red)
         prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
       end
 

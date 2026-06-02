@@ -171,6 +171,45 @@ RSpec.describe 'E2E Record Creation - Retry' do
   end
 end
 
+RSpec.describe 'E2E Record Edit - Duplicate PK' do
+  include_context 'e2e setup'
+
+  it 'retries record update when a duplicate primary key error occurs' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 1. DB選択 -> 2. テーブル選択 -> 3. 編集(e) -> 4. 終了(q)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    # 1回目: PKを選択し、重複する値を入力 -> 2回目: 正しい値を入力
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id', 'unique_id')
+    allow(prompt).to receive(:say)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'test' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+
+    expect(client).to receive(:update_record)
+      .with('test_table', 'id', 1, 'id', 'duplicate_id')
+      .and_raise(Mysql2::Error, "Duplicate entry 'duplicate_id' for key 'PRIMARY'")
+    expect(client).to receive(:update_record)
+      .with('test_table', 'id', 1, 'id', 'unique_id')
+      .and_return(true)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 RSpec.describe 'E2E Connection Error' do
   include_context 'e2e setup'
 

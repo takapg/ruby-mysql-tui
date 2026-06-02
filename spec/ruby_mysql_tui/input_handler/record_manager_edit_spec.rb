@@ -63,4 +63,16 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
 
     described_class.handle_edit_record(state, client, prompt)
   end
+
+  it 'shows specific message for duplicate entry error' do
+    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:ask).and_return('duplicate_id', 'unique_id', nil)
+    allow(client).to receive(:update_record).and_invoke(
+      ->(*_args) { raise Mysql2::Error, "Duplicate entry 'duplicate_id' for key 'PRIMARY'" },
+      ->(*_args) { true }
+    )
+    expect(prompt).to receive(:say).with(/主キーまたはユニーク制約違反（重複）です/, color: :red)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
 end
