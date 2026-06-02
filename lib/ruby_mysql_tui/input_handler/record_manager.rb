@@ -7,6 +7,7 @@ module RubyMysqlTui
       module_function
 
 
+
     end
 
     # RecordManager は レコードの削除などの操作を提供します。
