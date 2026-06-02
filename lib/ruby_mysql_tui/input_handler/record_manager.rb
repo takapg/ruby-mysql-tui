@@ -40,11 +40,7 @@ module RubyMysqlTui
       end
 
       def prompt_for_record_data(columns, prompt)
-        data = {}
-        columns.each do |col|
-          data[col] = prompt.ask("値を入力してください (#{col}):")
-        end
-        data
+        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):")] }
       end
 
       def execute_insert(state, client, prompt, data)
