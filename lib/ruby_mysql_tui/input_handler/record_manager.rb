@@ -40,7 +40,8 @@ module RubyMysqlTui
         column, value = prompt_for_edit(record, prompt)
         return if value.nil?
 
-        execute_update(state, client, record, pk_column, column, value, prompt)
+        update_info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
+        execute_update(state, client, prompt, update_info)
       end
 
       def confirm_and_delete(state, client, record, pk_column, prompt)
@@ -62,8 +63,8 @@ module RubyMysqlTui
         [column, value]
       end
 
-      def execute_update(state, client, record, pk_column, column, value, prompt)
-        client.update_record(state[:selected_table], pk_column, record[pk_column], column, value)
+      def execute_update(state, client, prompt, info)
+        client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
         state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
