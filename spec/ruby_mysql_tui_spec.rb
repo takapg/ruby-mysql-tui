@@ -419,6 +419,11 @@ RSpec.describe 'Happy Path Integration', 'Real MySQL' do
     test_client.query('INSERT INTO test_table (id, name) VALUES (1, "Alice"), (2, "Bob")')
   end
 
+  after(:all) do
+    admin_client = RubyMysqlTui::Client.new(host: '127.0.0.1', database: nil)
+    admin_client.query('DROP DATABASE IF EXISTS tui_test_db')
+  end
+
   it 'ハッピーパス: データベース選択 -> テーブル選択 -> レコード表示 の遷移が正しく行われること' do
     # 1. 初期状態 (データベース一覧)
     state = RubyMysqlTui.initial_state(client)
@@ -440,7 +445,7 @@ RSpec.describe 'Happy Path Integration', 'Real MySQL' do
     # 3. レコードビューに遷移し、データが取得できていること
     expect(state[:view_mode]).to eq(:records)
     expect(state[:records].size).to eq(2)
-    expect(state[:records].any? { |r| r['name'] == 'Alice' }).to be true
-    expect(state[:records].any? { |r| r['name'] == 'Bob' }).to be true
+    expect(state[:records]).to include(hash_including('name' => 'Alice'))
+    expect(state[:records]).to include(hash_including('name' => 'Bob'))
   end
 end
