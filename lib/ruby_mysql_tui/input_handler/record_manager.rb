@@ -45,17 +45,15 @@ module RubyMysqlTui
 
       def execute_insert(state, client, prompt, columns, data)
         loop do
-          begin
-            client.insert_record(state[:selected_table], data)
-            refresh_records_safe(state, client, prompt)
-            break
-          rescue Mysql2::Error => e
-            RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
-            prompt.say("挿入に失敗しました: #{e.message}", color: :red)
-            break unless prompt.yes?('値を修正して再試行しますか？')
+          client.insert_record(state[:selected_table], data)
+          refresh_records_safe(state, client, prompt)
+          break
+        rescue Mysql2::Error => e
+          RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
+          prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+          break unless prompt.yes?('値を修正して再試行しますか？')
 
-            data = prompt_for_record_data(columns, prompt, data)
-          end
+          data = prompt_for_record_data(columns, prompt, data)
         end
       end
 
