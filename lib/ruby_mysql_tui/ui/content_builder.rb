@@ -25,7 +25,12 @@ module RubyMysqlTui
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
         when :records
           build_records_text(
-            state[:selected_table], state[:records], content_width, height, state[:records_offset] || 0, state[:selected_record_index]
+            table_name: state[:selected_table],
+            records: state[:records],
+            width: content_width,
+            height: height,
+            offset: state[:records_offset] || 0,
+            selected_index: state[:selected_record_index]
           )
         else truncate('Unknown view mode', content_width)
         end
@@ -45,7 +50,7 @@ module RubyMysqlTui
         end
       end
 
-      def build_records_text(table_name, records, width, height = nil, offset = 0, selected_index = nil)
+      def build_records_text(table_name:, records:, width:, height: nil, offset: 0, selected_index: nil)
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.empty?
 
@@ -80,7 +85,7 @@ module RubyMysqlTui
         records.map.with_index do |row, idx|
           row.values.map.with_index do |val, col_idx|
             text = truncate(val.to_s, col_width)
-            (idx == selected_index && col_idx == 0) ? "> #{text}" : text
+            idx == selected_index && col_idx.zero? ? "> #{text}" : text
           end
         end
       end
