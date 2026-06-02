@@ -56,7 +56,9 @@ module RubyMysqlTui
 
     # レコードを更新します。
     def update_record(table_name, pk_column, pk_value, column_name, new_value)
-      sql = "UPDATE `#{table_name.gsub('`', '``')}` SET `#{column_name.gsub('`', '``')}` = ? WHERE `#{pk_column.gsub('`', '``')}` = ?"
+      sql = "UPDATE `#{table_name.gsub('`', '``')}` " \
+            "SET `#{column_name.gsub('`', '``')}` = ? " \
+            "WHERE `#{pk_column.gsub('`', '``')}` = ?"
       log_update_sql(sql, new_value, pk_value)
       @connection.prepare(sql).execute(new_value, pk_value)
     rescue Mysql2::Error => e
