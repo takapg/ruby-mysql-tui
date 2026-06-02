@@ -86,6 +86,18 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       described_class.handle_create_record(state, client, prompt)
     end
   end
+
+  it 'stops record creation after 5 failed retries' do
+    Timeout.timeout(10) do
+      allow(client).to receive(:list_columns).and_return(%w[id])
+      allow(prompt).to receive(:ask).and_return('val')
+      allow(prompt).to receive(:say)
+
+      expect(client).to receive(:insert_record).exactly(5).times.and_raise(Mysql2::Error, 'Persistent failure')
+
+      described_class.handle_create_record(state, client, prompt)
+    end
+  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record error handling' do

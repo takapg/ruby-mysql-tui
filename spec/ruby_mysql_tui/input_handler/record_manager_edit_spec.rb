@@ -28,6 +28,17 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
 
     described_class.handle_edit_record(state, client, prompt)
   end
+
+  it 'stops record editing after 5 failed retries' do
+    allow(prompt).to receive(:select).and_return('name')
+    allow(prompt).to receive(:ask).and_return('Bob')
+    allow(prompt).to receive(:say)
+    allow(RubyMysqlTui.logger).to receive(:error)
+
+    expect(client).to receive(:update_record).exactly(5).times.and_raise(Mysql2::Error, 'Persistent failure')
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record failure' do
