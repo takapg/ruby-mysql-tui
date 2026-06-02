@@ -174,3 +174,35 @@ RSpec.describe RubyMysqlTui::Client, '#delete_record' do
     client.delete_record(table_with_tick, col_with_tick, pk_val)
   end
 end
+
+RSpec.describe RubyMysqlTui::Client, '#update_record' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table) { 'users' }
+  let(:pk_col) { 'id' }
+  let(:pk_val) { 1 }
+  let(:edit_col) { 'name' }
+  let(:new_val) { 'New Name' }
+
+  it 'uses a prepared statement to update a record' do
+    sql = "UPDATE `#{table}` SET `#{edit_col}` = ? WHERE `#{pk_col}` = ?"
+    statement = instance_double('Mysql2::Statement')
+
+    expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
+    expect(statement).to receive(:execute).with(new_val, pk_val)
+
+    client.update_record(table, pk_col, pk_val, edit_col, new_val)
+  end
+
+  it 'escapes backticks in table and column names' do
+    table_with_tick = 'user`s'
+    col_with_tick = 'name`s'
+    sql = "UPDATE `user``s` SET `name``s` = ? WHERE `#{pk_col}` = ?"
+    statement = instance_double('Mysql2::Statement')
+
+    expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
+    expect(statement).to receive(:execute).with(new_val, pk_val)
+
+    client.update_record(table_with_tick, pk_col, pk_val, col_with_tick, new_val)
+  end
+end

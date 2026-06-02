@@ -54,10 +54,22 @@ module RubyMysqlTui
       results.first ? results.first['Column_name'] : nil
     end
 
+    # レコードを更新します。
+    def update_record(table_name, pk_column, pk_value, column_name, new_value)
+      sql = "UPDATE `#{table_name.gsub('`', '``')}` " \
+            "SET `#{column_name.gsub('`', '``')}` = ? " \
+            "WHERE `#{pk_column.gsub('`', '``')}` = ?"
+      log_prepared_sql(sql, new_value, pk_value)
+      @connection.prepare(sql).execute(new_value, pk_value)
+    rescue Mysql2::Error => e
+      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
+      raise e
+    end
+
     # レコードを削除します。
     def delete_record(table_name, pk_column, pk_value)
       sql = "DELETE FROM `#{table_name.gsub('`', '``')}` WHERE `#{pk_column.gsub('`', '``')}` = ?"
-      log_delete_sql(sql, pk_value)
+      log_prepared_sql(sql, pk_value)
       @connection.prepare(sql).execute(pk_value)
     rescue Mysql2::Error => e
       RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
@@ -71,9 +83,13 @@ module RubyMysqlTui
 
     private
 
-    def log_delete_sql(sql, pk_value)
-      val = pk_value.is_a?(Numeric) ? pk_value : "'#{pk_value.to_s.gsub("'", "''")}'"
-      @last_sql = sql.gsub('?', val.to_s)
+    def log_prepared_sql(sql, *values)
+      interpolated = sql.dup
+      values.each do |val|
+        quoted = val.is_a?(Numeric) ? val.to_s : "'#{val.to_s.gsub("'", "''")}'"
+        interpolated.sub!('?', quoted)
+      end
+      @last_sql = interpolated
       RubyMysqlTui.logger.info("Executing SQL: #{@last_sql}")
     end
 
