@@ -75,9 +75,7 @@ module RubyMysqlTui
 
     # レコードを挿入します。
     def insert_record(table_name, data)
-      cols = data.keys.map { |k| "`#{k.gsub('`', '``')}`" }.join(', ')
-      placeholders = Array.new(data.size, '?').join(', ')
-      sql = "INSERT INTO `#{table_name.gsub('`', '``')}` (#{cols}) VALUES (#{placeholders})"
+      sql = build_insert_sql(table_name, data)
       log_prepared_sql(sql, *data.values)
       @connection.prepare(sql).execute(*data.values)
     rescue Mysql2::Error => e
@@ -101,6 +99,12 @@ module RubyMysqlTui
     end
 
     private
+
+    def build_insert_sql(table_name, data)
+      cols = data.keys.map { |k| "`#{k.gsub('`', '``')}`" }.join(', ')
+      placeholders = Array.new(data.size, '?').join(', ')
+      "INSERT INTO `#{table_name.gsub('`', '``')}` (#{cols}) VALUES (#{placeholders})"
+    end
 
     def log_prepared_sql(sql, *values)
       interpolated = sql.dup

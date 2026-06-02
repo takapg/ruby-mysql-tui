@@ -207,7 +207,7 @@ RSpec.describe RubyMysqlTui::Client, '#insert_record' do
   it 'escapes backticks in table and column names' do
     table_with_tick = 'user`s'
     data_with_tick = { 'name`s' => 'Value' }
-    sql = "INSERT INTO `user``s` (`name``s`) VALUES (?)"
+    sql = 'INSERT INTO `user``s` (`name``s`) VALUES (?)'
     statement = instance_double('Mysql2::Statement')
 
     expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)

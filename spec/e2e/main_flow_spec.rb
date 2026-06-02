@@ -75,7 +75,7 @@ RSpec.describe 'E2E Record Creation' do
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
-    
+
     # TTY::Prompt のモック
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
