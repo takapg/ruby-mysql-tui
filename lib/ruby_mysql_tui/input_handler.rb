@@ -28,19 +28,18 @@ module RubyMysqlTui
     end
 
     def handle_up(state, client)
-      if state[:focus] == :left && !state[:items].empty?
-        update_selected_index(state, -1)
-      elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        Pagination.update_records_offset(state, -1, client, current_layout)
-      end
-      state
+      handle_scroll(state, client, -1)
     end
 
     def handle_down(state, client)
+      handle_scroll(state, client, 1)
+    end
+
+    def handle_scroll(state, client, delta)
       if state[:focus] == :left && !state[:items].empty?
-        update_selected_index(state, 1)
+        update_selected_index(state, delta)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        Pagination.update_records_offset(state, 1, client, current_layout)
+        Pagination.update_records_offset(state, delta, client, current_layout)
       end
       state
     end
