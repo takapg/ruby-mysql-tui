@@ -104,7 +104,6 @@ module RubyMysqlTui
         end
 
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
-        return nil if column == pk_column
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]

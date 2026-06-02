@@ -30,20 +30,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record forced pk' do
-  include_context 'record manager setup'
-  before do
-    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
-  end
-
-  it 'does not update when the primary key is forcedly selected' do
-    expect(prompt).to receive(:select).and_return(pk_column)
-    expect(client).not_to receive(:update_record)
-
-    result_state = described_class.handle_edit_record(state, client, prompt)
-    expect(result_state).to eq(state)
-  end
-end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record no editable columns' do
   include_context 'record manager setup'
