@@ -22,7 +22,7 @@ module RubyMysqlTui
 
         columns = client.list_columns(state[:selected_table])
         data = prompt_for_record_data(columns, prompt)
-        return state if data.empty?
+        return state if data.nil? || data.empty?
 
         execute_insert(state, client, prompt, columns, data)
         state
@@ -40,7 +40,14 @@ module RubyMysqlTui
       end
 
       def prompt_for_record_data(columns, prompt, default_data = {})
-        columns.to_h { |col| [col, prompt.ask("値を入力してください (#{col}):", default: default_data[col])] }
+        data = {}
+        columns.each do |col|
+          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col])
+          return nil if val.nil? || (val.is_a?(Hash) && val.empty?)
+
+          data[col] = val
+        end
+        data
       end
 
       def execute_insert(state, client, prompt, columns, data)
@@ -105,7 +112,7 @@ module RubyMysqlTui
           break if retries >= max_retries
 
           info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
-          break if info[:val].nil?
+          break if info[:val].nil? || (info[:val].is_a?(Hash) && info[:val].empty?)
         end
       end
 
