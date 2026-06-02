@@ -32,4 +32,3 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record g
       expect(described_class.handle_edit_record(state, client, prompt)).to eq(state)
     end
   end
-end
