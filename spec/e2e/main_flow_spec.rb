@@ -44,6 +44,11 @@ module E2EFlowHelpers
   end
 
   def setup_record_edit_retry_mocks(reader, prompt)
+    setup_edit_events(reader)
+    setup_edit_prompt_mocks(prompt)
+  end
+
+  def setup_edit_events(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -52,6 +57,9 @@ module E2EFlowHelpers
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
+  end
+
+  def setup_edit_prompt_mocks(prompt)
     allow(prompt).to receive(:select).and_return('id')
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
