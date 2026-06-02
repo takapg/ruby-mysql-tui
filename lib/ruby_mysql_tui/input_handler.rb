@@ -11,11 +11,17 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
-      return handle_back_navigation(state, client) if event.value == 'b'
-      return handle_sql_mode_toggle(state) if event.value == 's'
-      return handle_delete_record(state, client) if event.value == 'd'
+      case event.value
+      when 'b' then return handle_back_navigation(state, client)
+      when 's' then return handle_sql_mode_toggle(state)
+      when 'd' then return handle_delete_record(state, client)
+      end
 
-      case event.key.name
+      handle_key_input(event.key.name, state, client)
+    end
+
+    def handle_key_input(key_name, state, client)
+      case key_name
       when :tab then handle_tab(state)
       when :up then handle_up(state, client)
       when :down then handle_down(state, client)
@@ -109,25 +115,27 @@ module RubyMysqlTui
     end
 
     def handle_delete_record(state, client)
-      return state unless state[:focus] == :right && state[:view_mode] == :records && state[:records]
+      return state unless can_delete_record?(state)
 
-      # records_offset が選択位置を決定するため、常に 0 番目のレコードを対象とする
-      selected_idx = 0
-      record = state[:records][selected_idx]
-      return state unless record
+      record = state[:records][0]
+      pk = client.primary_key_for(state[:selected_table])
+      return state unless record && pk
 
-      table_name = state[:selected_table]
-      pk_column = client.primary_key_for(table_name)
-      return state if pk_column.nil?
-
-      pk_value = record[pk_column]
-      prompt = TTY::Prompt.new
-      if prompt.yes?("本当にこのレコードを削除しますか？ (y/N)")
-        client.delete_record(table_name, pk_column, pk_value)
-        state[:records] = client.list_records(table_name, state[:records_offset] || 0)
-        state[:selected_record_index] = selected_idx.clamp(0, state[:records].size - 1)
-      end
+      confirm_and_delete(state, client, record, pk)
       state
+    end
+
+    def can_delete_record?(state)
+      state[:focus] == :right && state[:view_mode] == :records && state[:records]
+    end
+
+    def confirm_and_delete(state, client, record, pk)
+      return unless TTY::Prompt.new.yes?('本当にこのレコードを削除しますか？ (y/N)')
+
+      table = state[:selected_table]
+      client.delete_record(table, pk, record[pk])
+      state[:records] = client.list_records(table, state[:records_offset] || 0)
+      state[:selected_record_index] = 0.clamp(0, state[:records].size - 1)
     end
   end
 end
