@@ -233,6 +233,14 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down)' do
   end
 end
 
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down Boundary)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+end
+
 RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up)' do
   let(:client) { double('Client') }
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
