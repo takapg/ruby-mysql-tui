@@ -85,14 +85,22 @@ RSpec.describe RubyMysqlTui::Client, '#list_records' do
 
   it 'executes SELECT * FROM `table_name` with LIMIT and returns records' do
     records = [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }]
-    expect(mock_mysql_client).to receive(:query).with("SELECT * FROM `#{table_name}` LIMIT 100").and_return(records)
+    sql = "SELECT * FROM `#{table_name}` LIMIT 100 OFFSET 0"
+    expect(mock_mysql_client).to receive(:query).with(sql).and_return(records)
     expect(client.list_records(table_name)).to eq(records)
+  end
+
+  it 'executes SELECT * FROM `table_name` with LIMIT and OFFSET when offset is provided' do
+    records = [{ 'id' => 101, 'name' => 'Charlie' }]
+    sql = "SELECT * FROM `#{table_name}` LIMIT 100 OFFSET 100"
+    expect(mock_mysql_client).to receive(:query).with(sql).and_return(records)
+    expect(client.list_records(table_name, 100)).to eq(records)
   end
 
   it 'escapes backticks in table name' do
     table_name_with_backtick = 'user`s'
     records = []
-    expect(mock_mysql_client).to receive(:query).with('SELECT * FROM `user``s` LIMIT 100').and_return(records)
+    expect(mock_mysql_client).to receive(:query).with('SELECT * FROM `user``s` LIMIT 100 OFFSET 0').and_return(records)
     expect(client.list_records(table_name_with_backtick)).to eq(records)
   end
 end

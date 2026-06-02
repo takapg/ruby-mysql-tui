@@ -57,32 +57,41 @@ RSpec.describe RubyMysqlTui, '.handle_input (navigation)' do
   end
 end
 
-RSpec.describe RubyMysqlTui, '.handle_input (record scroll)' do
+RSpec.describe RubyMysqlTui, '.handle_input (record scroll - basic)' do
   let(:client) { double('Client') }
-  context '右ペインでのレコードスクロール' do
-    let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
-    let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
+  let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+  let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
 
-    it '右ペインフォーカスかつレコードビューのとき、Upキーで records_offset を減少させる' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(9)
-    end
+  it '右ペインフォーカスかつレコードビューのとき、Upキーで records_offset を減少させる' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+    expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(9)
+  end
 
-    it '右ペインフォーカスかつレコードビューのとき、Downキーで records_offset を増加させる' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
-    end
+  it '右ペインフォーカスかつレコードビューのとき、Downキーで records_offset を増加させる' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 10 }
+    expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
+  end
+end
 
-    it 'records_offset が 0 未満にならないこと' do
-      state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
-      expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
-    end
+RSpec.describe RubyMysqlTui, '.handle_input (record scroll - boundaries)' do
+  let(:client) { double('Client') }
+  let(:up_event) { double('Event', value: nil, key: double('Key', name: :up)) }
+  let(:down_event) { double('Event', value: nil, key: double('Key', name: :down)) }
 
-    it 'records_offset が最大値 (records.size - main_h) を超えないこと' do
-      allow_any_instance_of(RubyMysqlTui::UI::Layout).to receive(:main_h).and_return(10)
-      state = { focus: :right, view_mode: :records, records: Array.new(20), records_offset: 10 }
-      expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(10)
-    end
+  it 'records_offset が 0 未満にならないこと' do
+    state = { focus: :right, view_mode: :records, records: Array.new(100), records_offset: 0 }
+    expect(RubyMysqlTui.handle_input(up_event, state, client)[:records_offset]).to eq(0)
+  end
+
+  it 'Downキーで records_offset が正しく増加すること' do
+    state = {
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(1000),
+      records_offset: 10
+    }
+    expect(RubyMysqlTui.handle_input(down_event, state, client)[:records_offset]).to eq(11)
   end
 end
 
@@ -105,7 +114,7 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
     it 'フォーカス :left かつ view_mode :tables のとき、レコード一覧に遷移する' do
       state = { focus: :left, view_mode: :tables, items: %w[table1], selected_index: 0 }
       records = [{ 'id' => 1, 'name' => 'Alice' }]
-      allow(client).to receive(:list_records).with('table1').and_return(records)
+      allow(client).to receive(:list_records).with('table1', 0).and_return(records)
 
       result = RubyMysqlTui.handle_input(return_event, state, client)
       expect(result[:view_mode]).to eq(:records)
@@ -203,6 +212,137 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Transition' do
     s_event = double('Event', value: 's', key: double('Key', name: :unknown))
     state = RubyMysqlTui.handle_input(s_event, initial_state, client)
     expect(state[:sql_mode]).to eq(true)
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it '100件以上のレコードがあるとき、Downキーで次ページをフェッチする' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 99
+    )
+
+    next_page = Array.new(100) { { 'id' => 1 } }
+    allow(client).to receive(:list_records).with('users', 100).and_return(next_page)
+
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(100)
+    expect(result[:page_offset]).to eq(100)
+    expect(result[:records]).to eq(next_page)
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down Boundary)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it '最後のページの最後のレコードに達しているとき、Downキーを押しても records_offset が増加せず、データも更新されないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(50) { { 'id' => 0 } },
+      page_offset: 100,
+      records_offset: 149
+    )
+
+    allow(client).to receive(:list_records).with('users', 150).and_return([])
+
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(149)
+    expect(result[:records]).to eq(Array.new(50) { { 'id' => 0 } })
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Page Offset)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it 'ページオフセットがあるとき、Upキーで前ページをフェッチする' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 1 } },
+      page_offset: 100,
+      records_offset: 100
+    )
+
+    prev_page = Array.new(100) { { 'id' => 0 } }
+    allow(client).to receive(:list_records).with('users', 0).and_return(prev_page)
+
+    up_event = double('Event', value: nil, key: double('Key', name: :up))
+    result = RubyMysqlTui.handle_input(up_event, state, client)
+
+    expect(result[:records_offset]).to eq(99)
+    expect(result[:page_offset]).to eq(0)
+    expect(result[:records]).to eq(prev_page)
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Empty Next Page)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it '次ページが空の場合、records_offset が前ページの末尾に固定され、page_offset は更新されないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(100) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 99
+    )
+
+    allow(client).to receive(:list_records).with('users', 100).and_return([])
+
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(99)
+    expect(result[:page_offset]).to eq(0)
+    expect(result[:records]).to eq(Array.new(100) { { 'id' => 0 } })
+  end
+end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Small Record Set)' do
+  let(:client) { double('Client') }
+  let(:initial_state) { RubyMysqlTui.initial_state(client) }
+  before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it 'レコード総数が PAGE_SIZE 未満のとき、Downキーでフェッチが発生しないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(50) { { 'id' => 0 } },
+      page_offset: 0,
+      records_offset: 10
+    )
+
+    expect(client).not_to receive(:list_records)
+
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(11)
   end
 end
 
