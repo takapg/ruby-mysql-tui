@@ -31,7 +31,7 @@ module RubyMysqlTui
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, -1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        Pagination.update_records_offset(state, -1, client)
+        Pagination.update_records_offset(state, -1, client, current_layout)
       end
       state
     end
@@ -40,7 +40,7 @@ module RubyMysqlTui
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, 1)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        Pagination.update_records_offset(state, 1, client)
+        Pagination.update_records_offset(state, 1, client, current_layout)
       end
       state
     end

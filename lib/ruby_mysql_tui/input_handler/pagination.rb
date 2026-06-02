@@ -6,17 +6,18 @@ module RubyMysqlTui
     module Pagination
       module_function
 
-      def update_records_offset(state, delta, client)
+      def update_records_offset(state, delta, client, layout)
         state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, Float::INFINITY)
-        fetch_page_if_needed(state, client)
+        fetch_page_if_needed(state, client, layout)
       end
 
-      def fetch_page_if_needed(state, client)
+      def fetch_page_if_needed(state, client, layout)
         offset = state[:records_offset]
         page_offset = state[:page_offset] || 0
         records = state[:records] || []
+        main_h = layout.main_h
 
-        if offset >= page_offset + records.size
+        if offset + main_h >= page_offset + records.size
           fetch_next_page(state, client, page_offset, records.size)
         elsif offset < page_offset
           fetch_prev_page(state, client)
