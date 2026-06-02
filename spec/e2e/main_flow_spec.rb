@@ -116,6 +116,7 @@ RSpec.describe 'E2E Record Creation' do
       allow(TTY::Prompt).to receive(:new).and_return(prompt)
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:yes?).and_return(true)
+      allow(prompt).to receive(:say)
 
       states = track_states(client)
       allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
