@@ -58,8 +58,18 @@ module RubyMysqlTui
     def delete_record(table_name, pk_column, pk_value)
       escaped_table_name = table_name.gsub('`', '``')
       escaped_pk_column = pk_column.gsub('`', '``')
-      val = pk_value.is_a?(Numeric) ? pk_value : "'#{pk_value.to_s.gsub("'", "''")}'"
-      query("DELETE FROM `#{escaped_table_name}` WHERE `#{escaped_pk_column}` = #{val}")
+      sql = "DELETE FROM `#{escaped_table_name}` WHERE `#{escaped_pk_column}` = ?"
+
+      # ログ出力用にSQLを擬似的に構築
+      val_for_log = pk_value.is_a?(Numeric) ? pk_value : "'#{pk_value.to_s.gsub("'", "''")}'"
+      log_sql = sql.gsub('?', val_for_log.to_s)
+      @last_sql = log_sql
+      RubyMysqlTui.logger.info("Executing SQL: #{log_sql}")
+
+      @connection.prepare(sql).execute(pk_value)
+    rescue Mysql2::Error => e
+      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
+      raise e
     end
 
     # 接続を閉じます。
