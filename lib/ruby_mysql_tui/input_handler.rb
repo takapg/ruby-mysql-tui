@@ -15,7 +15,7 @@ module RubyMysqlTui
       case event.value
       when 'b' then return handle_back_navigation(state, client)
       when 's' then return handle_sql_mode_toggle(state)
-      when 'd' then return RecordManager.handle_delete_record(state, client)
+      when 'd' then return RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
       end
 
       handle_key_input(event.key.name, state, client)
@@ -49,7 +49,6 @@ module RubyMysqlTui
         update_selected_index(state, delta)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
         Pagination.update_records_offset(state, delta, client, current_layout)
-        state[:selected_record_index] = 0
       end
       state
     end
