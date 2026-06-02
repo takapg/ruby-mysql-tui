@@ -51,9 +51,8 @@ module RubyMysqlTui
         rescue Mysql2::Error => e
           RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
           prompt.say("挿入に失敗しました: #{e.message}", color: :red)
-          break unless prompt.yes?('値を修正して再試行しますか？')
-
           data = prompt_for_record_data(columns, prompt, data)
+          break if data.empty?
         end
       end
 
@@ -95,9 +94,8 @@ module RubyMysqlTui
             break
           end
 
-          break unless prompt.yes?('値を修正して再試行しますか？')
-
           info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
+          break if info[:val].nil?
         end
       end
 

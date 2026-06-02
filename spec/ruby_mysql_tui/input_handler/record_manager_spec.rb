@@ -18,7 +18,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
 
       allow(prompt).to receive(:select).and_return('name')
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
-      allow(prompt).to receive(:yes?).and_return(true)
       allow(prompt).to receive(:say)
 
       expect(client).to receive(:update_record)
@@ -98,7 +97,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       allow(prompt).to receive(:ask).and_return('1')
       allow(client).to receive(:insert_record).and_raise(Mysql2::Error, 'Insert failed')
       expect(prompt).to receive(:say).with(/挿入に失敗しました/, color: :red)
-      allow(prompt).to receive(:yes?).and_return(false)
+      allow(prompt).to receive(:ask).and_return({})
 
       described_class.handle_create_record(state, client, prompt)
     end
@@ -112,7 +111,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
     Timeout.timeout(10) do
       allow(client).to receive(:list_columns).and_return(%w[id])
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
-      allow(prompt).to receive(:yes?).and_return(true)
       allow(prompt).to receive(:say)
 
       expect(client).to receive(:insert_record)
@@ -131,7 +129,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       allow(prompt).to receive(:ask).and_return('invalid')
       allow(client).to receive(:insert_record).and_raise(Mysql2::Error, 'Insert failed')
       expect(prompt).to receive(:say).with(/挿入に失敗しました/, color: :red)
-      expect(prompt).to receive(:yes?).and_return(false)
+      allow(prompt).to receive(:ask).and_return({})
 
       described_class.handle_create_record(state, client, prompt)
     end
