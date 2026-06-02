@@ -53,9 +53,9 @@ RSpec.describe 'E2E Main Flow' do
     # 1. 初期状態 (databases)
     # 2. DB選択後 (tables)
     # 3. テーブル選択後 (records)
-    expect(states.any? { |s| s[:layout] == :databases }).to be true
-    expect(states.any? { |s| s[:layout] == :tables }).to be true
-    expect(states.any? { |s| s[:layout] == :records }).to be true
+    expect(states.any? { |s| s[:view_mode] == :databases }).to be true
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
   end
 
   it 'switches focus using Tab key' do
