@@ -15,6 +15,7 @@ module RubyMysqlTui
       case event.value
       when 'b' then return handle_back_navigation(state, client)
       when 's' then return handle_sql_mode_toggle(state)
+      when 'e' then return RecordManager.handle_edit_record(state, client, TTY::Prompt.new)
       when 'd' then return RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
       end
 
