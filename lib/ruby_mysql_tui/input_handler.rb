@@ -3,6 +3,7 @@
 require 'tty-prompt'
 require_relative 'input_handler/sql'
 require_relative 'input_handler/pagination'
+require_relative 'input_handler/record_manager'
 require_relative 'ui/layout'
 
 module RubyMysqlTui
@@ -14,7 +15,7 @@ module RubyMysqlTui
       case event.value
       when 'b' then return handle_back_navigation(state, client)
       when 's' then return handle_sql_mode_toggle(state)
-      when 'd' then return handle_delete_record(state, client)
+      when 'd' then return RecordManager.handle_delete_record(state, client)
       end
 
       handle_key_input(event.key.name, state, client)
@@ -114,28 +115,5 @@ module RubyMysqlTui
       state
     end
 
-    def handle_delete_record(state, client)
-      return state unless can_delete_record?(state)
-
-      record = state[:records][0]
-      pk = client.primary_key_for(state[:selected_table])
-      return state unless record && pk
-
-      confirm_and_delete(state, client, record, pk)
-      state
-    end
-
-    def can_delete_record?(state)
-      state[:focus] == :right && state[:view_mode] == :records && state[:records]
-    end
-
-    def confirm_and_delete(state, client, record, pk)
-      return unless TTY::Prompt.new.yes?('本当にこのレコードを削除しますか？ (y/N)')
-
-      table = state[:selected_table]
-      client.delete_record(table, pk, record[pk])
-      state[:records] = client.list_records(table, state[:records_offset] || 0)
-      state[:selected_record_index] = 0.clamp(0, state[:records].size - 1)
-    end
   end
 end
