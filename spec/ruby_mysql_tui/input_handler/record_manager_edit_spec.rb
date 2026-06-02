@@ -12,7 +12,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   end
 
   it 'updates the record when valid column and value are provided' do
-    expect(prompt).to receive(:select).with('編集するカラムを選択してください:', record.keys).and_return('name')
+    expect(prompt).to receive(:select).with('編集するカラムを選択してください:', record.keys - [pk_column]).and_return('name')
     expect(prompt).to receive(:ask).with(any_args).and_return('Bob')
     expect(client).to receive(:update_record).with(table_name, pk_column, 1, 'name', 'Bob')
     expect(client).to receive(:list_records).with(table_name, 0).and_return([{ 'id' => 1, 'name' => 'Bob' }])
@@ -24,6 +24,21 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   it 'does not update when value is nil' do
     expect(prompt).to receive(:select).and_return('name')
     expect(prompt).to receive(:ask).and_return(nil)
+    expect(client).not_to receive(:update_record)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record no editable columns' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    state[:records] = [{ pk_column => 1 }]
+  end
+
+  it 'shows a warning and does not update when only the primary key exists' do
+    expect(prompt).to receive(:say).with('編集可能なカラムがありません', color: :yellow)
     expect(client).not_to receive(:update_record)
 
     described_class.handle_edit_record(state, client, prompt)

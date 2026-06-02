@@ -91,9 +91,14 @@ module RubyMysqlTui
       end
 
       def prompt_for_edit(record, prompt, pk_column = nil)
-        column = prompt.select('編集するカラムを選択してください:', record.keys)
-        label = column == pk_column ? "#{column} (主キー)" : column
-        value = prompt.ask("新しい値を入力してください (#{label}):", default: record[column]) { |q| q.required true }
+        editable_columns = record.keys - [pk_column]
+        if editable_columns.empty?
+          prompt.say('編集可能なカラムがありません', color: :yellow)
+          return nil
+        end
+
+        column = prompt.select('編集するカラムを選択してください:', editable_columns)
+        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]
       end
 
