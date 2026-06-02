@@ -238,6 +238,25 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down Boundary)' do
   let(:initial_state) { RubyMysqlTui.initial_state(client) }
 
   before { allow(client).to receive(:list_databases).and_return([]) }
+
+  it '最後のページの最後のレコードに達しているとき、Downキーを押しても records_offset が増加せず、データも更新されないこと' do
+    state = initial_state.merge(
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: Array.new(50) { { 'id' => 0 } },
+      page_offset: 100,
+      records_offset: 149
+    )
+
+    allow(client).to receive(:list_records).with('users', 150).and_return([])
+
+    down_event = double('Event', value: nil, key: double('Key', name: :down))
+    result = RubyMysqlTui.handle_input(down_event, state, client)
+
+    expect(result[:records_offset]).to eq(149)
+    expect(result[:records]).to eq(Array.new(50) { { 'id' => 0 } })
+  end
 end
 
 RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Page Offset)' do
