@@ -19,6 +19,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
       allow(prompt).to receive(:select).and_return('name')
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:yes?).and_return(true)
+      allow(prompt).to receive(:say)
       
       expect(client).to receive(:update_record).with('users', 'id', '1', 'name', 'invalid').and_raise(Mysql2::Error, 'Invalid value')
       expect(client).to receive(:update_record).with('users', 'id', '1', 'name', 'valid').and_return(true)
@@ -97,6 +98,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       allow(client).to receive(:list_columns).and_return(%w[id])
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:yes?).and_return(true)
+      allow(prompt).to receive(:say)
       
       expect(client).to receive(:insert_record).with('users', { 'id' => 'invalid' }).and_raise(Mysql2::Error, 'Invalid value')
       expect(client).to receive(:insert_record).with('users', { 'id' => 'valid' }).and_return(true)
