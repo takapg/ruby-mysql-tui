@@ -50,7 +50,6 @@ module RubyMysqlTui
         end
       end
 
-
       def can_manage_record?(state)
         state[:focus] == :right && state[:view_mode] == :records && state[:records]
       end
@@ -59,9 +58,10 @@ module RubyMysqlTui
         column, value = prompt_for_edit(record, prompt, pk_column)
         return if value.nil?
 
-        RecordExecutor.execute_update(state, client, prompt, pk_col: pk_column, pk_val: record[pk_column], col: column, val: value)
+        RecordExecutor.execute_update(
+          state, client, prompt, pk_col: pk_column, pk_val: record[pk_column], col: column, val: value
+        )
       end
-
 
       def prompt_for_edit(record, prompt, pk_column = nil)
         editable_columns = record.keys - [pk_column]
@@ -74,7 +74,6 @@ module RubyMysqlTui
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]
       end
-
     end
   end
 end
