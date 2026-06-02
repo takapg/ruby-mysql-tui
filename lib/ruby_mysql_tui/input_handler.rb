@@ -41,17 +41,8 @@ module RubyMysqlTui
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, delta)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        current_idx = state[:selected_record_index] || 0
-        new_idx = current_idx + delta
-        if new_idx < 0 && state[:records_offset] > 0
-          Pagination.update_records_offset(state, -1, client, current_layout)
-          state[:selected_record_index] = state[:records].size - 1
-        elsif new_idx >= state[:records].size
-          Pagination.update_records_offset(state, 1, client, current_layout)
-          state[:selected_record_index] = 0
-        else
-          state[:selected_record_index] = new_idx.clamp(0, state[:records].size - 1)
-        end
+        Pagination.update_records_offset(state, delta, client, current_layout)
+        state[:selected_record_index] = 0
       end
       state
     end
@@ -120,7 +111,8 @@ module RubyMysqlTui
     def handle_delete_record(state, client)
       return state unless state[:focus] == :right && state[:view_mode] == :records && state[:records]
 
-      selected_idx = state[:selected_record_index] || 0
+      # records_offset が選択位置を決定するため、常に 0 番目のレコードを対象とする
+      selected_idx = 0
       record = state[:records][selected_idx]
       return state unless record
 

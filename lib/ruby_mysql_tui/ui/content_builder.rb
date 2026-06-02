@@ -51,28 +51,25 @@ module RubyMysqlTui
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_records_table(records, width, max_rows, offset, selected_index).to_s
+        table_output = create_records_table(records, width, max_rows, selected_index).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_records_table(records, width, max_rows = nil, offset = 0, selected_index = nil)
+      def create_records_table(records, width, max_rows = nil, selected_index = nil)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
-        display_records = slice_records(records, max_rows, offset)
+        display_records = slice_records(records, max_rows)
         col_width = calculate_col_width(width, columns.size)
-
-        # slice_records で drop(offset) しているため、表示上の index と元の index を合わせる
-        relative_selected_index = selected_index ? selected_index - offset : nil
 
         TTY::Table.new(
           header: columns.map { |c| truncate(c, col_width) },
-          rows: format_records_rows(display_records, col_width, relative_selected_index)
+          rows: format_records_rows(display_records, col_width, selected_index)
         )
       end
 
-      def slice_records(records, max_rows, offset)
-        max_rows ? records.drop(offset).take(max_rows) : records.drop(offset)
+      def slice_records(records, max_rows)
+        max_rows ? records.take(max_rows) : records
       end
 
       def calculate_col_width(width, columns_count)
