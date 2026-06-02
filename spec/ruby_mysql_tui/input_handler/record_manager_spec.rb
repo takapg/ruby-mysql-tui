@@ -72,8 +72,8 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
   it 'prompts for all columns and inserts a record' do
     Timeout.timeout(10) do
       allow(client).to receive(:list_columns).with('users').and_return(%w[id name])
-      allow(prompt).to receive(:ask).with(/id/).and_return('1')
-      allow(prompt).to receive(:ask).with(/name/).and_return('Alice')
+      allow(prompt).to receive(:ask).with(/id/, anything).and_return('1')
+      allow(prompt).to receive(:ask).with(/name/, anything).and_return('Alice')
       expect(client).to receive(:insert_record).with('users', { 'id' => '1', 'name' => 'Alice' })
       expect(client).to receive(:list_records)
 
