@@ -374,3 +374,37 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Execution' do
     expect(current_state[:sql_mode]).to eq(false)
   end
 end
+
+RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
+  let(:client) { double('Client') }
+  let(:delete_event) { double('Event', value: 'd', key: double('Key', name: :unknown)) }
+  let(:state) do
+    {
+      focus: :right,
+      view_mode: :records,
+      selected_table: 'users',
+      records: [{ 'id' => 1, 'name' => 'Alice' }],
+      selected_record_index: 0,
+      records_offset: 0
+    }
+  end
+
+  before do
+    allow(client).to receive(:primary_key_for).with('users').and_return('id')
+    allow(client).to receive(:list_records).and_return([])
+  end
+
+  it 'ユーザーが承認した場合、レコードを削除する' do
+    allow_any_instance_of(TTY::Prompt).to receive(:yes?).and_return(true)
+    expect(client).to receive(:delete_record).with('users', 'id', 1)
+
+    RubyMysqlTui.handle_input(delete_event, state, client)
+  end
+
+  it 'ユーザーが拒否した場合、レコードを削除しない' do
+    allow_any_instance_of(TTY::Prompt).to receive(:yes?).and_return(false)
+    expect(client).not_to receive(:delete_record)
+
+    RubyMysqlTui.handle_input(delete_event, state, client)
+  end
+end
