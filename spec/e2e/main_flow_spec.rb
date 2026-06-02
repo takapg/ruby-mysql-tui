@@ -34,7 +34,7 @@ RSpec.describe 'E2E Main Flow' do
     allow(reader).to receive(:read_keypress).and_return(*events)
 
     # 内部状態の遷移を追跡するために handle_input をラップして記録する
-    states = []
+    states = [RubyMysqlTui.initial_state(client)]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
       res = m.call(*args)
       states << res
