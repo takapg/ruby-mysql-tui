@@ -6,9 +6,7 @@ module RubyMysqlTui
   module InputHandler
     # RecordManager は レコードの削除などの操作を提供します。
     module RecordManager
-      module_function
-
-      def handle_edit_record(state, client, prompt)
+      def self.handle_edit_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
         record = state[:records][state[:selected_record_index]]
@@ -19,7 +17,7 @@ module RubyMysqlTui
         state
       end
 
-      def handle_create_record(state, client, prompt)
+      def self.handle_create_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
         columns = client.list_columns(state[:selected_table])
@@ -30,7 +28,7 @@ module RubyMysqlTui
         state
       end
 
-      def execute_insert_with_retry(state, client, prompt, data, columns)
+      def self.execute_insert_with_retry(state, client, prompt, data, columns)
         context = { data: data }
         with_retry(error_handler: lambda { |e|
           context[:data] = handle_insert_error(e, prompt, columns, context[:data])
@@ -40,13 +38,13 @@ module RubyMysqlTui
         end
       end
 
-      def handle_insert_error(error, prompt, columns, data)
+      def self.handle_insert_error(error, prompt, columns, data)
         RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
         prompt.say("挿入に失敗しました: #{error.message}", color: :red)
         prompt_for_record_data(columns, prompt, data)
       end
 
-      def handle_delete_record(state, client, prompt)
+      def self.handle_delete_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
         record = state[:records][state[:selected_record_index]]
@@ -57,7 +55,7 @@ module RubyMysqlTui
         state
       end
 
-      def prompt_for_record_data(columns, prompt, default_data = {})
+      def self.prompt_for_record_data(columns, prompt, default_data = {})
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col])
           return nil if val.nil?
@@ -66,11 +64,11 @@ module RubyMysqlTui
         end
       end
 
-      def can_manage_record?(state)
+      def self.can_manage_record?(state)
         state[:focus] == :right && state[:view_mode] == :records && state[:records]
       end
 
-      def edit_and_update(state, client, record, pk_column, prompt)
+      def self.edit_and_update(state, client, record, pk_column, prompt)
         column, value = prompt_for_edit(record, prompt, pk_column)
         return if value.nil?
 
@@ -78,7 +76,7 @@ module RubyMysqlTui
         execute_update_with_retry(state, client, prompt, info)
       end
 
-      def execute_update_with_retry(state, client, prompt, info)
+      def self.execute_update_with_retry(state, client, prompt, info)
         with_retry(error_handler: lambda { |e|
           handle_update_error(e, prompt, info)
           info[:val].nil?
@@ -87,7 +85,7 @@ module RubyMysqlTui
         end
       end
 
-      def handle_update_error(error, prompt, info)
+      def self.handle_update_error(error, prompt, info)
         msg = if error.respond_to?(:errno) && error.errno == 1062
                 "主キーまたはユニーク制約違反です: #{error.message}"
               else
@@ -98,7 +96,7 @@ module RubyMysqlTui
         info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
       end
 
-      def prompt_for_edit(record, prompt, pk_column = nil)
+      def self.prompt_for_edit(record, prompt, pk_column = nil)
         editable_columns = record.keys - [pk_column]
         if editable_columns.empty?
           prompt.say('編集可能なカラムがありません', color: :yellow)
@@ -106,11 +104,13 @@ module RubyMysqlTui
         end
 
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
+        return nil if column == pk_column
+
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]
       end
 
-      def with_retry(max_retries = 5, error_handler:)
+      def self.with_retry(max_retries = 5, error_handler:)
         retries = 0
         loop do
           yield
