@@ -30,7 +30,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   end
 end
 
-
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record no editable columns' do
   include_context 'record manager setup'
   before do
