@@ -25,11 +25,11 @@ RSpec.describe 'E2E Main Flow' do
     # 4. Enter (テーブル決定)
     # 5. 'q' (終了)
     events = [
-      double('Event', value: "\e[B"), # Down
-      double('Event', value: "\r"),   # Enter
-      double('Event', value: "\e[B"), # Down
-      double('Event', value: "\r"),   # Enter
-      double('Event', value: 'q')     # Quit
+      double('Event', value: "\e[B", key: double('Key', name: :down)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\e[B", key: double('Key', name: :down)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
@@ -63,8 +63,8 @@ RSpec.describe 'E2E Main Flow' do
 
     # Tabキーを押し、その後に 'q' で終了
     events = [
-      double('Event', value: "\t"), # Tab
-      double('Event', value: 'q')   # Quit
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'q', key: double('Key', name: :q))
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
