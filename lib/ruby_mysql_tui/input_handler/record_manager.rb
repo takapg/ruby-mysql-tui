@@ -60,20 +60,25 @@ module RubyMysqlTui
       end
 
       def execute_update(state, client, prompt, info)
-        begin
-          client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
-        rescue Mysql2::Error => e
-          RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
-          prompt.say("更新に失敗しました: #{e.message}", color: :red)
-          return
-        end
+        return unless update_record_safe(client, prompt, state[:selected_table], info)
 
-        begin
-          state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
-        rescue Mysql2::Error => e
-          RubyMysqlTui.logger.error("Failed to refresh records: #{e.message}")
-          prompt.say("更新は成功しましたが、一覧の再取得に失敗しました: #{e.message}", color: :yellow)
-        end
+        refresh_records_safe(state, client, prompt)
+      end
+
+      def update_record_safe(client, prompt, table, info)
+        client.update_record(table, info[:pk_col], info[:pk_val], info[:col], info[:val])
+        true
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
+        prompt.say("更新に失敗しました: #{e.message}", color: :red)
+        false
+      end
+
+      def refresh_records_safe(state, client, prompt)
+        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Failed to refresh records: #{e.message}")
+        prompt.say("更新は成功しましたが、一覧の再取得に失敗しました: #{e.message}", color: :yellow)
       end
     end
   end
