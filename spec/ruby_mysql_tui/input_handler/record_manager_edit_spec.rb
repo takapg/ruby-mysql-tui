@@ -52,6 +52,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_records).and_return(state[:records])
   end
 
   it 'handles Mysql2::Error during update' do

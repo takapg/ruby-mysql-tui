@@ -180,6 +180,7 @@ RSpec.describe 'E2E Record Edit - Duplicate PK' do
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
       double('Event', value: 'e', key: double('Key', name: :e)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
