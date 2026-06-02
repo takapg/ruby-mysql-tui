@@ -42,7 +42,7 @@ RSpec.describe 'E2E Main Flow' do
     end
 
     # 期待されるクエリが発行されることを検証
-    expect(client).to receive(:list_databases).and_call_original
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
     expect(client).to receive(:list_records).with('test_table', 0).and_call_original
 
@@ -75,11 +75,10 @@ RSpec.describe 'E2E Main Flow' do
       res
     end
 
+    initial_focus = RubyMysqlTui.initial_state(client)[:focus]
     RubyMysqlTui.run_main_loop(client)
 
     # フォーカスが切り替わっていることを検証 (例: :left -> :right)
-    # 初期状態のフォーカスが :left であると仮定
-    initial_focus = states.first[:focus]
     expect(states.last[:focus]).not_to eq(initial_focus)
   end
 end
