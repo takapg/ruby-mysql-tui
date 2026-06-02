@@ -93,7 +93,7 @@ module RubyMysqlTui
       def prompt_for_edit(record, prompt, pk_column = nil)
         column = prompt.select('編集するカラムを選択してください:', record.keys)
         prompt_text = "新しい値を入力してください (#{column}):"
-        prompt_text += " [主キー]" if column == pk_column
+        prompt_text += ' [主キー]' if column == pk_column
         value = prompt.ask(prompt_text, default: record[column]) { |q| q.required true }
         [column, value]
       end
@@ -116,9 +116,11 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error("Failed to update record: #{error.message}")
 
         error_msg = error.message
-        display_msg = error_msg.include?('Duplicate entry') ?
-                     "主キーまたはユニーク制約違反（重複）です: #{error_msg}" :
-                     "更新に失敗しました: #{error_msg}"
+        display_msg = if error_msg.include?('Duplicate entry')
+                        "主キーまたはユニーク制約違反（重複）です: #{error_msg}"
+                      else
+                        "更新に失敗しました: #{error_msg}"
+                      end
 
         prompt.say(display_msg, color: :red)
         prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
