@@ -25,9 +25,16 @@ module RubyMysqlTui
 
       def fetch_next_page(state, client, page_offset, records_size)
         new_offset = page_offset + records_size
-        state[:page_offset] = new_offset
-        state[:records] = client.list_records(state[:selected_table], new_offset)
-        state[:records_offset] = [0, page_offset + records_size - 1].max if state[:records].empty?
+        records = client.list_records(state[:selected_table], new_offset)
+
+        if records.empty?
+          # 次ページが空の場合、ページオフセットは更新せず、
+          # 現在のページの末尾にオフセットを固定して負の相対オフセットを防ぐ
+          state[:records_offset] = [0, page_offset + records_size - 1].max
+        else
+          state[:page_offset] = new_offset
+          state[:records] = records
+        end
       end
 
       def fetch_prev_page(state, client)
