@@ -58,21 +58,21 @@ RSpec.describe 'E2E Navigation' do
   include_context 'e2e setup'
 
   it 'navigates from databases to tables to records' do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      events = [
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: 'q', key: double('Key', name: :q))
-      ]
-      allow(reader).to receive(:read_keypress).and_return(*events)
-      states = track_states(client)
-      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-      expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
-      expect(client).to receive(:list_records).with('test_table', 0).and_call_original
-      RubyMysqlTui.run_main_loop(client)
-      expect(states.any? { |s| s[:view_mode] == :databases }).to be true
-      expect(states.any? { |s| s[:view_mode] == :tables }).to be true
-      expect(states.any? { |s| s[:view_mode] == :records }).to be true
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
+    expect(client).to receive(:list_records).with('test_table', 0).and_call_original
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :databases }).to be true
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
   end
 end
 
@@ -80,17 +80,17 @@ RSpec.describe 'E2E Focus' do
   include_context 'e2e setup'
 
   it 'switches focus using Tab key' do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      events = [
-        double('Event', value: "\t", key: double('Key', name: :tab)),
-        double('Event', value: 'q', key: double('Key', name: :q))
-      ]
-      allow(reader).to receive(:read_keypress).and_return(*events)
-      states = track_states(client)
-      initial_focus = RubyMysqlTui.initial_state(client)[:focus]
-      RubyMysqlTui.run_main_loop(client)
-      expected_focus = initial_focus == :left ? :right : :left
-      expect(states.last[:focus]).to eq(expected_focus)
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+    states = track_states(client)
+    initial_focus = RubyMysqlTui.initial_state(client)[:focus]
+    RubyMysqlTui.run_main_loop(client)
+    expected_focus = initial_focus == :left ? :right : :left
+    expect(states.last[:focus]).to eq(expected_focus)
   end
 end
 
@@ -98,31 +98,31 @@ RSpec.describe 'E2E Record Creation - Basic' do
   include_context 'e2e setup'
 
   it 'creates a new record when n is pressed' do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      # 1. DB選択 -> 2. テーブル選択 -> 3. 新規作成(n) -> 4. 終了(q)
-      events = [
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\r", key: double('Key', name: :return)),
-        double('Event', value: "\t", key: double('Key', name: :tab)),
-        double('Event', value: 'n', key: double('Key', name: :n)),
-        double('Event', value: 'q', key: double('Key', name: :q))
-      ]
-      allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 1. DB選択 -> 2. テーブル選択 -> 3. 新規作成(n) -> 4. 終了(q)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
 
-      # TTY::Prompt のモック
-      prompt = instance_double(TTY::Prompt)
-      allow(TTY::Prompt).to receive(:new).and_return(prompt)
-      allow(prompt).to receive(:ask).and_return('test_value')
+    # TTY::Prompt のモック
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('test_value')
 
-      states = track_states(client)
-      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-      allow(client).to receive(:list_tables).and_return(['test_table'])
-      allow(client).to receive(:list_records).and_return([])
-      allow(client).to receive(:list_columns).and_return(['col1'])
-      expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'test_value' })
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return(['col1'])
+    expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'test_value' })
 
-      RubyMysqlTui.run_main_loop(client)
-      expect(states.any? { |s| s[:view_mode] == :records }).to be true
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
   end
 end
 
@@ -130,25 +130,25 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
   include_context 'e2e setup'
 
   it 'cancels record creation retry when an error occurs' do
-      setup_retry_reader(reader)
+    setup_retry_reader(reader)
 
-      prompt = instance_double(TTY::Prompt)
-      allow(TTY::Prompt).to receive(:new).and_return(prompt)
-      allow(prompt).to receive(:ask).and_return('invalid')
-      allow(prompt).to receive(:say)
-      allow(prompt).to receive(:yes?).and_return(false)
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('invalid')
+    allow(prompt).to receive(:say)
+    allow(prompt).to receive(:yes?).and_return(false)
 
-      states = track_states(client)
-      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-      allow(client).to receive(:list_tables).and_return(['test_table'])
-      allow(client).to receive(:list_records).and_return([])
-      allow(client).to receive(:list_columns).and_return(['col1'])
-      expect(client).to receive(:insert_record)
-        .with('test_table', { 'col1' => 'invalid' })
-        .and_raise(Mysql2::Error, 'Invalid value')
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return(['col1'])
+    expect(client).to receive(:insert_record)
+      .with('test_table', { 'col1' => 'invalid' })
+      .and_raise(Mysql2::Error, 'Invalid value')
 
-      RubyMysqlTui.run_main_loop(client)
-      expect(states.any? { |s| s[:view_mode] == :records }).to be true
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
   end
 end
 
@@ -156,20 +156,20 @@ RSpec.describe 'E2E Record Creation - Retry' do
   include_context 'e2e setup'
 
   it 'retries record creation when an error occurs' do
-      setup_record_creation_retry_mocks(reader)
-      states = track_states(client)
-      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-      allow(client).to receive(:list_tables).and_return(['test_table'])
-      allow(client).to receive(:list_records).and_return([])
-      allow(client).to receive(:list_columns).and_return(['col1'])
+    setup_record_creation_retry_mocks(reader)
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return(['col1'])
 
-      expect(client).to receive(:insert_record)
-        .with('test_table', { 'col1' => 'invalid' })
-        .and_raise(Mysql2::Error, 'Invalid value')
-      expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'valid' }).and_return(true)
+    expect(client).to receive(:insert_record)
+      .with('test_table', { 'col1' => 'invalid' })
+      .and_raise(Mysql2::Error, 'Invalid value')
+    expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'valid' }).and_return(true)
 
-      RubyMysqlTui.run_main_loop(client)
-      expect(states.any? { |s| s[:view_mode] == :records }).to be true
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
   end
 end
 
@@ -177,15 +177,15 @@ RSpec.describe 'E2E Connection Error' do
   include_context 'e2e setup'
 
   it 'handles connection failure gracefully' do
-      allow(TTY::Reader).to receive(:new).and_return(reader)
-      # 即座に終了するように 'q' キーをシミュレート
-      allow(reader).to receive(:read_keypress).and_return(
-        double('Event', value: 'q', key: double('Key', name: :q))
-      )
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 即座に終了するように 'q' キーをシミュレート
+    allow(reader).to receive(:read_keypress).and_return(
+      double('Event', value: 'q', key: double('Key', name: :q))
+    )
 
-      # 接続エラーをシミュレート
-      allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new('Connection failed'))
+    # 接続エラーをシミュレート
+    allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new('Connection failed'))
 
-      expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
+    expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
   end
 end
