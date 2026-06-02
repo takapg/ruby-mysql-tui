@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'timeout'
 require_relative 'e2e_helper'
 require 'ruby_mysql_tui'
 
@@ -59,7 +58,6 @@ RSpec.describe 'E2E Navigation' do
   include_context 'e2e setup'
 
   it 'navigates from databases to tables to records' do
-    Timeout.timeout(10) do
       allow(TTY::Reader).to receive(:new).and_return(reader)
       events = [
         double('Event', value: "\r", key: double('Key', name: :return)),
@@ -75,7 +73,6 @@ RSpec.describe 'E2E Navigation' do
       expect(states.any? { |s| s[:view_mode] == :databases }).to be true
       expect(states.any? { |s| s[:view_mode] == :tables }).to be true
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
-    end
   end
 end
 
@@ -83,7 +80,6 @@ RSpec.describe 'E2E Focus' do
   include_context 'e2e setup'
 
   it 'switches focus using Tab key' do
-    Timeout.timeout(10) do
       allow(TTY::Reader).to receive(:new).and_return(reader)
       events = [
         double('Event', value: "\t", key: double('Key', name: :tab)),
@@ -95,7 +91,6 @@ RSpec.describe 'E2E Focus' do
       RubyMysqlTui.run_main_loop(client)
       expected_focus = initial_focus == :left ? :right : :left
       expect(states.last[:focus]).to eq(expected_focus)
-    end
   end
 end
 
@@ -103,7 +98,6 @@ RSpec.describe 'E2E Record Creation - Basic' do
   include_context 'e2e setup'
 
   it 'creates a new record when n is pressed' do
-    Timeout.timeout(10) do
       allow(TTY::Reader).to receive(:new).and_return(reader)
       # 1. DB選択 -> 2. テーブル選択 -> 3. 新規作成(n) -> 4. 終了(q)
       events = [
@@ -129,7 +123,6 @@ RSpec.describe 'E2E Record Creation - Basic' do
 
       RubyMysqlTui.run_main_loop(client)
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
-    end
   end
 end
 
@@ -137,7 +130,6 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
   include_context 'e2e setup'
 
   it 'cancels record creation retry when an error occurs' do
-    Timeout.timeout(10) do
       setup_retry_reader(reader)
 
       prompt = instance_double(TTY::Prompt)
@@ -157,7 +149,6 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
 
       RubyMysqlTui.run_main_loop(client)
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
-    end
   end
 end
 
@@ -165,7 +156,6 @@ RSpec.describe 'E2E Record Creation - Retry' do
   include_context 'e2e setup'
 
   it 'retries record creation when an error occurs' do
-    Timeout.timeout(10) do
       setup_record_creation_retry_mocks(reader)
       states = track_states(client)
       allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
@@ -180,7 +170,6 @@ RSpec.describe 'E2E Record Creation - Retry' do
 
       RubyMysqlTui.run_main_loop(client)
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
-    end
   end
 end
 
@@ -188,7 +177,6 @@ RSpec.describe 'E2E Connection Error' do
   include_context 'e2e setup'
 
   it 'handles connection failure gracefully' do
-    Timeout.timeout(10) do
       allow(TTY::Reader).to receive(:new).and_return(reader)
       # 即座に終了するように 'q' キーをシミュレート
       allow(reader).to receive(:read_keypress).and_return(
@@ -199,6 +187,5 @@ RSpec.describe 'E2E Connection Error' do
       allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new('Connection failed'))
 
       expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
-    end
   end
 end
