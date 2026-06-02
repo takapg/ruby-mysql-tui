@@ -72,7 +72,7 @@ RSpec.describe 'E2E Connection Error' do
     )
 
     # 接続エラーをシミュレート
-    allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new("Connection failed"))
+    allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new('Connection failed'))
 
     expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
   end
