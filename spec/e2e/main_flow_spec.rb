@@ -16,16 +16,19 @@ module E2EFlowHelpers
     states
   end
 
-  def setup_retry_reader(reader)
-    allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
+  def retry_events
+    [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\t", key: double('Key', name: :tab)),
       double('Event', value: 'n', key: double('Key', name: :n)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+  end
+
+  def setup_retry_reader(reader)
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    allow(reader).to receive(:read_keypress).and_return(*retry_events)
   end
 
   def setup_retry_prompt
@@ -45,6 +48,7 @@ end
 
 RSpec.shared_context 'e2e setup' do
   include E2EFlowHelpers
+
   before(:all) { E2EHelper.setup_test_db }
   after(:all) { E2EHelper.cleanup_test_db }
   let(:client) { RubyMysqlTui::Client.new(host: ENV.fetch('MYSQL_HOST', '127.0.0.1'), database: E2EHelper::TEST_DB) }
