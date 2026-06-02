@@ -378,7 +378,10 @@ end
 RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
   let(:client) { double('Client') }
   let(:delete_event) { double('Event', value: 'd', key: double('Key', name: :unknown)) }
-  let(:state) { { focus: :right, view_mode: :records, selected_table: 'users', records: [{ 'id' => 1, 'name' => 'Alice' }], selected_record_index: 0, records_offset: 0 } }
+  let(:state) do
+    { focus: :right, view_mode: :records, selected_table: 'users',
+      records: [{ 'id' => 1, 'name' => 'Alice' }], selected_record_index: 0, records_offset: 0 }
+  end
 
   before do
     allow(client).to receive(:primary_key_for).with('users').and_return('id')
