@@ -103,6 +103,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       described_class.handle_create_record(state, client, prompt)
     end
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record retry handling' do
+  include_context 'record manager setup'
 
   it 'retries record creation when an error occurs' do
     Timeout.timeout(10) do

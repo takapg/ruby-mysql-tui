@@ -131,6 +131,10 @@ RSpec.describe 'E2E Record Creation - Basic' do
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
     end
   end
+end
+
+RSpec.describe 'E2E Record Creation - Cancel Retry' do
+  include_context 'e2e setup'
 
   it 'cancels record creation retry when an error occurs' do
     Timeout.timeout(10) do
@@ -155,7 +159,9 @@ RSpec.describe 'E2E Record Creation - Basic' do
       allow(client).to receive(:list_tables).and_return(['test_table'])
       allow(client).to receive(:list_records).and_return([])
       allow(client).to receive(:list_columns).and_return(['col1'])
-      expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'invalid' }).and_raise(Mysql2::Error, 'Invalid value')
+      expect(client).to receive(:insert_record)
+        .with('test_table', { 'col1' => 'invalid' })
+        .and_raise(Mysql2::Error, 'Invalid value')
 
       RubyMysqlTui.run_main_loop(client)
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
