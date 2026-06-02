@@ -35,16 +35,17 @@ module RubyMysqlTui
         loop do
           RecordExecutor.execute_insert(state, client, prompt, data)
           break
-        rescue Mysql2::Error => e
+        rescue Mysql2::Error => error
           break if (retries += 1) >= 5
-          data = handle_insert_error(e, prompt, columns, data)
+
+          data = handle_insert_error(error, prompt, columns, data)
           break if data.nil? || data.empty?
         end
       end
 
-      def handle_insert_error(e, prompt, columns, data)
-        RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
-        prompt.say("挿入に失敗しました: #{e.message}", color: :red)
+      def handle_insert_error(error, prompt, columns, data)
+        RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
+        prompt.say("挿入に失敗しました: #{error.message}", color: :red)
         prompt_for_record_data(columns, prompt, data)
       end
 
@@ -85,18 +86,19 @@ module RubyMysqlTui
         loop do
           RecordExecutor.execute_update(state, client, prompt, info)
           break
-        rescue Mysql2::Error => e
+        rescue Mysql2::Error => error
           break if (retries += 1) >= 5
-          handle_update_error(e, prompt, info)
+
+          handle_update_error(error, prompt, info)
           break if info[:val].nil?
         end
       end
 
-      def handle_update_error(e, prompt, info)
-        msg = if e.respond_to?(:errno) && e.errno == 1062
-                "主キーまたはユニーク制約違反です: #{e.message}"
+      def handle_update_error(error, prompt, info)
+        msg = if error.respond_to?(:errno) && error.errno == 1062
+                "主キーまたはユニーク制約違反です: #{error.message}"
               else
-                "更新に失敗しました: #{e.message}"
+                "更新に失敗しました: #{error.message}"
               end
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
