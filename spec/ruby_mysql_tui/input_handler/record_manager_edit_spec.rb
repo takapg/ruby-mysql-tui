@@ -102,7 +102,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
   end
 
   it 'handles duplicate entry error specifically' do
-    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('duplicate_id', nil)
 
     # errno 1062 を持つエラーをシミュレート
@@ -116,7 +116,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
   end
 
   it 'stops record editing after 5 failed duplicate entry retries' do
-    allow(prompt).to receive(:select).and_return('id')
+    allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('duplicate_id')
     allow(prompt).to receive(:say)
     allow(RubyMysqlTui.logger).to receive(:error)
