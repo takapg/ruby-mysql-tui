@@ -31,15 +31,12 @@ module RubyMysqlTui
       end
 
       def execute_insert_with_retry(state, client, prompt, data, columns)
-        retries = 0
-        loop do
-          RecordExecutor.execute_insert(state, client, prompt, data)
-          break
-        rescue Mysql2::Error => e
-          break if (retries += 1) >= 5
-
-          data = handle_insert_error(e, prompt, columns, data)
-          break if data.nil? || data.empty?
+        context = { data: data }
+        with_retry(error_handler: ->(e) {
+          context[:data] = handle_insert_error(e, prompt, columns, context[:data])
+          context[:data].nil? || context[:data].empty?
+        }) do
+          RecordExecutor.execute_insert(state, client, prompt, context[:data])
         end
       end
 
@@ -56,7 +53,9 @@ module RubyMysqlTui
         pk_column = client.primary_key_for(state[:selected_table])
         return state unless record && pk_column
 
-        RecordExecutor.confirm_and_delete(state, client, record, pk_column, prompt)
+        if RecordExecutor.confirm_and_delete(state, client, prompt, record, pk_column)
+          state[:selected_record_index] = 0
+        end
         state
       end
 
@@ -82,15 +81,11 @@ module RubyMysqlTui
       end
 
       def execute_update_with_retry(state, client, prompt, info)
-        retries = 0
-        loop do
-          RecordExecutor.execute_update(state, client, prompt, info)
-          break
-        rescue Mysql2::Error => e
-          break if (retries += 1) >= 5
-
+        with_retry(error_handler: ->(e) {
           handle_update_error(e, prompt, info)
-          break if info[:val].nil?
+          info[:val].nil?
+        }) do
+          RecordExecutor.execute_update(state, client, prompt, info)
         end
       end
 
@@ -116,6 +111,20 @@ module RubyMysqlTui
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
         [column, value]
       end
+
+      def with_retry(max_retries = 5, error_handler:)
+        retries = 0
+        loop do
+          begin
+            yield
+            break
+          rescue Mysql2::Error => e
+            break if (retries += 1) >= max_retries
+            break if error_handler.call(e)
+          end
+        end
+      end
+      private_class_method :with_retry
     end
   end
 end
