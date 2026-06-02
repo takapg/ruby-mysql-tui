@@ -34,7 +34,6 @@ module E2EFlowHelpers
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('invalid', 'valid')
-    allow(prompt).to receive(:yes?).and_return(true)
     allow(prompt).to receive(:say)
     prompt
   end
@@ -134,9 +133,8 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:ask).and_return('invalid')
+    allow(prompt).to receive(:ask).and_return('invalid', nil)
     allow(prompt).to receive(:say)
-    allow(prompt).to receive(:yes?).and_return(false)
 
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
