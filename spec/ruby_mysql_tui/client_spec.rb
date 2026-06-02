@@ -165,7 +165,7 @@ RSpec.describe RubyMysqlTui::Client, '#delete_record' do
   it 'escapes backticks in table and column names' do
     table_with_tick = 'user`s'
     col_with_tick = 'id`s'
-    sql = "DELETE FROM `user``s` WHERE `id``s` = ?"
+    sql = 'DELETE FROM `user``s` WHERE `id``s` = ?'
     statement = instance_double('Mysql2::Statement')
 
     expect(mock_mysql_client).to receive(:prepare).with(sql).and_return(statement)
