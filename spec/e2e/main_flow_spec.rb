@@ -133,7 +133,7 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:ask).and_return('invalid', {})
+    allow(prompt).to receive(:ask).and_return('invalid', nil)
     allow(prompt).to receive(:say)
 
     states = track_states(client)

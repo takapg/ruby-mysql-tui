@@ -42,7 +42,7 @@ module RubyMysqlTui
       def prompt_for_record_data(columns, prompt, default_data = {})
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col])
-          return nil if val.nil? || (val.is_a?(Hash) && val.empty?)
+          return nil if val.nil?
 
           data[col] = val
         end
@@ -99,28 +99,21 @@ module RubyMysqlTui
       def execute_update(state, client, prompt, info)
         retries = 0
         loop do
-          if update_record_safe(client, prompt, state[:selected_table], info)
-            refresh_records_safe(state, client, prompt)
-            break
-          end
+          client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
+          refresh_records_safe(state, client, prompt)
+          break
+        rescue Mysql2::Error => e
           break if (retries += 1) >= 5
 
-          info[:val] = retry_update_value(prompt, info)
-          break if info[:val].nil? || (info[:val].is_a?(Hash) && info[:val].empty?)
+          info[:val] = retry_update(e, prompt, info)
+          break if info[:val].nil?
         end
       end
 
-      def retry_update_value(prompt, info)
+      def retry_update(error, prompt, info)
+        RubyMysqlTui.logger.error("Failed to update record: #{error.message}")
+        prompt.say("更新に失敗しました: #{error.message}", color: :red)
         prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
-      end
-
-      def update_record_safe(client, prompt, table, info)
-        client.update_record(table, info[:pk_col], info[:pk_val], info[:col], info[:val])
-        true
-      rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Failed to update record: #{e.message}")
-        prompt.say("更新に失敗しました: #{e.message}", color: :red)
-        false
       end
 
       def refresh_records_safe(state, client, prompt)
