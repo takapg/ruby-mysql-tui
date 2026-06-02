@@ -120,4 +120,16 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       described_class.handle_create_record(state, client, prompt)
     end
   end
+
+  it 'stops record creation when user declines retry after error' do
+    Timeout.timeout(10) do
+      allow(client).to receive(:list_columns).and_return(%w[id])
+      allow(prompt).to receive(:ask).and_return('invalid')
+      allow(client).to receive(:insert_record).and_raise(Mysql2::Error, 'Insert failed')
+      expect(prompt).to receive(:say).with(/挿入に失敗しました/, color: :red)
+      expect(prompt).to receive(:yes?).and_return(false)
+
+      described_class.handle_create_record(state, client, prompt)
+    end
+  end
 end

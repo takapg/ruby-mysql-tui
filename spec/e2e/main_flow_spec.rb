@@ -131,6 +131,36 @@ RSpec.describe 'E2E Record Creation - Basic' do
       expect(states.any? { |s| s[:view_mode] == :records }).to be true
     end
   end
+
+  it 'cancels record creation retry when an error occurs' do
+    Timeout.timeout(10) do
+      allow(TTY::Reader).to receive(:new).and_return(reader)
+      events = [
+        double('Event', value: "\r", key: double('Key', name: :return)),
+        double('Event', value: "\r", key: double('Key', name: :return)),
+        double('Event', value: "\t", key: double('Key', name: :tab)),
+        double('Event', value: 'n', key: double('Key', name: :n)),
+        double('Event', value: 'q', key: double('Key', name: :q))
+      ]
+      allow(reader).to receive(:read_keypress).and_return(*events)
+
+      prompt = instance_double(TTY::Prompt)
+      allow(TTY::Prompt).to receive(:new).and_return(prompt)
+      allow(prompt).to receive(:ask).and_return('invalid')
+      allow(prompt).to receive(:say)
+      allow(prompt).to receive(:yes?).and_return(false)
+
+      states = track_states(client)
+      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+      allow(client).to receive(:list_tables).and_return(['test_table'])
+      allow(client).to receive(:list_records).and_return([])
+      allow(client).to receive(:list_columns).and_return(['col1'])
+      expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'invalid' }).and_raise(Mysql2::Error, 'Invalid value')
+
+      RubyMysqlTui.run_main_loop(client)
+      expect(states.any? { |s| s[:view_mode] == :records }).to be true
+    end
+  end
 end
 
 RSpec.describe 'E2E Record Creation - Retry' do
