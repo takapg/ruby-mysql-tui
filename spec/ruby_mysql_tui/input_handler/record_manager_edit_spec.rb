@@ -113,4 +113,3 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
     described_class.handle_edit_record(state, client, prompt)
   end
 end
-
