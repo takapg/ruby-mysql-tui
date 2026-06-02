@@ -44,15 +44,20 @@ module RubyMysqlTui
       end
 
       def execute_insert(state, client, prompt, columns, data)
+        max_retries = 5
+        retries = 0
         loop do
           client.insert_record(state[:selected_table], data)
           refresh_records_safe(state, client, prompt)
           break
         rescue Mysql2::Error => e
+          retries += 1
+          break if retries >= max_retries
+
           RubyMysqlTui.logger.error("Failed to insert record: #{e.message}")
           prompt.say("挿入に失敗しました: #{e.message}", color: :red)
           data = prompt_for_record_data(columns, prompt, data)
-          break if data.empty?
+          break if data.nil? || data.empty?
         end
       end
 
@@ -88,11 +93,16 @@ module RubyMysqlTui
       end
 
       def execute_update(state, client, prompt, info)
+        max_retries = 5
+        retries = 0
         loop do
           if update_record_safe(client, prompt, state[:selected_table], info)
             refresh_records_safe(state, client, prompt)
             break
           end
+
+          retries += 1
+          break if retries >= max_retries
 
           info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val])
           break if info[:val].nil?
