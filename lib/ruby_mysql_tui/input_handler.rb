@@ -19,7 +19,7 @@ module RubyMysqlTui
         return result
       end
 
-      key_name = event.respond_to?(:key) ? event.key&.name : nil
+      key_name = event.respond_to?(:key) && event.key&.respond_to?(:name) ? event.key.name : nil
       handle_key_input(key_name, state, client)
     end
 
