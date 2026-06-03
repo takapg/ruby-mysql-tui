@@ -20,9 +20,12 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:say)
 
+      error = Mysql2::Error.new('Duplicate entry')
+      allow(error).to receive(:errno).and_return(1062)
+
       expect(client).to receive(:update_record)
         .with('users', 'id', '1', 'name', 'invalid')
-        .and_raise(Mysql2::Error, 'Invalid value')
+        .and_raise(error)
       expect(client).to receive(:update_record).with('users', 'id', '1', 'name', 'valid').and_return(true)
       allow(client).to receive(:list_records).and_return(state[:records])
 

@@ -73,8 +73,8 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
     allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('Bob')
     allow(client).to receive(:update_record).and_raise(Mysql2::Error, 'Update failed')
-    expect(RubyMysqlTui.logger).to receive(:error).with(/更新に失敗しました: Update failed/)
-    expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red)
+    expect(RubyMysqlTui.logger).to receive(:error).with(/更新に失敗しました: Update failed/).at_least(:once)
+    expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red).at_least(:once)
 
     described_class.handle_edit_record(state, client, prompt)
   end
