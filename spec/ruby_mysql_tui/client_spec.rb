@@ -267,6 +267,17 @@ RSpec.describe RubyMysqlTui::Client, '#select_database' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#create_database' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes CREATE DATABASE and escapes backticks' do
+    db_name = 'my`db'
+    expect(mock_mysql_client).to receive(:query).with('CREATE DATABASE `my``db`')
+    client.create_database(db_name)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#update_record' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

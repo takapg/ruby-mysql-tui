@@ -326,6 +326,31 @@ RSpec.describe 'E2E Connection Error' do
   end
 end
 
+RSpec.describe 'E2E Database Creation' do
+  include_context 'e2e setup'
+
+  it 'creates a new database when n is pressed in database view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('new_e2e_db')
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    expect(client).to receive(:create_database).with('new_e2e_db')
+    expect(client).to receive(:list_databases).twice # initial + refresh
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :databases }).to be true
+  end
+end
+
 RSpec.describe 'E2E All Records Mode' do
   include_context 'e2e setup'
 
