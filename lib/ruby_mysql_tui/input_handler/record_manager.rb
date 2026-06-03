@@ -42,6 +42,8 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
         prompt.say("挿入に失敗しました: #{error.message}", color: :red)
 
+        return true unless unique_constraint_violation?(error)
+
         new_data = RecordPrompt.prompt_for_record_data(columns, prompt, context[:data])
         context[:data] = new_data
         new_data.nil? || new_data.empty?
