@@ -60,6 +60,25 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for n
     regex, = described_class.type_validation_for('weight', structure)
     expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
   end
+
+  it 'returns date/datetime validation for date types' do
+    date_structure = [
+      { 'Field' => 'created_at', 'Type' => 'datetime' },
+      { 'Field' => 'birthday', 'Type' => 'date' },
+      { 'Field' => 'updated_at', 'Type' => 'timestamp' }
+    ]
+    
+    regex, msg = described_class.type_validation_for('birthday', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2}\z/)
+    expect(msg).to eq('日付形式 (YYYY-MM-DD) で入力してください')
+
+    regex, msg = described_class.type_validation_for('created_at', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/)
+    expect(msg).to eq('日時形式 (YYYY-MM-DD HH:MM:SS) で入力してください')
+
+    regex, = described_class.type_validation_for('updated_at', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/)
+  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for non-numeric' do
