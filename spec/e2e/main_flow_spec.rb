@@ -266,6 +266,33 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
   end
 end
 
+RSpec.describe RubyMysqlTui, '.handle_input (input types)' do
+  let(:client) { double('Client') }
+
+  it 'KeyEvent オブジェクト (文字) が渡されたとき、正しく処理されること' do
+    event = double('Event', value: 'b', key: double('Key', name: :unknown))
+    allow(client).to receive(:list_databases).and_return(%w[db1])
+    state = { view_mode: :tables }
+    result = RubyMysqlTui.handle_input(event, state, client)
+    expect(result[:view_mode]).to eq(:databases)
+  end
+
+  it '文字列が直接渡されたとき、正しく処理されること' do
+    event = 'b'
+    allow(client).to receive(:list_databases).and_return(%w[db1])
+    state = { view_mode: :tables }
+    result = RubyMysqlTui.handle_input(event, state, client)
+    expect(result[:view_mode]).to eq(:databases)
+  end
+
+  it 'KeyEvent オブジェクト (特殊キー) が渡されたとき、正しく処理されること' do
+    event = double('Event', value: nil, key: double('Key', name: :up))
+    state = { focus: :left, selected_index: 1, items: %w[a b] }
+    result = RubyMysqlTui.handle_input(event, state, client)
+    expect(result[:selected_index]).to eq(0)
+  end
+end
+
 RSpec.describe 'E2E Record Creation - Type Validation' do
   include_context 'e2e setup'
 

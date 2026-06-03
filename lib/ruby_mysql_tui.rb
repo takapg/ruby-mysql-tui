@@ -72,7 +72,7 @@ module RubyMysqlTui
     return InputHandler.handle_sql_mode_input(reader, state, client) if state[:sql_mode]
 
     event = reader.read_keypress
-    val = event.respond_to?(:value) ? event.value : event
+    val = InputHandler.event_value(event)
     return [state, true] if val == 'q'
 
     [handle_input(event, state, client), false]

@@ -13,14 +13,23 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
-      val = event.respond_to?(:value) ? event.value : event
+      val = event_value(event)
 
       if (result = handle_action_key(val, state, client))
         return result
       end
 
-      key_name = event.respond_to?(:key) && event.key.respond_to?(:name) ? event.key.name : nil
+      key_name = event_key_name(event)
       handle_key_input(key_name, state, client)
+    end
+
+    def event_value(event)
+      event.respond_to?(:value) ? event.value : event
+    end
+
+    def event_key_name(event)
+      return nil unless event.respond_to?(:key)
+      event.key.respond_to?(:name) ? event.key.name : nil
     end
 
     def handle_action_key(val, state, client)
