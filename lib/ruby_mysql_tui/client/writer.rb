@@ -2,6 +2,7 @@
 
 module RubyMysqlTui
   class Client
+    # Writer は レコードの更新、挿入、削除などの書き込み操作を提供します。
     module Writer
       # レコードを更新します。
       def update_record(table_name, pk_column, pk_value, column_name, new_value)

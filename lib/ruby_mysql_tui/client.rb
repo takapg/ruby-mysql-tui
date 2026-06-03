@@ -7,6 +7,7 @@ module RubyMysqlTui
   # Client は MySQL 接続を管理し、クエリの実行を提供します。
   class Client
     include Writer
+
     attr_reader :connection, :config, :last_sql
 
     def initialize(config = {})
@@ -36,10 +37,12 @@ module RubyMysqlTui
       results = query('SHOW DATABASES')
       results.map { |row| row.values.first }
     end
+
     # データベースを選択します。
     def select_database(database_name)
       query("USE `#{database_name.gsub('`', '``')}`")
     end
+
     # 指定したデータベースのテーブル一覧を取得します。
     def list_tables(database_name)
       escaped_db_name = database_name.gsub('`', '``')
@@ -61,12 +64,14 @@ module RubyMysqlTui
       results = query("SHOW COLUMNS FROM `#{escaped_table_name}`")
       results.map { |row| row['Field'] }
     end
+
     # テーブルの主キー列名を取得します。
     def primary_key_for(table_name)
       escaped_table_name = table_name.gsub('`', '``')
       results = query("SHOW KEYS FROM `#{escaped_table_name}` WHERE Key_name = 'PRIMARY'")
       results.first ? results.first['Column_name'] : nil
     end
+
     # テーブルの構造（カラム定義）を取得します。
     def list_table_structure(table_name)
       escaped_table_name = table_name.gsub('`', '``')
