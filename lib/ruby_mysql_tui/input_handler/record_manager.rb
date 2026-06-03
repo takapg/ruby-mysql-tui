@@ -58,13 +58,13 @@ module RubyMysqlTui
         column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column, structure)
         return if value.nil?
 
-        return if invalid_edit_input?(column, value, structure, pk_column, prompt)
+        return if invalid_edit_input?(column, pk_column, prompt)
 
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
         RecordRetryHandler.execute_update_with_retry(state, client, prompt, info)
       end
 
-      def self.invalid_edit_input?(column, value, structure, pk_column, prompt)
+      def self.invalid_edit_input?(column, pk_column, prompt)
         if column == pk_column
           RecordPrompt.warn_pk_not_editable(prompt)
           return true
