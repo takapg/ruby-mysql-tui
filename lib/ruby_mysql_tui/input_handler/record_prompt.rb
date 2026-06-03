@@ -6,23 +6,28 @@ module RubyMysqlTui
     module RecordPrompt
       module_function
 
-      def prompt_for_record_data(columns, prompt, default_data = {})
+      def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
-          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col])
+          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |q|
+            q.validate(/\S+/, '入力してください') if required_column?(col, structure)
+          end
           return nil if val.nil?
 
           data[col] = val
         end
       end
 
-      def prompt_for_edit(record, prompt, pk_column = nil)
+      def prompt_for_edit(record, prompt, pk_column = nil, structure = [])
         editable_columns = get_editable_columns(record, prompt, pk_column)
         return nil if editable_columns.nil?
 
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
         return nil if column.nil?
 
-        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
+        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |q|
+          q.required true if required_column?(column, structure)
+          q.validate(/\S+/, '入力してください') if required_column?(column, structure)
+        end
         [column, value]
       end
 
@@ -47,6 +52,11 @@ module RubyMysqlTui
 
       def warn_pk_not_editable(prompt)
         prompt.say('主キーは編集できません', color: :red)
+      end
+
+      def required_column?(column_name, structure)
+        col_info = structure.find { |c| c['Field'] == column_name }
+        col_info&.[]('Null') == 'NO'
       end
     end
   end
