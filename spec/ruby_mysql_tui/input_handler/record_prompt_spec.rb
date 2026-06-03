@@ -47,27 +47,31 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for' 
     ]
   end
 
-  it 'returns integer validation for int type' do
-    regex, msg = described_class.type_validation_for('age', structure)
-    expect(regex).to eq(/\A-?\d+\z/)
-    expect(msg).to eq('数値のみ入力してください')
+  context 'with numeric types' do
+    it 'returns integer validation for int type' do
+      regex, msg = described_class.type_validation_for('age', structure)
+      expect(regex).to eq(/\A-?\d+\z/)
+      expect(msg).to eq('数値のみ入力してください')
+    end
+
+    it 'returns numeric validation for decimal/float type' do
+      regex, msg = described_class.type_validation_for('price', structure)
+      expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+      expect(msg).to eq('数値を入力してください')
+
+      regex, = described_class.type_validation_for('weight', structure)
+      expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+    end
   end
 
-  it 'returns numeric validation for decimal/float type' do
-    regex, msg = described_class.type_validation_for('price', structure)
-    expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
-    expect(msg).to eq('数値を入力してください')
+  context 'with non-numeric or missing types' do
+    it 'returns nil for varchar type' do
+      expect(described_class.type_validation_for('name', structure)).to be_nil
+    end
 
-    regex, _ = described_class.type_validation_for('weight', structure)
-    expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
-  end
-
-  it 'returns nil for varchar type' do
-    expect(described_class.type_validation_for('name', structure)).to be_nil
-  end
-
-  it 'returns nil for non-existent column' do
-    expect(described_class.type_validation_for('unknown', structure)).to be_nil
+    it 'returns nil for non-existent column' do
+      expect(described_class.type_validation_for('unknown', structure)).to be_nil
+    end
   end
 end
 
@@ -96,38 +100,43 @@ end
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data validation' do
   let(:prompt) { instance_double('TTY::Prompt') }
-  let(:columns) { %w[name email] }
-  let(:structure) do
-    [
-      { 'Field' => 'name', 'Null' => 'NO' },
-      { 'Field' => 'email', 'Null' => 'YES' }
-    ]
+
+  context 'with NOT NULL validation' do
+    let(:columns) { %w[name email] }
+    let(:structure) do
+      [
+        { 'Field' => 'name', 'Null' => 'NO' },
+        { 'Field' => 'email', 'Null' => 'YES' }
+      ]
+    end
+
+    it 'applies validation only to NOT NULL columns' do
+      question_name = instance_double('TTY::Prompt::Question')
+      question_email = instance_double('TTY::Prompt::Question')
+
+      expect(prompt).to receive(:ask).with(/name/, any_args).and_yield(question_name).and_return('Alice')
+      expect(prompt).to receive(:ask).with(/email/, any_args).and_yield(question_email).and_return('alice@example.com')
+
+      expect(question_name).to receive(:required).with(true)
+      expect(question_name).to receive(:validate).with(/\S+/, '入力してください')
+      expect(question_email).not_to receive(:required)
+      expect(question_email).not_to receive(:validate)
+
+      described_class.prompt_for_record_data(columns, prompt, {}, structure)
+    end
   end
 
-  it 'applies validation only to NOT NULL columns' do
-    question_name = instance_double('TTY::Prompt::Question')
-    question_email = instance_double('TTY::Prompt::Question')
+  context 'with type validation' do
+    it 'applies type validation for numeric columns' do
+      columns = %w[age]
+      structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }]
+      question = instance_double('TTY::Prompt::Question')
 
-    expect(prompt).to receive(:ask).with(/name/, any_args).and_yield(question_name).and_return('Alice')
-    expect(prompt).to receive(:ask).with(/email/, any_args).and_yield(question_email).and_return('alice@example.com')
+      expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('25')
+      expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
 
-    expect(question_name).to receive(:required).with(true)
-    expect(question_name).to receive(:validate).with(/\S+/, '入力してください')
-    expect(question_email).not_to receive(:required)
-    expect(question_email).not_to receive(:validate)
-
-    described_class.prompt_for_record_data(columns, prompt, {}, structure)
-  end
-
-  it 'applies type validation for numeric columns' do
-    columns = %w[age]
-    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }]
-    question = instance_double('TTY::Prompt::Question')
-
-    expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('25')
-    expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
-
-    described_class.prompt_for_record_data(columns, prompt, {}, structure)
+      described_class.prompt_for_record_data(columns, prompt, {}, structure)
+    end
   end
 end
 

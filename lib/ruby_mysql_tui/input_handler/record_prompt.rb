@@ -6,6 +6,11 @@ module RubyMysqlTui
     module RecordPrompt
       module_function
 
+      TYPE_VALIDATIONS = {
+        /int/ => [/\A-?\d+\z/, '数値のみ入力してください'],
+        /decimal|float|double/ => [/\A-?\d+(\.\d+)?\z/, '数値を入力してください']
+      }.freeze
+
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
@@ -77,18 +82,10 @@ module RubyMysqlTui
 
       def type_validation_for(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
-        return nil unless col_info
-
-        type = col_info['Type']&.downcase
+        type = col_info&.[]('Type')&.downcase
         return nil unless type
 
-        if type.include?('int')
-          [/\A-?\d+\z/, '数値のみ入力してください']
-        elsif type.include?('decimal') || type.include?('float') || type.include?('double')
-          [/\A-?\d+(\.\d+)?\z/, '数値を入力してください']
-        else
-          nil
-        end
+        TYPE_VALIDATIONS.find { |pattern, _| type.match?(pattern) }&.last
       end
     end
   end

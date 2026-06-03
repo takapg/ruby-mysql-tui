@@ -270,7 +270,7 @@ RSpec.describe 'E2E Record Creation - Type Validation' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     
-    expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*args, &block|
+    expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*_args, &block|
       question = instance_double('TTY::Prompt::Question')
       expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
       block.call(question)
@@ -282,7 +282,9 @@ RSpec.describe 'E2E Record Creation - Type Validation' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([])
     allow(client).to receive(:list_columns).and_return(['age'])
-    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }])
+    allow(client).to receive(:list_table_structure).and_return([
+      { 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }
+    ])
     expect(client).to receive(:insert_record).with('test_table', { 'age' => '25' })
 
     RubyMysqlTui.run_main_loop(client)
