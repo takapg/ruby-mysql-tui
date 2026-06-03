@@ -78,9 +78,9 @@ module RubyMysqlTui
 
       def self.handle_update_error(error, prompt, info)
         if unique_constraint_violation?(error)
-          handle_unique_constraint_error(error, prompt, info)
+          handle_unique_constraint_error_retry?(error, prompt, info)
         else
-          handle_general_update_error(error, prompt, info)
+          handle_general_update_error_retry?(error, prompt, info)
         end
       end
 
@@ -88,7 +88,7 @@ module RubyMysqlTui
         error.respond_to?(:errno) && error.errno == 1062
       end
 
-      def self.handle_unique_constraint_error(error, prompt, info)
+      def self.handle_unique_constraint_error_retry?(error, prompt, info)
         msg = "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
@@ -96,7 +96,7 @@ module RubyMysqlTui
         info[:val].nil?
       end
 
-      def self.handle_general_update_error(error, prompt, info)
+      def self.handle_general_update_error_retry?(error, prompt, info)
         msg = "更新に失敗しました: #{error.message}"
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
@@ -116,8 +116,8 @@ module RubyMysqlTui
       end
       private_class_method :with_retry, :handle_update_error,
                            :unique_constraint_violation?,
-                           :handle_unique_constraint_error,
-                           :handle_general_update_error
+                           :handle_unique_constraint_error_retry?,
+                           :handle_general_update_error_retry?
     end
   end
 end
