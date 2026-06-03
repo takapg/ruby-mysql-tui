@@ -95,6 +95,7 @@ module RubyMysqlTui
           msg = "更新に失敗しました: #{error.message}"
           RubyMysqlTui.logger.error(msg)
           prompt.say(msg, color: :red)
+          info[:val] = nil
         end
       end
 
