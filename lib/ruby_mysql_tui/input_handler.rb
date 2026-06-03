@@ -35,6 +35,7 @@ module RubyMysqlTui
       when 'i' then handle_view_mode_toggle(state, client)
       when "\t" then Navigation.handle_tab(state)
       when "\r" then Navigation.handle_return(state, client)
+      when 'a' then handle_all_records_toggle(state, client)
       when 'n', 'e', 'd' then handle_record_action(val, state, client)
       end
     end
@@ -88,6 +89,20 @@ module RubyMysqlTui
     def handle_sql_mode_toggle(state)
       state[:sql_mode] = !state[:sql_mode]
       state[:sql_input] = '' if state[:sql_mode]
+      state
+    end
+
+    def handle_all_records_toggle(state, client)
+      return state unless state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
+
+      state[:all_records_mode] = !state[:all_records_mode]
+      if state[:all_records_mode]
+        state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
+        state[:records_offset] = 0
+        state[:page_offset] = 0
+      else
+        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
+      end
       state
     end
 

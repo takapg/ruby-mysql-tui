@@ -12,6 +12,8 @@ module RubyMysqlTui
       end
 
       def fetch_page_if_needed(state, client, layout)
+        return if state[:all_records_mode]
+
         offset = state[:records_offset]
         page_offset = state[:page_offset] || 0
         records = state[:records] || []

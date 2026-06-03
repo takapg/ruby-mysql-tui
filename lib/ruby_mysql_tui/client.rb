@@ -48,9 +48,11 @@ module RubyMysqlTui
     end
 
     # 指定したテーブルのレコード一覧を取得します。
-    def list_records(table_name, offset = 0)
+    def list_records(table_name, offset = 0, limit: RubyMysqlTui::PAGE_SIZE)
       escaped_table_name = table_name.gsub('`', '``')
-      query("SELECT * FROM `#{escaped_table_name}` LIMIT #{RubyMysqlTui::PAGE_SIZE} OFFSET #{offset}")
+      sql = "SELECT * FROM `#{escaped_table_name}`"
+      sql += " LIMIT #{limit} OFFSET #{offset}" if limit
+      query(sql)
     end
 
     # テーブルのカラム一覧を取得します。
