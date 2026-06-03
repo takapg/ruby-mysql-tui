@@ -240,7 +240,7 @@ end
 RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
   include_context 'e2e setup'
 
-  it 'does not call update_record when a NOT NULL column is updated with an empty string' do
+  it 'applies required validation for NOT NULL columns during record edit' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
@@ -254,12 +254,18 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
     allow(client).to receive(:primary_key_for).and_return('id')
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'name', 'Null' => 'NO' }])
 
-    # NOT NULLカラム 'name' に対して空白のみを入力
+    # NOT NULLカラム 'name' に対してバリデーションが設定されていることを検証
     allow(prompt).to receive(:select).and_return('name')
-    allow(prompt).to receive(:ask).and_return('  ')
+    expect(prompt).to receive(:ask).with(/新しい値を入力してください \(name\):/, any_args) do |*_args, &block|
+      question = instance_double('TTY::Prompt::Question')
+      expect(question).to receive(:required).with(true)
+      expect(question).to receive(:validate).with(/\S+/, '入力してください')
+      block.call(question)
+      'valid_name'
+    end
     allow(prompt).to receive(:say)
 
-    expect(client).not_to receive(:update_record)
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'name', 'valid_name')
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
