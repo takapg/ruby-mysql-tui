@@ -9,6 +9,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'updates the record when valid column and value are provided' do
@@ -34,6 +35,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record P
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'shows a warning and does not update when the primary key is selected' do
@@ -51,6 +53,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record n
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(nil)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'returns state and shows warning when no primary key is found' do
@@ -65,6 +68,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record n
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
     state[:records] = [{ pk_column => 1 }]
   end
 
@@ -80,6 +84,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record r
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'stops record editing after 5 failed retries' do
@@ -100,6 +105,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'handles Mysql2::Error during update' do
@@ -117,6 +123,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
   include_context 'record manager setup'
   before do
     allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
   end
 
   it 'handles duplicate entry error specifically' do

@@ -56,7 +56,7 @@ module RubyMysqlTui
 
       def required_column?(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
-        col_info && col_info['Null'] == 'NO'
+        col_info&.[]('Null') == 'NO'
       end
     end
   end
