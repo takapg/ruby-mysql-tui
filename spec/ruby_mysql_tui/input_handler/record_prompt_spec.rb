@@ -128,11 +128,25 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
 
   it 'applies type validation for numeric columns' do
     columns = %w[age]
-    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }]
+    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'NO' }]
     question = instance_double('TTY::Prompt::Question')
 
     expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('25')
     expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
+
+    described_class.prompt_for_record_data(columns, prompt, {}, structure)
+  end
+
+  it 'allows empty input for nullable numeric columns' do
+    columns = %w[age]
+    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }]
+    question = instance_double('TTY::Prompt::Question')
+
+    expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('')
+    expect(question).to receive(:validate).with(
+      Regexp.union(/\A-?\d+\z/, /\A\s*\z/),
+      '数値のみ入力してください'
+    )
 
     described_class.prompt_for_record_data(columns, prompt, {}, structure)
   end

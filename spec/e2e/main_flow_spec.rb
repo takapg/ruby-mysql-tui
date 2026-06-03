@@ -57,7 +57,7 @@ module E2EFlowHelpers
   def setup_client_for_type_validation(client, column)
     setup_basic_client_mocks(client)
     allow(client).to receive(:list_columns).and_return([column])
-    structure = [{ 'Field' => column, 'Type' => 'int(11)', 'Null' => 'YES' }]
+    structure = [{ 'Field' => column, 'Type' => 'int(11)', 'Null' => 'NO' }]
     allow(client).to receive(:list_table_structure).and_return(structure)
   end
 

@@ -77,6 +77,9 @@ module RubyMysqlTui
         return unless validation
 
         regex, message = validation
+        # Nullableな場合は空文字を許容する
+        regex = Regexp.union(regex, /\A\s*\z/) unless required_column?(column, structure)
+
         question.validate(regex, message)
       end
 
