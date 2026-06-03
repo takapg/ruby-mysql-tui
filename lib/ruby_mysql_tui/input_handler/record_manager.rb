@@ -93,7 +93,7 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
         info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
-        false
+        info[:val].nil?
       end
 
       def self.handle_general_update_error(error, prompt, info)
