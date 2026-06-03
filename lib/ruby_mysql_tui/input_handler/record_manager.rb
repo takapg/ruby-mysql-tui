@@ -86,17 +86,29 @@ module RubyMysqlTui
       end
 
       def self.handle_update_error(error, prompt, info)
-        if error.respond_to?(:errno) && error.errno == 1062
-          msg = "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
-          RubyMysqlTui.logger.error(msg)
-          prompt.say(msg, color: :red)
-          info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+        if unique_constraint_violation?(error)
+          handle_unique_constraint_error(error, prompt, info)
         else
-          msg = "更新に失敗しました: #{error.message}"
-          RubyMysqlTui.logger.error(msg)
-          prompt.say(msg, color: :red)
-          info[:val] = nil
+          handle_general_update_error(error, prompt, info)
         end
+      end
+
+      def self.unique_constraint_violation?(error)
+        error.respond_to?(:errno) && error.errno == 1062
+      end
+
+      def self.handle_unique_constraint_error(error, prompt, info)
+        msg = "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
+        RubyMysqlTui.logger.error(msg)
+        prompt.say(msg, color: :red)
+        info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+      end
+
+      def self.handle_general_update_error(error, prompt, info)
+        msg = "更新に失敗しました: #{error.message}"
+        RubyMysqlTui.logger.error(msg)
+        prompt.say(msg, color: :red)
+        info[:val] = nil
       end
 
       def self.prompt_for_edit(record, prompt, pk_column = nil)
@@ -122,7 +134,7 @@ module RubyMysqlTui
           break if error_handler.call(e)
         end
       end
-      private_class_method :with_retry
+      private_class_method :with_retry, :handle_update_error, :unique_constraint_violation?, :handle_unique_constraint_error, :handle_general_update_error
     end
   end
 end
