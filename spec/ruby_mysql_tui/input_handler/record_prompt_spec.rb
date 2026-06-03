@@ -36,3 +36,26 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable'
     described_class.warn_pk_not_editable(prompt)
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.required_column?' do
+  let(:structure) do
+    [
+      { 'Field' => 'id', 'Null' => 'NO' },
+      { 'Field' => 'name', 'Null' => 'NO' },
+      { 'Field' => 'email', 'Null' => 'YES' }
+    ]
+  end
+
+  it 'returns true for NOT NULL columns' do
+    expect(described_class.required_column?('id', structure)).to be true
+    expect(described_class.required_column?('name', structure)).to be true
+  end
+
+  it 'returns false for nullable columns' do
+    expect(described_class.required_column?('email', structure)).to be false
+  end
+
+  it 'returns false for non-existent columns' do
+    expect(described_class.required_column?('unknown', structure)).to be false
+  end
+end

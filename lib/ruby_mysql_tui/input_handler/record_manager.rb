@@ -28,10 +28,11 @@ module RubyMysqlTui
         return state unless can_manage_record?(state)
 
         columns = client.list_columns(state[:selected_table])
-        data = RecordPrompt.prompt_for_record_data(columns, prompt)
+        structure = client.list_table_structure(state[:selected_table])
+        data = RecordPrompt.prompt_for_record_data(columns, prompt, {}, structure)
         return state if data.nil? || data.empty?
 
-        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, columns)
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, columns, structure)
         state
       end
 
@@ -51,7 +52,8 @@ module RubyMysqlTui
       end
 
       def self.edit_and_update(state, client, record, pk_column, prompt)
-        column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column)
+        structure = client.list_table_structure(state[:selected_table])
+        column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column, structure)
         return if value.nil?
 
         if column == pk_column

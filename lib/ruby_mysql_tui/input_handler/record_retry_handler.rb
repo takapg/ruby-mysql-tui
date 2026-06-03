@@ -9,22 +9,22 @@ module RubyMysqlTui
     module RecordRetryHandler
       module_function
 
-      def execute_insert_with_retry(state, client, prompt, data, columns)
+      def execute_insert_with_retry(state, client, prompt, data, columns, structure = [])
         context = { data: data }
         with_retry(error_handler: lambda { |e|
-          handle_insert_error_retry?(e, prompt, columns, context)
+          handle_insert_error_retry?(e, prompt, columns, context, structure)
         }) do
           RecordExecutor.execute_insert(state, client, prompt, context[:data])
         end
       end
 
-      def handle_insert_error_retry?(error, prompt, columns, context)
+      def handle_insert_error_retry?(error, prompt, columns, context, structure = [])
         RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
         prompt.say("挿入に失敗しました: #{error.message}", color: :red)
 
         return true unless unique_constraint_violation?(error)
 
-        new_data = RecordPrompt.prompt_for_record_data(columns, prompt, context[:data])
+        new_data = RecordPrompt.prompt_for_record_data(columns, prompt, context[:data], structure)
         context[:data] = new_data
         new_data.nil? || new_data.empty?
       end
