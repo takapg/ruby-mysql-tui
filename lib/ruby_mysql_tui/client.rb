@@ -57,8 +57,11 @@ module RubyMysqlTui
       escaped_table_name = table_name.gsub('`', '``')
       sql = "SELECT * FROM `#{escaped_table_name}`"
 
-      limit_val = limit || MAX_RECORDS_LIMIT
-      sql += " LIMIT #{limit_val} OFFSET #{offset}"
+      if limit
+        sql += " LIMIT #{limit} OFFSET #{offset}"
+      elsif offset > 0
+        sql += " OFFSET #{offset}"
+      end
 
       query(sql)
     end
