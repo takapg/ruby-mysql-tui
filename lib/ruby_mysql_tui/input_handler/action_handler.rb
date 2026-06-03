@@ -16,11 +16,11 @@ module RubyMysqlTui
       def handle_system_action(val, state, client)
         case val
         when 'b' then Navigation.handle_back_navigation(state, client)
-        when 's' then InputHandler.handle_sql_mode_toggle(state)
-        when 'i' then InputHandler.handle_view_mode_toggle(state, client)
+        when 's' then RubyMysqlTui::InputHandler.handle_sql_mode_toggle(state)
+        when 'i' then RubyMysqlTui::InputHandler.handle_view_mode_toggle(state, client)
         when "\t" then Navigation.handle_tab(state)
         when "\r" then Navigation.handle_return(state, client)
-        when 'a' then InputHandler.handle_all_records_toggle(state, client)
+        when 'a' then RubyMysqlTui::InputHandler.handle_all_records_toggle(state, client)
         end
       end
 
