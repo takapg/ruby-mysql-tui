@@ -8,8 +8,8 @@ module RubyMysqlTui
 
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
-          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |q|
-            apply_required_validation(q, col, structure)
+          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
+            apply_required_validation(question, col, structure)
           end
           return nil if val.nil?
 
@@ -24,8 +24,8 @@ module RubyMysqlTui
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
         return nil if column.nil?
 
-        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |q|
-          apply_required_validation(q, column, structure)
+        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
+          apply_required_validation(question, column, structure)
         end
         [column, value]
       end
@@ -53,11 +53,11 @@ module RubyMysqlTui
         prompt.say('主キーは編集できません', color: :red)
       end
 
-      def apply_required_validation(q, column, structure)
-        if required_column?(column, structure)
-          q.required true
-          q.validate(/\S+/, '入力してください')
-        end
+      def apply_required_validation(question, column, structure)
+        return unless required_column?(column, structure)
+
+        question.required true
+        question.validate(/\S+/, '入力してください')
       end
 
       def required_column?(column_name, structure)
