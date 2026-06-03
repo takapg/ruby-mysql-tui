@@ -9,10 +9,10 @@ module RubyMysqlTui
     module RecordRetryHandler
       module_function
 
-      def execute_insert_with_retry(state, client, prompt, data, columns, structure = [])
+      def execute_insert_with_retry(state, client, prompt, data, table_info)
         context = { data: data }
         with_retry(error_handler: lambda { |e|
-          handle_insert_error_retry?(e, prompt, columns, context, structure)
+          handle_insert_error_retry?(e, prompt, table_info[:columns], context, table_info[:structure] || [])
         }) do
           RecordExecutor.execute_insert(state, client, prompt, context[:data])
         end

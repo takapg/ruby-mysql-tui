@@ -32,7 +32,7 @@ module RubyMysqlTui
         data = RecordPrompt.prompt_for_record_data(columns, prompt, {}, structure)
         return state if data.nil? || data.empty?
 
-        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, columns, structure)
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, { columns: columns, structure: structure })
         state
       end
 
