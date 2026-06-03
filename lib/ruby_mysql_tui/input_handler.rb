@@ -10,9 +10,7 @@ require_relative 'ui/layout'
 module RubyMysqlTui
   # InputHandler は ユーザー入力を処理し、状態を更新します。
   module InputHandler
-    module_function
-
-    def handle_input(event, state, client)
+    def self.handle_input(event, state, client)
       val = event.respond_to?(:value) ? event.value : event
 
       if (result = handle_action_key(val, state, client))
@@ -24,7 +22,7 @@ module RubyMysqlTui
       handle_key_input(key_name, state, client)
     end
 
-    def extract_key_name(event)
+    def self.extract_key_name(event)
       if event.respond_to?(:key) && event.key.respond_to?(:name)
         event.key.name
       elsif event.respond_to?(:name)
@@ -32,7 +30,7 @@ module RubyMysqlTui
       end
     end
 
-    def handle_action_key(val, state, client)
+    def self.handle_action_key(val, state, client)
       case val
       when 'b' then Navigation.handle_back_navigation(state, client)
       when 's' then handle_sql_mode_toggle(state)
@@ -43,7 +41,7 @@ module RubyMysqlTui
       end
     end
 
-    def handle_key_input(key_name, state, client)
+    def self.handle_key_input(key_name, state, client)
       case key_name
       when :tab then Navigation.handle_tab(state)
       when :up then handle_up(state, client)
@@ -53,15 +51,15 @@ module RubyMysqlTui
       end
     end
 
-    def handle_up(state, client)
+    def self.handle_up(state, client)
       handle_scroll(state, client, -1)
     end
 
-    def handle_down(state, client)
+    def self.handle_down(state, client)
       handle_scroll(state, client, 1)
     end
 
-    def handle_scroll(state, client, delta)
+    def self.handle_scroll(state, client, delta)
       if state[:focus] == :left && !state[:items].empty?
         update_selected_index(state, delta)
       elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
@@ -70,23 +68,23 @@ module RubyMysqlTui
       state
     end
 
-    def update_selected_index(state, delta)
+    def self.update_selected_index(state, delta)
       state[:selected_index] = (state[:selected_index] + delta).clamp(0, state[:items].size - 1)
     end
 
-    def current_layout
+    def self.current_layout
       @current_layout ||= RubyMysqlTui::UI::Layout.new
       @current_layout.update_dimensions
       @current_layout
     end
 
-    def handle_sql_mode_toggle(state)
+    def self.handle_sql_mode_toggle(state)
       state[:sql_mode] = !state[:sql_mode]
       state[:sql_input] = '' if state[:sql_mode]
       state
     end
 
-    def handle_view_mode_toggle(state, client)
+    def self.handle_view_mode_toggle(state, client)
       return state unless state[:focus] == :right && state[:selected_table]
 
       if state[:view_mode] == :records
