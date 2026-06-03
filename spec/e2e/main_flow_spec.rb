@@ -48,14 +48,17 @@ module E2EFlowHelpers
     setup_edit_prompt_mocks(prompt)
   end
 
-  def setup_client_for_type_validation(client, column)
+  def setup_basic_client_mocks(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([])
+  end
+
+  def setup_client_for_type_validation(client, column)
+    setup_basic_client_mocks(client)
     allow(client).to receive(:list_columns).and_return([column])
-    allow(client).to receive(:list_table_structure).and_return([
-      { 'Field' => column, 'Type' => 'int(11)', 'Null' => 'YES' }
-    ])
+    structure = [{ 'Field' => column, 'Type' => 'int(11)', 'Null' => 'YES' }]
+    allow(client).to receive(:list_table_structure).and_return(structure)
   end
 
   def setup_edit_events(reader)
