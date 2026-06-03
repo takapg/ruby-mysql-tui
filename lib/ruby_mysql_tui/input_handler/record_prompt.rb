@@ -9,6 +9,7 @@ module RubyMysqlTui
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |q|
+            q.required true if required_column?(col, structure)
             q.validate(/\S+/, '入力してください') if required_column?(col, structure)
           end
           return nil if val.nil?
@@ -25,6 +26,7 @@ module RubyMysqlTui
         return nil if column.nil?
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |q|
+          q.required true if required_column?(column, structure)
           q.validate(/\S+/, '入力してください') if required_column?(column, structure)
         end
         [column, value]

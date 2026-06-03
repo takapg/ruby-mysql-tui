@@ -77,6 +77,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
     expect(prompt).to receive(:ask).with(/name/, any_args).and_yield(question_name).and_return('Alice')
     expect(prompt).to receive(:ask).with(/email/, any_args).and_yield(question_email).and_return('alice@example.com')
 
+    expect(question_name).to receive(:required).with(true)
     expect(question_name).to receive(:validate).with(/\S+/, '入力してください')
     expect(question_email).not_to receive(:validate)
 
