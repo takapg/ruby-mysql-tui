@@ -35,5 +35,39 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(final_state[:view_mode]).to eq(:records)
       expect(final_state[:records]).to eq([{ 'id' => 1 }])
     end
+
+    context 'when arrow keys are pressed' do
+      let(:state) { { focus: :left, items: ['item1', 'item2'], selected_index: 0 } }
+
+      it 'handles "down" key via event.key.name' do
+        event = double('Event', key: double('Key', name: 'down'))
+        new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+        expect(new_state[:selected_index]).to eq(1)
+      end
+
+      it 'handles "up" key via event.name' do
+        state[:selected_index] = 1
+        event = double('Event', name: 'up')
+        new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+        expect(new_state[:selected_index]).to eq(0)
+      end
+    end
+  end
+
+  describe '.extract_key_name' do
+    it 'extracts name from event.key.name' do
+      event = double('Event', key: double('Key', name: 'up'))
+      expect(RubyMysqlTui::InputHandler.extract_key_name(event)).to eq('up')
+    end
+
+    it 'extracts name from event.name' do
+      event = double('Event', name: 'down')
+      expect(RubyMysqlTui::InputHandler.extract_key_name(event)).to eq('down')
+    end
+
+    it 'returns nil if neither is present' do
+      event = double('Event')
+      expect(RubyMysqlTui::InputHandler.extract_key_name(event)).to be_nil
+    end
   end
 end
