@@ -29,6 +29,7 @@ module RubyMysqlTui
 
     def event_key_name(event)
       return nil unless event.respond_to?(:key)
+
       event.key.respond_to?(:name) ? event.key.name : nil
     end
 
