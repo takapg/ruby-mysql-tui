@@ -24,6 +24,7 @@ module RubyMysqlTui
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
         when :records then build_records_view(state, content_width, height)
+        when :table_structure then build_table_structure_view(state, content_width, height)
         else truncate('Unknown view mode', content_width)
         end
       end
@@ -38,6 +39,36 @@ module RubyMysqlTui
             selected_index: state[:selected_record_index],
             offset: state[:records_offset] || 0
           }
+        )
+      end
+
+      def build_table_structure_view(state, width, height)
+        build_table_structure_text(
+          table_name: state[:selected_table],
+          structure: state[:records],
+          width: width,
+          options: { height: height }
+        )
+      end
+
+      def build_table_structure_text(table_name:, structure:, width:, options: {})
+        height = options[:height]
+        header = truncate("Table Structure: #{table_name}", width)
+        return "#{header}\n\n#{truncate('No structure information found', width)}" if structure.nil? || structure.none?
+
+        max_rows = height ? [0, height - 4].max : nil
+        table_output = create_structure_table(structure, width, max_rows).to_s
+        "#{header}\n\n#{table_output}"
+      end
+
+      def create_structure_table(structure, width, max_rows = nil)
+        columns = structure.first.keys
+        display_structure = structure.take(max_rows || structure.size)
+        col_width = calculate_col_width(width, columns.size)
+
+        TTY::Table.new(
+          header: columns.map { |c| truncate(c, col_width) },
+          rows: display_structure.map { |row| row.values.map { |v| truncate(v.to_s, col_width) } }
         )
       end
 

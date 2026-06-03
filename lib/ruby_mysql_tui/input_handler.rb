@@ -15,6 +15,7 @@ module RubyMysqlTui
       case event.value
       when 'b' then return handle_back_navigation(state, client)
       when 's' then return handle_sql_mode_toggle(state)
+      when 'i' then return handle_view_mode_toggle(state, client)
       when 'n' then return RecordManager.handle_create_record(state, client, TTY::Prompt.new)
       when 'e' then return RecordManager.handle_edit_record(state, client, TTY::Prompt.new)
       when 'd' then return RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
@@ -113,6 +114,19 @@ module RubyMysqlTui
     def handle_sql_mode_toggle(state)
       state[:sql_mode] = !state[:sql_mode]
       state[:sql_input] = '' if state[:sql_mode]
+      state
+    end
+
+    def handle_view_mode_toggle(state, client)
+      return state unless state[:focus] == :right && state[:selected_table]
+
+      if state[:view_mode] == :records
+        state[:view_mode] = :table_structure
+        state[:records] = client.list_table_structure(state[:selected_table])
+      elsif state[:view_mode] == :table_structure
+        state[:view_mode] = :records
+        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
+      end
       state
     end
   end

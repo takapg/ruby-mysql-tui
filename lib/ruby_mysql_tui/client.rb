@@ -61,6 +61,12 @@ module RubyMysqlTui
       results.first ? results.first['Column_name'] : nil
     end
 
+    # テーブルの構造（カラム定義）を取得します。
+    def list_table_structure(table_name)
+      escaped_table_name = table_name.gsub('`', '``')
+      query("SHOW COLUMNS FROM `#{escaped_table_name}`")
+    end
+
     # レコードを更新します。
     def update_record(table_name, pk_column, pk_value, column_name, new_value)
       sql = "UPDATE `#{table_name.gsub('`', '``')}` " \
