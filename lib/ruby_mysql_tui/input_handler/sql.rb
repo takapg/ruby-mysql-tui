@@ -36,7 +36,7 @@ module RubyMysqlTui
     def handle_sql_text_input(event, state)
       if event.key.name == :backspace
         state[:sql_input] = state[:sql_input].chop
-      elsif event.value
+      elsif event.value && !event.value.start_with?("\e")
         state[:sql_input] += event.value
       end
       [state, false]
