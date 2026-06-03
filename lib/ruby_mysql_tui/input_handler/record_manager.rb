@@ -71,7 +71,6 @@ module RubyMysqlTui
       def self.execute_update_with_retry(state, client, prompt, info)
         with_retry(error_handler: lambda { |e|
           handle_update_error(e, prompt, info)
-          info[:val].nil?
         }) do
           RecordExecutor.execute_update(state, client, prompt, info)
         end
@@ -94,6 +93,7 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
         info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+        false
       end
 
       def self.handle_general_update_error(error, prompt, info)
@@ -101,6 +101,7 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error(msg)
         prompt.say(msg, color: :red)
         info[:val] = nil
+        true
       end
 
       def self.with_retry(max_retries = 5, error_handler:)
