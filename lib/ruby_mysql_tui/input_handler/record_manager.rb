@@ -58,6 +58,11 @@ module RubyMysqlTui
         column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column, structure)
         return if value.nil?
 
+        if RecordPrompt.required_column?(column, structure) && value.to_s.strip.empty?
+          prompt.say('NOT NULL カラムに空文字を入力することはできません', color: :red)
+          return
+        end
+
         if column == pk_column
           RecordPrompt.warn_pk_not_editable(prompt)
           return
