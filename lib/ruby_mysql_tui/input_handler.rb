@@ -19,17 +19,17 @@ module RubyMysqlTui
         return result
       end
 
-      key_name = if event.respond_to?(:key) && event.key.respond_to?(:name)
-                   event.key.name
-                 elsif event.respond_to?(:name)
-                   event.name
-                 else
-                   nil
-                 end
-
-      # key_name が文字列の場合にシンボルへ変換し、case 文での判定を確実にする
+      key_name = extract_key_name(event)
       key_name = key_name.to_sym if key_name.is_a?(String)
       handle_key_input(key_name, state, client)
+    end
+
+    def extract_key_name(event)
+      if event.respond_to?(:key) && event.key.respond_to?(:name)
+        event.key.name
+      elsif event.respond_to?(:name)
+        event.name
+      end
     end
 
     def handle_action_key(val, state, client)
