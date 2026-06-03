@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'record_executor'
+require_relative 'record_prompt'
 
 module RubyMysqlTui
   module InputHandler
@@ -21,7 +22,7 @@ module RubyMysqlTui
         return state unless can_manage_record?(state)
 
         columns = client.list_columns(state[:selected_table])
-        data = prompt_for_record_data(columns, prompt)
+        data = RecordPrompt.prompt_for_record_data(columns, prompt)
         return state if data.nil? || data.empty?
 
         execute_insert_with_retry(state, client, prompt, data, columns)
@@ -41,7 +42,7 @@ module RubyMysqlTui
       def self.handle_insert_error(error, prompt, columns, data)
         RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
         prompt.say("挿入に失敗しました: #{error.message}", color: :red)
-        prompt_for_record_data(columns, prompt, data)
+        RecordPrompt.prompt_for_record_data(columns, prompt, data)
       end
 
       def self.handle_delete_record(state, client, prompt)
@@ -55,21 +56,12 @@ module RubyMysqlTui
         state
       end
 
-      def self.prompt_for_record_data(columns, prompt, default_data = {})
-        columns.each_with_object({}) do |col, data|
-          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col])
-          return nil if val.nil?
-
-          data[col] = val
-        end
-      end
-
       def self.can_manage_record?(state)
         state[:focus] == :right && state[:view_mode] == :records && state[:records]
       end
 
       def self.edit_and_update(state, client, record, pk_column, prompt)
-        column, value = prompt_for_edit(record, prompt, pk_column)
+        column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column)
         return if value.nil?
 
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
@@ -111,19 +103,6 @@ module RubyMysqlTui
         info[:val] = nil
       end
 
-      def self.prompt_for_edit(record, prompt, pk_column = nil)
-        editable_columns = record.keys - [pk_column]
-        if editable_columns.empty?
-          prompt.say('編集可能なカラムがありません', color: :yellow)
-          return nil
-        end
-
-        column = prompt.select('編集するカラムを選択してください:', editable_columns)
-
-        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) { |q| q.required true }
-        [column, value]
-      end
-
       def self.with_retry(max_retries = 5, error_handler:)
         retries = 0
         loop do
@@ -134,7 +113,10 @@ module RubyMysqlTui
           break if error_handler.call(e)
         end
       end
-      private_class_method :with_retry, :handle_update_error, :unique_constraint_violation?, :handle_unique_constraint_error, :handle_general_update_error
+      private_class_method :with_retry, :handle_update_error,
+                           :unique_constraint_violation?,
+                           :handle_unique_constraint_error,
+                           :handle_general_update_error
     end
   end
 end
