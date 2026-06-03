@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+if ENV['SILENCE_OUTPUT'] == 'true'
+  $stdout = File.open(File::NULL, 'w')
+  $stderr = File.open(File::NULL, 'w')
+end
+
 require 'bundler/setup'
 require 'mysql2'
 require 'timeout'
