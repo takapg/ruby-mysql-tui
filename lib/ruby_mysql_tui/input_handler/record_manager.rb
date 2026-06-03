@@ -32,13 +32,13 @@ module RubyMysqlTui
       def self.execute_insert_with_retry(state, client, prompt, data, columns)
         context = { data: data }
         with_retry(error_handler: lambda { |e|
-          handle_insert_error(e, prompt, columns, context)
+          handle_insert_error_retry?(e, prompt, columns, context)
         }) do
           RecordExecutor.execute_insert(state, client, prompt, context[:data])
         end
       end
 
-      def self.handle_insert_error(error, prompt, columns, context)
+      def self.handle_insert_error_retry?(error, prompt, columns, context)
         RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
         prompt.say("挿入に失敗しました: #{error.message}", color: :red)
 
@@ -116,7 +116,7 @@ module RubyMysqlTui
           break if error_handler.call(e)
         end
       end
-      private_class_method :with_retry, :handle_insert_error, :handle_update_error_retry?,
+      private_class_method :with_retry, :handle_insert_error_retry?, :handle_update_error_retry?,
                            :unique_constraint_violation?,
                            :handle_unique_constraint_error_retry?,
                            :handle_general_update_error_retry?
