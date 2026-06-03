@@ -35,7 +35,6 @@ module RubyMysqlTui
         state
       end
 
-
       def self.handle_delete_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
@@ -63,7 +62,6 @@ module RubyMysqlTui
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
         RecordRetryHandler.execute_update_with_retry(state, client, prompt, info)
       end
-
     end
   end
 end
