@@ -36,6 +36,8 @@ module RubyMysqlTui
       when 'n' then RecordManager.handle_create_record(state, client, TTY::Prompt.new)
       when 'e' then RecordManager.handle_edit_record(state, client, TTY::Prompt.new)
       when 'd' then RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
+      when "\t" then Navigation.handle_tab(state)
+      when "\r" then Navigation.handle_return(state, client)
       end
     end
 
