@@ -12,7 +12,8 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
-      case event.value
+      val = event.respond_to?(:value) ? event.value : event
+      case val
       when 'b' then return handle_back_navigation(state, client)
       when 's' then return handle_sql_mode_toggle(state)
       when 'i' then return handle_view_mode_toggle(state, client)
@@ -21,7 +22,8 @@ module RubyMysqlTui
       when 'd' then return RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
       end
 
-      handle_key_input(event.key.name, state, client)
+      key_name = event.respond_to?(:key) ? event.key&.name : nil
+      handle_key_input(key_name, state, client)
     end
 
     def handle_key_input(key_name, state, client)
