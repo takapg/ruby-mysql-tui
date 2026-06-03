@@ -232,15 +232,7 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
 
-    # 1. DB選択 -> 2. テーブル選択 -> 3. 編集(e) -> 4. 終了(q)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'e', key: double('Key', name: :e)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    setup_edit_events(reader)
 
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
