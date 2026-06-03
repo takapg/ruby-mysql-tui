@@ -5,13 +5,14 @@ require 'ruby_mysql_tui/input_handler/record_prompt'
 
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt do
   let(:prompt) { instance_double('TTY::Prompt') }
-  let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
-  let(:pk_column) { 'id' }
 
   describe '.get_editable_columns' do
+    let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
+    let(:pk_column) { 'id' }
+
     it 'excludes the primary key column' do
       cols = described_class.get_editable_columns(record, prompt, pk_column)
-      expect(cols).to eq(['name', 'email'])
+      expect(cols).to eq(%w[name email])
       expect(cols).not_to include(pk_column)
     end
 
