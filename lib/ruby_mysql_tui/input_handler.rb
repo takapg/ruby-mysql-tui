@@ -30,13 +30,19 @@ module RubyMysqlTui
 
     def handle_action_key(val, state, client)
       case val
+      when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
+      when 'n', 'e', 'd' then handle_record_action(val, state, client)
+      end
+    end
+
+    def handle_system_action(val, state, client)
+      case val
       when 'b' then Navigation.handle_back_navigation(state, client)
       when 's' then handle_sql_mode_toggle(state)
       when 'i' then handle_view_mode_toggle(state, client)
       when "\t" then Navigation.handle_tab(state)
       when "\r" then Navigation.handle_return(state, client)
       when 'a' then handle_all_records_toggle(state, client)
-      when 'n', 'e', 'd' then handle_record_action(val, state, client)
       end
     end
 
@@ -93,9 +99,18 @@ module RubyMysqlTui
     end
 
     def handle_all_records_toggle(state, client)
-      return state unless state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
+      return state unless can_toggle_all_records?(state)
 
       state[:all_records_mode] = !state[:all_records_mode]
+      apply_all_records_mode(state, client)
+      state
+    end
+
+    def can_toggle_all_records?(state)
+      state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
+    end
+
+    def apply_all_records_mode(state, client)
       if state[:all_records_mode]
         state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
         state[:records_offset] = 0
@@ -103,7 +118,6 @@ module RubyMysqlTui
       else
         state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
       end
-      state
     end
 
     def handle_view_mode_toggle(state, client)
