@@ -98,7 +98,7 @@ jobs:
                   --thinking-tokens 1024 \
                   --yes-always \
                   --chat-language japanese \
-                  --test-cmd "bundle exec rspec && bundle exec rubocop" \
+                  --test-cmd "SILENCE_OUTPUT=true bundle exec rspec && bundle exec rubocop" \
                   --auto-test \
                   --no-attribute-author \
                   --no-attribute-committer \
