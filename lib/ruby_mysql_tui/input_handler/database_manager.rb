@@ -21,11 +21,6 @@ module RubyMysqlTui
     end
   end
 end
-```
-
-```ruby
-lib/ruby_mysql_tui/input_handler/action_handler.rb
-<<<<<<< SEARCH
       def handle_record_action(val, state, client)
         prompt = TTY::Prompt.new
         case val
