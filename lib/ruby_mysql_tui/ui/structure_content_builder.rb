@@ -20,7 +20,9 @@ module RubyMysqlTui
       def build_text(table_name:, structure:, width:, options: {})
         height = options[:height]
         header = ContentBuilder.truncate("Table Structure: #{table_name}", width)
-        return "#{header}\n\n#{ContentBuilder.truncate('No structure information found', width)}" if structure.nil? || structure.none?
+        if structure.nil? || structure.none?
+          return "#{header}\n\n#{ContentBuilder.truncate('No structure information found', width)}"
+        end
 
         max_rows = height ? [0, height - 4].max : nil
         table_output = create_table(structure, width, max_rows).to_s
