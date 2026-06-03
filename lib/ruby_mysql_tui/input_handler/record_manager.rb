@@ -70,13 +70,13 @@ module RubyMysqlTui
 
       def self.execute_update_with_retry(state, client, prompt, info)
         with_retry(error_handler: lambda { |e|
-          handle_update_error(e, prompt, info)
+          handle_update_error_retry?(e, prompt, info)
         }) do
           RecordExecutor.execute_update(state, client, prompt, info)
         end
       end
 
-      def self.handle_update_error(error, prompt, info)
+      def self.handle_update_error_retry?(error, prompt, info)
         if unique_constraint_violation?(error)
           handle_unique_constraint_error_retry?(error, prompt, info)
         else
@@ -114,7 +114,7 @@ module RubyMysqlTui
           break if error_handler.call(e)
         end
       end
-      private_class_method :with_retry, :handle_update_error,
+      private_class_method :with_retry, :handle_update_error_retry?,
                            :unique_constraint_violation?,
                            :handle_unique_constraint_error_retry?,
                            :handle_general_update_error_retry?
