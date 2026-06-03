@@ -37,28 +37,68 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable'
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for numeric' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for int' do
+  let(:structure) { [{ 'Field' => 'age', 'Type' => 'int(11)' }] }
+
+  it 'returns integer validation' do
+    regex, msg = described_class.type_validation_for('age', structure)
+    expect(regex).to eq(/\A-?\d+\z/)
+    expect(regex).to match('123')
+    expect(regex).to match('-123')
+    expect(regex).not_to match('12.3')
+    expect(regex).not_to match('abc')
+    expect(msg).to eq('数値のみ入力してください')
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for decimal/float' do
   let(:structure) do
     [
-      { 'Field' => 'age', 'Type' => 'int(11)' },
       { 'Field' => 'price', 'Type' => 'decimal(10,2)' },
       { 'Field' => 'weight', 'Type' => 'float' }
     ]
   end
 
-  it 'returns integer validation for int type' do
-    regex, msg = described_class.type_validation_for('age', structure)
-    expect(regex).to eq(/\A-?\d+\z/)
-    expect(msg).to eq('数値のみ入力してください')
-  end
-
-  it 'returns numeric validation for decimal/float type' do
+  it 'returns numeric validation' do
     regex, msg = described_class.type_validation_for('price', structure)
     expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+    expect(regex).to match('123')
+    expect(regex).to match('123.45')
+    expect(regex).to match('-123.45')
+    expect(regex).not_to match('abc')
     expect(msg).to eq('数値を入力してください')
 
     regex, = described_class.type_validation_for('weight', structure)
     expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+    expect(regex).to match('123.45')
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for date/datetime' do
+  it 'returns date/datetime validation for date types' do
+    date_structure = [
+      { 'Field' => 'created_at', 'Type' => 'datetime' },
+      { 'Field' => 'birthday', 'Type' => 'date' },
+      { 'Field' => 'updated_at', 'Type' => 'timestamp' }
+    ]
+
+    regex, msg = described_class.type_validation_for('birthday', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2}\z/)
+    expect(regex).to match('2023-01-01')
+    expect(regex).not_to match('2023-1-1')
+    expect(regex).not_to match('abc')
+    expect(msg).to eq('日付形式 (YYYY-MM-DD) で入力してください')
+
+    regex, msg = described_class.type_validation_for('created_at', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/)
+    expect(regex).to match('2023-01-01 12:00:00')
+    expect(regex).not_to match('2023-01-01 12:00')
+    expect(regex).not_to match('abc')
+    expect(msg).to eq('日時形式 (YYYY-MM-DD HH:MM:SS) で入力してください')
+
+    regex, = described_class.type_validation_for('updated_at', date_structure)
+    expect(regex).to eq(/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/)
+    expect(regex).to match('2023-01-01 12:00:00')
   end
 end
 

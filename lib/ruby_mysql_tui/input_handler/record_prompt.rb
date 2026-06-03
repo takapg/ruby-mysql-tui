@@ -8,7 +8,9 @@ module RubyMysqlTui
 
       TYPE_VALIDATIONS = {
         /int/ => [/\A-?\d+\z/, '数値のみ入力してください'],
-        /decimal|float|double/ => [/\A-?\d+(\.\d+)?\z/, '数値を入力してください']
+        /decimal|float|double/ => [/\A-?\d+(\.\d+)?\z/, '数値を入力してください'],
+        /datetime|timestamp/ => [/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\z/, '日時形式 (YYYY-MM-DD HH:MM:SS) で入力してください'],
+        /date/ => [/\A\d{4}-\d{2}-\d{2}\z/, '日付形式 (YYYY-MM-DD) で入力してください']
       }.freeze
 
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
