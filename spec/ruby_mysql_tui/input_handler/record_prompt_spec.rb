@@ -59,3 +59,61 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.required_column?' do
     expect(described_class.required_column?('unknown', structure)).to be false
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data validation' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:columns) { %w[name email] }
+  let(:structure) do
+    [
+      { 'Field' => 'name', 'Null' => 'NO' },
+      { 'Field' => 'email', 'Null' => 'YES' }
+    ]
+  end
+
+  it 'applies validation only to NOT NULL columns' do
+    question_name = instance_double('TTY::Prompt::Question')
+    question_email = instance_double('TTY::Prompt::Question')
+
+    expect(prompt).to receive(:ask).with(/name/, any_args).and_yield(question_name).and_return('Alice')
+    expect(prompt).to receive(:ask).with(/email/, any_args).and_yield(question_email).and_return('alice@example.com')
+
+    expect(question_name).to receive(:validate).with(/\S+/, '入力してください')
+    expect(question_email).not_to receive(:validate)
+
+    described_class.prompt_for_record_data(columns, prompt, {}, structure)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_edit validation' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
+  let(:pk_column) { 'id' }
+  let(:structure) do
+    [
+      { 'Field' => 'name', 'Null' => 'NO' },
+      { 'Field' => 'email', 'Null' => 'YES' }
+    ]
+  end
+
+  it 'applies required and validation for NOT NULL columns' do
+    question = instance_double('TTY::Prompt::Question')
+    expect(prompt).to receive(:select).and_return('name')
+    expect(prompt).to receive(:ask).with(/name/, any_args).and_yield(question).and_return('Bob')
+
+    expect(question).to receive(:required).with(true)
+    expect(question).to receive(:validate).with(/\S+/, '入力してください')
+
+    described_class.prompt_for_edit(record, prompt, pk_column, structure)
+  end
+
+  it 'does not apply required or validation for nullable columns' do
+    question = instance_double('TTY::Prompt::Question')
+    expect(prompt).to receive(:select).and_return('email')
+    expect(prompt).to receive(:ask).with(/email/, any_args).and_yield(question).and_return('bob@example.com')
+
+    expect(question).not_to receive(:required)
+    expect(question).not_to receive(:validate)
+
+    described_class.prompt_for_edit(record, prompt, pk_column, structure)
+  end
+end
