@@ -164,7 +164,9 @@ RSpec.describe RubyMysqlTui::Client, '#list_table_structure' do
   let(:table_name) { 'users' }
 
   it 'executes SHOW COLUMNS and returns structure information' do
-    structure = [{ 'Field' => 'id', 'Type' => 'int', 'Null' => 'NO', 'Key' => 'PRI', 'Default' => nil, 'Extra' => 'auto_increment' }]
+    structure = [{
+      'Field' => 'id', 'Type' => 'int', 'Null' => 'NO', 'Key' => 'PRI', 'Default' => nil, 'Extra' => 'auto_increment'
+    }]
     expect(mock_mysql_client).to receive(:query).with("SHOW COLUMNS FROM `#{table_name}`").and_return(structure)
     expect(client.list_table_structure(table_name)).to eq(structure)
   end
