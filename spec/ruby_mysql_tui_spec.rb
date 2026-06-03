@@ -102,6 +102,7 @@ RSpec.describe RubyMysqlTui, '.handle_input (selection)' do
 
     it 'フォーカス :left かつ view_mode :databases のとき、テーブル一覧に遷移する' do
       state = { focus: :left, view_mode: :databases, items: %w[db1], selected_index: 0 }
+      allow(client).to receive(:select_database).with('db1')
       allow(client).to receive(:list_tables).with('db1').and_return(%w[table1 table2])
 
       result = RubyMysqlTui.handle_input(return_event, state, client)
@@ -386,6 +387,7 @@ RSpec.describe RubyMysqlTui, '.handle_input (raw value handling)' do
 
   it 'event.value が \r のとき、Navigation.handle_return が呼ばれること' do
     state = { focus: :left, view_mode: :databases, items: %w[db1], selected_index: 0 }
+    allow(client).to receive(:select_database).with('db1')
     allow(client).to receive(:list_tables).with('db1').and_return(%w[table1])
     event = double('Event', value: "\r", key: double('Key', name: :unknown))
     expect(RubyMysqlTui.handle_input(event, state, client)[:view_mode]).to eq(:tables)
