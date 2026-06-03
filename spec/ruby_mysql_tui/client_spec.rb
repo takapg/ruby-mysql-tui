@@ -115,6 +115,12 @@ RSpec.describe RubyMysqlTui::Client, '#list_records' do
     expect(mock_mysql_client).to receive(:query).with(sql).and_return(records)
     expect(client.list_records(table_name, 100)).to eq(records)
   end
+end
+
+RSpec.describe RubyMysqlTui::Client, '#list_records (options)' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table_name) { 'users' }
 
   it 'escapes backticks in table name' do
     table_name_with_backtick = 'user`s'
