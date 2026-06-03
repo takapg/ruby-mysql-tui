@@ -243,7 +243,7 @@ RSpec.describe RubyMysqlTui::Client, '#select_database' do
 
   it 'escapes backticks in database name' do
     db_name_with_tick = 'my`db'
-    expect(mock_mysql_client).to receive(:query).with("USE `my``db`")
+    expect(mock_mysql_client).to receive(:query).with('USE `my``db`')
     client.select_database(db_name_with_tick)
   end
 end
