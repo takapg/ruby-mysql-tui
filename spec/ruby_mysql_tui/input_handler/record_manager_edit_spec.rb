@@ -57,7 +57,9 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record r
     allow(prompt).to receive(:say)
     allow(RubyMysqlTui.logger).to receive(:error)
 
-    expect(client).to receive(:update_record).exactly(5).times.and_raise(Mysql2::Error, 'Persistent failure')
+    error = Mysql2::Error.new('Duplicate entry')
+    allow(error).to receive(:errno).and_return(1062)
+    expect(client).to receive(:update_record).exactly(5).times.and_raise(error)
 
     described_class.handle_edit_record(state, client, prompt)
   end
@@ -71,10 +73,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record f
 
   it 'handles Mysql2::Error during update' do
     allow(prompt).to receive(:select).and_return('name')
-    allow(prompt).to receive(:ask).and_return('Bob', nil)
+    allow(prompt).to receive(:ask).and_return('Bob')
     allow(client).to receive(:update_record).and_raise(Mysql2::Error, 'Update failed')
-    expect(RubyMysqlTui.logger).to receive(:error).with(/更新に失敗しました: Update failed/)
-    expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red)
+    expect(RubyMysqlTui.logger).to receive(:error).with(/更新に失敗しました: Update failed/).once
+    expect(prompt).to receive(:say).with(/更新に失敗しました: Update failed/, color: :red).once
 
     described_class.handle_edit_record(state, client, prompt)
   end
@@ -95,7 +97,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
     allow(error).to receive(:errno).and_return(1062)
     allow(client).to receive(:update_record).and_raise(error)
 
-    expect(prompt).to receive(:say).with(/主キーまたはユニーク制約違反です/, color: :red)
+    expect(prompt).to receive(:say).with(/入力された値は既に存在するため、保存できません/, color: :red)
 
     described_class.handle_edit_record(state, client, prompt)
   end
@@ -109,21 +111,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
     error = Mysql2::Error.new('Duplicate entry')
     allow(error).to receive(:errno).and_return(1062)
     expect(client).to receive(:update_record).exactly(5).times.and_raise(error)
-
-    described_class.handle_edit_record(state, client, prompt)
-  end
-end
-
-RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record primary key guard' do
-  include_context 'record manager setup'
-  before do
-    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
-  end
-
-  it 'shows warning and does not update when primary key is somehow selected' do
-    allow(described_class).to receive(:prompt_for_edit).and_return([pk_column, 'new_pk_value'])
-    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
-    expect(client).not_to receive(:update_record)
 
     described_class.handle_edit_record(state, client, prompt)
   end
