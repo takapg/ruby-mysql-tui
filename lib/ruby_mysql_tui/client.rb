@@ -8,8 +8,6 @@ module RubyMysqlTui
   class Client
     include Writer
 
-    MAX_RECORDS_LIMIT = 10_000
-
     attr_reader :connection, :config, :last_sql
 
     def initialize(config = {})

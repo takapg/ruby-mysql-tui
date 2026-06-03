@@ -86,10 +86,11 @@ module RubyMysqlTui
 
     def apply_all_records_mode(state, client)
       if state[:all_records_mode]
-        state[:records] = client.list_records(state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT)
+        state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
         state[:page_offset] = 0
       else
-        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
+        state[:page_offset] = state[:records_offset] || 0
+        state[:records] = client.list_records(state[:selected_table], state[:page_offset])
       end
     end
 
