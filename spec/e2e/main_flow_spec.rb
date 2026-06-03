@@ -324,6 +324,7 @@ RSpec.describe 'E2E All Records Mode' do
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
       double('Event', value: 'a', key: double('Key', name: :a)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
