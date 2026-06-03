@@ -23,7 +23,7 @@ module RubyMysqlTui
         render_header(client)
         render_main(state)
         render_log(client, state)
-        render_footer
+        render_footer(state)
       end
 
       private
@@ -78,8 +78,10 @@ module RubyMysqlTui
         puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { truncated_text }
       end
 
-      def render_footer
-        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { ' [q] Quit | [b] Back | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select ' }
+      def render_footer(state)
+        mode_text = state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
+        guide = "#{mode_text}[q] Quit | [b] Back | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select | [a] All Records "
+        puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { guide }
       end
     end
   end

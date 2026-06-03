@@ -77,6 +77,17 @@ module E2EFlowHelpers
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
   end
+
+  def all_records_events
+    [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'a', key: double('Key', name: :a)),
+      double('Event', value: 'a', key: double('Key', name: :a)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -312,5 +323,28 @@ RSpec.describe 'E2E Connection Error' do
     allow(client).to receive(:list_databases).and_raise(Mysql2::Error.new('Connection failed'))
 
     expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
+  end
+end
+
+RSpec.describe 'E2E All Records Mode' do
+  include_context 'e2e setup'
+
+  it 'toggles all records mode and fetches all records when a is pressed' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    allow(reader).to receive(:read_keypress).and_return(*all_records_events)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).with('test_table', 0).and_return([{ 'id' => 1 }])
+
+    all_records = [{ 'id' => 1 }, { 'id' => 2 }, { 'id' => 3 }]
+    expect(client).to receive(:list_records).with('test_table', 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT).and_return(all_records)
+    expect(client).to receive(:list_records).with('test_table', 0).and_return([{ 'id' => 1 }])
+
+    RubyMysqlTui.run_main_loop(client)
+
+    expect(states.any? { |s| s[:all_records_mode] == true && s[:records] == all_records }).to be true
+    expect(states.last[:all_records_mode]).to be false
   end
 end
