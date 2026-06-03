@@ -276,6 +276,7 @@ RSpec.describe 'E2E Record Creation - Type Validation' do
 
     expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*_args, &block|
       question = instance_double('TTY::Prompt::Question')
+      expect(question).to receive(:required).with(true)
       expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
       block.call(question)
       '25'
