@@ -37,16 +37,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable'
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for numeric' do
-  let(:structure) do
-    [
-      { 'Field' => 'age', 'Type' => 'int(11)' },
-      { 'Field' => 'price', 'Type' => 'decimal(10,2)' },
-      { 'Field' => 'weight', 'Type' => 'float' }
-    ]
-  end
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for int' do
+  let(:structure) { [{ 'Field' => 'age', 'Type' => 'int(11)' }] }
 
-  it 'returns integer validation for int type' do
+  it 'returns integer validation' do
     regex, msg = described_class.type_validation_for('age', structure)
     expect(regex).to eq(/\A-?\d+\z/)
     expect(regex).to match('123')
@@ -55,8 +49,17 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for n
     expect(regex).not_to match('abc')
     expect(msg).to eq('数値のみ入力してください')
   end
+end
 
-  it 'returns numeric validation for decimal/float type' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for decimal/float' do
+  let(:structure) do
+    [
+      { 'Field' => 'price', 'Type' => 'decimal(10,2)' },
+      { 'Field' => 'weight', 'Type' => 'float' }
+    ]
+  end
+
+  it 'returns numeric validation' do
     regex, msg = described_class.type_validation_for('price', structure)
     expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
     expect(regex).to match('123')
