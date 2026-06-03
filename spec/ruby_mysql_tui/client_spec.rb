@@ -122,6 +122,13 @@ RSpec.describe RubyMysqlTui::Client, '#list_records' do
     expect(mock_mysql_client).to receive(:query).with('SELECT * FROM `user``s` LIMIT 100 OFFSET 0').and_return(records)
     expect(client.list_records(table_name_with_backtick)).to eq(records)
   end
+
+  it 'executes SELECT * FROM `table_name` without LIMIT when limit is nil' do
+    records = [{ 'id' => 1, 'name' => 'Alice' }]
+    sql = "SELECT * FROM `#{table_name}` OFFSET 0"
+    expect(mock_mysql_client).to receive(:query).with(sql).and_return(records)
+    expect(client.list_records(table_name, 0, limit: nil)).to eq(records)
+  end
 end
 
 RSpec.describe RubyMysqlTui::Client, '#query' do

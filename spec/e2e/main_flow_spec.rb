@@ -314,3 +314,32 @@ RSpec.describe 'E2E Connection Error' do
     expect { RubyMysqlTui.run_main_loop(client) }.not_to raise_error
   end
 end
+
+RSpec.describe 'E2E All Records Mode' do
+  include_context 'e2e setup'
+
+  it 'toggles all records mode and fetches all records when a is pressed' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 1. DB選択 -> 2. テーブル選択 -> 3. 全件表示(a) -> 4. 終了(q)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'a', key: double('Key', name: :a)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).with('test_table', 0).and_return([])
+    
+    # 'a' キー押下時に limit: nil で呼ばれることを検証
+    expect(client).to receive(:list_records).with('test_table', 0, limit: nil).and_return([
+      { 'id' => 1 }, { 'id' => 2 }
+    ])
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:all_records_mode] == true }).to be true
+  end
+end
