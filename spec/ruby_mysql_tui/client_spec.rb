@@ -89,6 +89,12 @@ RSpec.describe RubyMysqlTui::Client, '#list_tables' do
     )
     expect(client.list_tables(db_name)).to eq(%w[table1 table2])
   end
+
+  it 'escapes backticks in database name' do
+    db_name_with_backtick = 'my`db'
+    expect(mock_mysql_client).to receive(:query).with('SHOW TABLES FROM `my``db`').and_return([])
+    client.list_tables(db_name_with_backtick)
+  end
 end
 
 RSpec.describe RubyMysqlTui::Client, '#list_records' do
