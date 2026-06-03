@@ -46,12 +46,16 @@ module RubyMysqlTui
 
       def log_prepared_sql(sql, *values)
         interpolated = sql.dup
-        values.each do |val|
-          quoted = val.nil? ? 'NULL' : (val.is_a?(Numeric) ? val.to_s : "'#{val.to_s.gsub("'", "''")}'")
-          interpolated.sub!('?', quoted)
-        end
+        values.each { |val| interpolated.sub!('?', quote_value(val)) }
         @last_sql = interpolated
         RubyMysqlTui.logger.info("Executing SQL: #{@last_sql}")
+      end
+
+      def quote_value(val)
+        return 'NULL' if val.nil?
+        return val.to_s if val.is_a?(Numeric)
+
+        "'#{val.to_s.gsub("'", "''")}'"
       end
     end
   end
