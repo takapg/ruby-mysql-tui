@@ -86,14 +86,16 @@ module RubyMysqlTui
       end
 
       def self.handle_update_error(error, prompt, info)
-        msg = if error.respond_to?(:errno) && error.errno == 1062
-                "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
-              else
-                "更新に失敗しました: #{error.message}"
-              end
-        RubyMysqlTui.logger.error(msg)
-        prompt.say(msg, color: :red)
-        info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+        if error.respond_to?(:errno) && error.errno == 1062
+          msg = "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
+          RubyMysqlTui.logger.error(msg)
+          prompt.say(msg, color: :red)
+          info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
+        else
+          msg = "更新に失敗しました: #{error.message}"
+          RubyMysqlTui.logger.error(msg)
+          prompt.say(msg, color: :red)
+        end
       end
 
       def self.prompt_for_edit(record, prompt, pk_column = nil)
