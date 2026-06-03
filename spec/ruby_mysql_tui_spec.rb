@@ -375,6 +375,23 @@ RSpec.describe RubyMysqlTui, 'Integration flow (SQL mode) - Execution' do
   end
 end
 
+RSpec.describe RubyMysqlTui, '.handle_input (raw value handling)' do
+  let(:client) { double('Client') }
+
+  it 'event.value が \t のとき、Navigation.handle_tab が呼ばれること' do
+    state = { focus: :left }
+    event = double('Event', value: "\t", key: double('Key', name: :unknown))
+    expect(RubyMysqlTui.handle_input(event, state, client)[:focus]).to eq(:right)
+  end
+
+  it 'event.value が \r のとき、Navigation.handle_return が呼ばれること' do
+    state = { focus: :left, view_mode: :databases, items: %w[db1], selected_index: 0 }
+    allow(client).to receive(:list_tables).with('db1').and_return(%w[table1])
+    event = double('Event', value: "\r", key: double('Key', name: :unknown))
+    expect(RubyMysqlTui.handle_input(event, state, client)[:view_mode]).to eq(:tables)
+  end
+end
+
 RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
   let(:client) { double('Client') }
   let(:delete_event) { double('Event', value: 'd', key: double('Key', name: :unknown)) }

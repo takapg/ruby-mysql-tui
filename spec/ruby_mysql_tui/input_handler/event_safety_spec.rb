@@ -18,6 +18,11 @@ RSpec.describe RubyMysqlTui::InputHandler, 'Event Handling Safety' do
       # 'b' は Navigation.handle_back_navigation を呼び出し、状態ハッシュを返す
       expect(described_class.handle_input(event, state, client)).to be_a(Hash)
     end
+
+    it 'does not raise error when event.value is \t or \r' do
+      expect { described_class.handle_input("\t", state, client) }.not_to raise_error
+      expect { described_class.handle_input("\r", state, client) }.not_to raise_error
+    end
   end
 end
 

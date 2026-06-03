@@ -33,9 +33,18 @@ module RubyMysqlTui
       when 'b' then Navigation.handle_back_navigation(state, client)
       when 's' then handle_sql_mode_toggle(state)
       when 'i' then handle_view_mode_toggle(state, client)
-      when 'n' then RecordManager.handle_create_record(state, client, TTY::Prompt.new)
-      when 'e' then RecordManager.handle_edit_record(state, client, TTY::Prompt.new)
-      when 'd' then RecordManager.handle_delete_record(state, client, TTY::Prompt.new)
+      when "\t" then Navigation.handle_tab(state)
+      when "\r" then Navigation.handle_return(state, client)
+      when 'n', 'e', 'd' then handle_record_action(val, state, client)
+      end
+    end
+
+    def handle_record_action(val, state, client)
+      prompt = TTY::Prompt.new
+      case val
+      when 'n' then RecordManager.handle_create_record(state, client, prompt)
+      when 'e' then RecordManager.handle_edit_record(state, client, prompt)
+      when 'd' then RecordManager.handle_delete_record(state, client, prompt)
       end
     end
 
