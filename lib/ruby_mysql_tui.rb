@@ -37,7 +37,7 @@ module RubyMysqlTui
       verify_connection(client)
       run_main_loop(client)
     rescue StandardError => e
-      logger.error "Initialization failed: #{e.message}"
+      logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
     ensure
       client&.close
     end
@@ -55,7 +55,7 @@ module RubyMysqlTui
     begin
       execute_main_loop(reader, renderer, client)
     rescue StandardError => e
-      logger.error "Runtime error in main loop: #{e.message}"
+      logger.error "Runtime error in main loop: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
     end
   end
 
