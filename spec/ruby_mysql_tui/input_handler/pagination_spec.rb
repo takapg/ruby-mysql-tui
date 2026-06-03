@@ -3,9 +3,8 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler/pagination'
 
-RSpec.describe RubyMysqlTui::InputHandler::Pagination do
+RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_next_page' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
-  let(:layout) { instance_double('RubyMysqlTui::UI::Layout', main_h: 10) }
   let(:state) do
     {
       selected_table: 'test_table',
@@ -24,9 +23,9 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination do
 
       allow(client).to receive(:list_records).and_return(mock_result)
 
-      expect {
+      expect do
         described_class.fetch_next_page(state, client, 0, 0)
-      }.not_to raise_error
+      end.not_to raise_error
 
       expect(state[:records]).to eq([{ 'id' => 1 }])
       expect(state[:page_offset]).to eq(0)
@@ -44,6 +43,18 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination do
       expect(state[:records_offset]).to eq(9)
     end
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_prev_page' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:state) do
+    {
+      selected_table: 'test_table',
+      records_offset: 0,
+      page_offset: 0,
+      records: []
+    }
+  end
 
   describe '.fetch_prev_page' do
     it 'handles Mysql2::Result by converting it to an array' do
@@ -54,9 +65,9 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination do
 
       allow(client).to receive(:list_records).and_return(mock_result)
 
-      expect {
+      expect do
         described_class.fetch_prev_page(state, client)
-      }.not_to raise_error
+      end.not_to raise_error
 
       expect(state[:records]).to eq([{ 'id' => 1 }])
       expect(state[:page_offset]).to eq(100 - RubyMysqlTui::PAGE_SIZE)
