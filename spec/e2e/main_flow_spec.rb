@@ -48,6 +48,16 @@ module E2EFlowHelpers
     setup_edit_prompt_mocks(prompt)
   end
 
+  def setup_client_for_type_validation(client, column)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return([column])
+    allow(client).to receive(:list_table_structure).and_return([
+      { 'Field' => column, 'Type' => 'int(11)', 'Null' => 'YES' }
+    ])
+  end
+
   def setup_edit_events(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -257,19 +267,10 @@ RSpec.describe 'E2E Record Creation - Type Validation' do
   include_context 'e2e setup'
 
   it 'applies type validation for INT columns during record creation' do
-    allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'n', key: double('Key', name: :n)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
-
+    setup_retry_reader(reader)
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    
+
     expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*_args, &block|
       question = instance_double('TTY::Prompt::Question')
       expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
@@ -278,13 +279,7 @@ RSpec.describe 'E2E Record Creation - Type Validation' do
     end
 
     states = track_states(client)
-    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).and_return([])
-    allow(client).to receive(:list_columns).and_return(['age'])
-    allow(client).to receive(:list_table_structure).and_return([
-      { 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }
-    ])
+    setup_client_for_type_validation(client, 'age')
     expect(client).to receive(:insert_record).with('test_table', { 'age' => '25' })
 
     RubyMysqlTui.run_main_loop(client)
