@@ -16,7 +16,8 @@ module RubyMysqlTui
       end
 
       def prompt_for_edit(record, prompt, pk_column = nil)
-        editable_columns = record.keys - [pk_column]
+        # 主キーがある場合は除外し、ない場合は全カラムを編集可能とする
+        editable_columns = pk_column ? record.keys - [pk_column] : record.keys
         if editable_columns.empty?
           prompt.say('編集可能なカラムがありません', color: :yellow)
           return nil
