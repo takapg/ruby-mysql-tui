@@ -35,6 +35,5 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(final_state[:view_mode]).to eq(:records)
       expect(final_state[:records]).to eq([{ 'id' => 1 }])
     end
-
   end
 end
