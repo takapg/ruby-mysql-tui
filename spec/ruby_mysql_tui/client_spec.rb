@@ -231,6 +231,23 @@ RSpec.describe RubyMysqlTui::Client, '#insert_record' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#select_database' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes USE database_name and returns results' do
+    db_name = 'test_db'
+    expect(mock_mysql_client).to receive(:query).with("USE `#{db_name}`")
+    client.select_database(db_name)
+  end
+
+  it 'escapes backticks in database name' do
+    db_name_with_tick = 'my`db'
+    expect(mock_mysql_client).to receive(:query).with("USE `my``db`")
+    client.select_database(db_name_with_tick)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#update_record' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
