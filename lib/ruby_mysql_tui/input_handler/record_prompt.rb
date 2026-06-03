@@ -6,10 +6,16 @@ module RubyMysqlTui
     module RecordPrompt
       module_function
 
+      TYPE_VALIDATIONS = {
+        /int/ => [/\A-?\d+\z/, '数値のみ入力してください'],
+        /decimal|float|double/ => [/\A-?\d+(\.\d+)?\z/, '数値を入力してください']
+      }.freeze
+
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
             apply_required_validation(question, col, structure)
+            apply_type_validation(question, col, structure)
           end
           return nil if val.nil?
 
@@ -26,6 +32,7 @@ module RubyMysqlTui
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
           apply_required_validation(question, column, structure)
+          apply_type_validation(question, column, structure)
         end
         [column, value]
       end
@@ -63,6 +70,25 @@ module RubyMysqlTui
       def required_column?(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
         col_info&.[]('Null') == 'NO'
+      end
+
+      def apply_type_validation(question, column, structure)
+        validation = type_validation_for(column, structure)
+        return unless validation
+
+        regex, message = validation
+        # Nullableな場合は空文字を許容する
+        regex = Regexp.union(regex, /\A\s*\z/) unless required_column?(column, structure)
+
+        question.validate(regex, message)
+      end
+
+      def type_validation_for(column_name, structure)
+        col_info = structure.find { |c| c['Field'] == column_name }
+        type = col_info&.[]('Type')&.downcase
+        return nil unless type
+
+        TYPE_VALIDATIONS.find { |pattern, _| type.match?(pattern) }&.last
       end
     end
   end

@@ -48,6 +48,19 @@ module E2EFlowHelpers
     setup_edit_prompt_mocks(prompt)
   end
 
+  def setup_basic_client_mocks(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+  end
+
+  def setup_client_for_type_validation(client, column)
+    setup_basic_client_mocks(client)
+    allow(client).to receive(:list_columns).and_return([column])
+    structure = [{ 'Field' => column, 'Type' => 'int(11)', 'Null' => 'NO' }]
+    allow(client).to receive(:list_table_structure).and_return(structure)
+  end
+
   def setup_edit_events(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -247,6 +260,32 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
     allow(prompt).to receive(:say)
 
     expect(client).not_to receive(:update_record)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Creation - Type Validation' do
+  include_context 'e2e setup'
+
+  it 'applies type validation for INT columns during record creation' do
+    setup_retry_reader(reader)
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+
+    expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*_args, &block|
+      question = instance_double('TTY::Prompt::Question')
+      expect(question).to receive(:required).with(true)
+      expect(question).to receive(:validate).with(/\S+/, '入力してください')
+      expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
+      block.call(question)
+      '25'
+    end
+
+    states = track_states(client)
+    setup_client_for_type_validation(client, 'age')
+    expect(client).to receive(:insert_record).with('test_table', { 'age' => '25' })
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true

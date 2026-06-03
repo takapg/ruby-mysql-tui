@@ -37,6 +37,43 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable'
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for numeric' do
+  let(:structure) do
+    [
+      { 'Field' => 'age', 'Type' => 'int(11)' },
+      { 'Field' => 'price', 'Type' => 'decimal(10,2)' },
+      { 'Field' => 'weight', 'Type' => 'float' }
+    ]
+  end
+
+  it 'returns integer validation for int type' do
+    regex, msg = described_class.type_validation_for('age', structure)
+    expect(regex).to eq(/\A-?\d+\z/)
+    expect(msg).to eq('数値のみ入力してください')
+  end
+
+  it 'returns numeric validation for decimal/float type' do
+    regex, msg = described_class.type_validation_for('price', structure)
+    expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+    expect(msg).to eq('数値を入力してください')
+
+    regex, = described_class.type_validation_for('weight', structure)
+    expect(regex).to eq(/\A-?\d+(\.\d+)?\z/)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for non-numeric' do
+  let(:structure) { [{ 'Field' => 'name', 'Type' => 'varchar(255)' }] }
+
+  it 'returns nil for varchar type' do
+    expect(described_class.type_validation_for('name', structure)).to be_nil
+  end
+
+  it 'returns nil for non-existent column' do
+    expect(described_class.type_validation_for('unknown', structure)).to be_nil
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.required_column?' do
   let(:structure) do
     [
@@ -60,7 +97,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.required_column?' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data validation' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data NOT NULL' do
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:columns) { %w[name email] }
   let(:structure) do
@@ -81,6 +118,37 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
     expect(question_name).to receive(:validate).with(/\S+/, '入力してください')
     expect(question_email).not_to receive(:required)
     expect(question_email).not_to receive(:validate)
+
+    described_class.prompt_for_record_data(columns, prompt, {}, structure)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data type' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+
+  it 'applies type validation for numeric columns' do
+    columns = %w[age]
+    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'NO' }]
+    question = instance_double('TTY::Prompt::Question')
+
+    expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('25')
+    expect(question).to receive(:required).with(true)
+    expect(question).to receive(:validate).with(/\S+/, '入力してください')
+    expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
+
+    described_class.prompt_for_record_data(columns, prompt, {}, structure)
+  end
+
+  it 'allows empty input for nullable numeric columns' do
+    columns = %w[age]
+    structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }]
+    question = instance_double('TTY::Prompt::Question')
+
+    expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('')
+    expect(question).to receive(:validate).with(
+      Regexp.union(/\A-?\d+\z/, /\A\s*\z/),
+      '数値のみ入力してください'
+    )
 
     described_class.prompt_for_record_data(columns, prompt, {}, structure)
   end
