@@ -21,11 +21,3 @@ module RubyMysqlTui
     end
   end
 end
-      def handle_record_action(val, state, client)
-        prompt = TTY::Prompt.new
-        case val
-        when 'n' then RecordManager.handle_create_record(state, client, prompt)
-        when 'e' then RecordManager.handle_edit_record(state, client, prompt)
-        when 'd' then RecordManager.handle_delete_record(state, client, prompt)
-        end
-      end
