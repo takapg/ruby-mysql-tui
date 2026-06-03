@@ -336,7 +336,9 @@ RSpec.describe 'E2E All Records Mode' do
     allow(client).to receive(:list_records).with('test_table', 0).and_return([])
 
     # 'a' キー押下時に limit: nil で呼ばれることを検証
-    expect(client).to receive(:list_records).with('test_table', 0, limit: nil).and_return([{ 'id' => 1 }, { 'id' => 2 }])
+    expect(client).to receive(:list_records)
+      .with('test_table', 0, limit: nil)
+      .and_return([{ 'id' => 1 }, { 'id' => 2 }])
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:all_records_mode] == true }).to be true
