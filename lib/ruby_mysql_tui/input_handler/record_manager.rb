@@ -2,6 +2,7 @@
 
 require_relative 'record_executor'
 require_relative 'record_prompt'
+require_relative 'record_retry_handler'
 
 module RubyMysqlTui
   module InputHandler
@@ -30,29 +31,10 @@ module RubyMysqlTui
         data = RecordPrompt.prompt_for_record_data(columns, prompt)
         return state if data.nil? || data.empty?
 
-        execute_insert_with_retry(state, client, prompt, data, columns)
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, columns)
         state
       end
 
-      def self.execute_insert_with_retry(state, client, prompt, data, columns)
-        context = { data: data }
-        with_retry(error_handler: lambda { |e|
-          handle_insert_error_retry?(e, prompt, columns, context)
-        }) do
-          RecordExecutor.execute_insert(state, client, prompt, context[:data])
-        end
-      end
-
-      def self.handle_insert_error_retry?(error, prompt, columns, context)
-        RubyMysqlTui.logger.error("Failed to insert record: #{error.message}")
-        prompt.say("挿入に失敗しました: #{error.message}", color: :red)
-
-        return true unless unique_constraint_violation?(error)
-
-        new_data = RecordPrompt.prompt_for_record_data(columns, prompt, context[:data])
-        context[:data] = new_data
-        new_data.nil? || new_data.empty?
-      end
 
       def self.handle_delete_record(state, client, prompt)
         return state unless can_manage_record?(state)
@@ -79,59 +61,9 @@ module RubyMysqlTui
         end
 
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
-        execute_update_with_retry(state, client, prompt, info)
+        RecordRetryHandler.execute_update_with_retry(state, client, prompt, info)
       end
 
-      def self.execute_update_with_retry(state, client, prompt, info)
-        with_retry(error_handler: lambda { |e|
-          handle_update_error_retry?(e, prompt, info)
-        }) do
-          RecordExecutor.execute_update(state, client, prompt, info)
-        end
-      end
-
-      def self.handle_update_error_retry?(error, prompt, info)
-        if unique_constraint_violation?(error)
-          handle_unique_constraint_error_retry?(error, prompt, info)
-        else
-          handle_general_update_error_retry?(error, prompt, info)
-        end
-      end
-
-      def self.unique_constraint_violation?(error)
-        error.respond_to?(:errno) && error.errno == 1062
-      end
-
-      def self.handle_unique_constraint_error_retry?(error, prompt, info)
-        msg = "入力された値は既に存在するため、保存できません（ユニーク制約違反）: #{error.message}"
-        RubyMysqlTui.logger.error(msg)
-        prompt.say(msg, color: :red)
-        info[:val] = prompt.ask("新しい値を入力してください (#{info[:col]}):", default: info[:val]) { |q| q.required true }
-        info[:val].nil?
-      end
-
-      def self.handle_general_update_error_retry?(error, prompt, info)
-        msg = "更新に失敗しました: #{error.message}"
-        RubyMysqlTui.logger.error(msg)
-        prompt.say(msg, color: :red)
-        info[:val] = nil
-        true
-      end
-
-      def self.with_retry(max_retries = 5, error_handler:)
-        retries = 0
-        loop do
-          yield
-          break
-        rescue Mysql2::Error => e
-          break if (retries += 1) >= max_retries
-          break if error_handler.call(e)
-        end
-      end
-      private_class_method :with_retry, :handle_insert_error_retry?, :handle_update_error_retry?,
-                           :unique_constraint_violation?,
-                           :handle_unique_constraint_error_retry?,
-                           :handle_general_update_error_retry?
     end
   end
 end
