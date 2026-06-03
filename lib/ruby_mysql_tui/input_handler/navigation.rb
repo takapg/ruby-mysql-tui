@@ -25,6 +25,7 @@ module RubyMysqlTui
         return if state[:items].empty?
 
         db_name = state[:items][state[:selected_index]]
+        client.select_database(db_name)
         state[:selected_db] = db_name
         state[:view_mode] = :tables
         state[:items] = client.list_tables(db_name)
