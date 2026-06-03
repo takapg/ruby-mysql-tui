@@ -133,6 +133,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
 
     expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('25')
     expect(question).to receive(:required).with(true)
+    expect(question).to receive(:validate).with(/\S+/, '入力してください')
     expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
 
     described_class.prompt_for_record_data(columns, prompt, {}, structure)
