@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'tty-table'
+require_relative 'structure_content_builder'
 
 module RubyMysqlTui
   module UI
@@ -24,6 +25,7 @@ module RubyMysqlTui
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
         when :records then build_records_view(state, content_width, height)
+        when :table_structure then StructureContentBuilder.build_view(state, content_width, height)
         else truncate('Unknown view mode', content_width)
         end
       end

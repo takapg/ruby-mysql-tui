@@ -17,5 +17,23 @@ RSpec.describe RubyMysqlTui::InputHandler do
 
       RubyMysqlTui::InputHandler.handle_input(event, state, client)
     end
+
+    it 'toggles view_mode between :records and :table_structure when "i" key is pressed' do
+      state = { focus: :right, view_mode: :records, selected_table: 'users', records: [] }
+      event = double('Event', value: 'i', key: double('Key'))
+
+      allow(client).to receive(:list_table_structure).with('users').and_return([{ 'Field' => 'id' }])
+
+      new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+      expect(new_state[:view_mode]).to eq(:table_structure)
+      expect(new_state[:records]).to eq([{ 'Field' => 'id' }])
+
+      event_back = double('Event', value: 'i', key: double('Key'))
+      allow(client).to receive(:list_records).with('users', 0).and_return([{ 'id' => 1 }])
+
+      final_state = RubyMysqlTui::InputHandler.handle_input(event_back, new_state, client)
+      expect(final_state[:view_mode]).to eq(:records)
+      expect(final_state[:records]).to eq([{ 'id' => 1 }])
+    end
   end
 end
