@@ -35,9 +35,15 @@ module RubyMysqlTui
       results.map { |row| row.values.first }
     end
 
+    # データベースを選択します。
+    def select_database(database_name)
+      query("USE `#{database_name.gsub('`', '``')}`")
+    end
+
     # 指定したデータベースのテーブル一覧を取得します。
     def list_tables(database_name)
-      results = query("SHOW TABLES FROM `#{database_name}`")
+      escaped_db_name = database_name.gsub('`', '``')
+      results = query("SHOW TABLES FROM `#{escaped_db_name}`")
       results.map { |row| row.values.first }
     end
 
