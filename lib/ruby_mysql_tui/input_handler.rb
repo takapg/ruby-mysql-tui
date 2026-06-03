@@ -72,7 +72,6 @@ module RubyMysqlTui
       state
     end
 
-
     def handle_view_mode_toggle(state, client)
       return state unless state[:focus] == :right && state[:selected_table]
 
