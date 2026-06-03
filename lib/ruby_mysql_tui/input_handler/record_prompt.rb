@@ -25,7 +25,7 @@ module RubyMysqlTui
         return nil if column.nil?
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |q|
-          q.required true
+          q.required true if required_column?(column, structure)
           q.validate(/\S+/, '入力してください') if required_column?(column, structure)
         end
         [column, value]
