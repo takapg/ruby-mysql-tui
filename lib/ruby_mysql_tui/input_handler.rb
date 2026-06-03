@@ -15,6 +15,11 @@ module RubyMysqlTui
     def handle_input(event, state, client)
       val = event.respond_to?(:value) ? event.value : event
 
+      case val
+      when "\e[A", "\eOA" then return handle_up(state, client)
+      when "\e[B", "\eOB" then return handle_down(state, client)
+      end
+
       if (result = handle_action_key(val, state, client))
         return result
       end
