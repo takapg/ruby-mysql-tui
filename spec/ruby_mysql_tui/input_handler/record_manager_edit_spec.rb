@@ -57,7 +57,9 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record r
     allow(prompt).to receive(:say)
     allow(RubyMysqlTui.logger).to receive(:error)
 
-    expect(client).to receive(:update_record).exactly(5).times.and_raise(Mysql2::Error, 'Persistent failure')
+    error = Mysql2::Error.new('Duplicate entry')
+    allow(error).to receive(:errno).and_return(1062)
+    expect(client).to receive(:update_record).exactly(5).times.and_raise(error)
 
     described_class.handle_edit_record(state, client, prompt)
   end
