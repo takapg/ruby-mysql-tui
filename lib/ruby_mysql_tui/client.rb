@@ -57,8 +57,6 @@ module RubyMysqlTui
 
       if limit
         sql += " LIMIT #{limit} OFFSET #{offset}"
-      elsif offset.positive?
-        sql += " OFFSET #{offset}"
       end
 
       query(sql)

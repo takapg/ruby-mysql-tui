@@ -13,6 +13,8 @@ module RubyMysqlTui
   module InputHandler
     module_function
 
+    MAX_ALL_RECORDS_LIMIT = 10_000
+
     def handle_input(event, state, client)
       val = event.respond_to?(:value) ? event.value : event
 
@@ -86,7 +88,7 @@ module RubyMysqlTui
 
     def apply_all_records_mode(state, client)
       if state[:all_records_mode]
-        state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
+        state[:records] = client.list_records(state[:selected_table], 0, limit: MAX_ALL_RECORDS_LIMIT)
         state[:page_offset] = 0
       else
         state[:page_offset] = state[:records_offset] || 0
