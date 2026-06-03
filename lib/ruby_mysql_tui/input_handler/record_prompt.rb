@@ -79,7 +79,9 @@ module RubyMysqlTui
         col_info = structure.find { |c| c['Field'] == column_name }
         return nil unless col_info
 
-        type = col_info['Type'].downcase
+        type = col_info['Type']&.downcase
+        return nil unless type
+
         if type.include?('int')
           [/\A-?\d+\z/, '数値のみ入力してください']
         elsif type.include?('decimal') || type.include?('float') || type.include?('double')
