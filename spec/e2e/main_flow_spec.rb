@@ -320,11 +320,12 @@ RSpec.describe 'E2E All Records Mode' do
 
   it 'toggles all records mode and fetches all records when a is pressed' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    # 1. DB選択 -> 2. テーブル選択 -> 3. 全件表示(a) -> 4. 終了(q)
+    # 1. DB選択 -> 2. テーブル選択 -> 3. 右ペインフォーカス -> 4. 全件表示(a) -> 5. 通常表示(a) -> 6. 終了(q)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\r", key: double('Key', name: :return)),
       double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'a', key: double('Key', name: :a)),
       double('Event', value: 'a', key: double('Key', name: :a)),
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
@@ -333,14 +334,26 @@ RSpec.describe 'E2E All Records Mode' do
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).with('test_table', 0).and_return([])
-
-    # 'a' キー押下時に limit: nil で呼ばれることを検証
+    
+    # 1回目: 通常のページネーション取得
+    allow(client).to receive(:list_records).with('test_table', 0).and_return([{ 'id' => 1 }])
+    
+    # 2回目: 全件取得 (limit: nil)
+    all_records = [{ 'id' => 1 }, { 'id' => 2 }, { 'id' => 3 }]
     expect(client).to receive(:list_records)
       .with('test_table', 0, limit: nil)
-      .and_return([{ 'id' => 1 }, { 'id' => 2 }])
+      .and_return(all_records)
+      
+    # 3回目: 通常表示に戻る
+    expect(client).to receive(:list_records)
+      .with('test_table', 0)
+      .and_return([{ 'id' => 1 }])
 
     RubyMysqlTui.run_main_loop(client)
-    expect(states.any? { |s| s[:all_records_mode] == true }).to be true
+    
+    # 全件表示モードになり、データが正しく格納されたことを検証
+    expect(states.any? { |s| s[:all_records_mode] == true && s[:records] == all_records }).to be true
+    # 最終的にモードが解除されていることを検証
+    expect(states.last[:all_records_mode]).to be false
   end
 end
