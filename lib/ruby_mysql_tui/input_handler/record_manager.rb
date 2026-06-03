@@ -14,6 +14,11 @@ module RubyMysqlTui
         pk_column = client.primary_key_for(state[:selected_table])
         return state unless record
 
+        if pk_column.nil?
+          RecordPrompt.warn_pk_missing(prompt)
+          return state
+        end
+
         edit_and_update(state, client, record, pk_column, prompt)
         state
       end

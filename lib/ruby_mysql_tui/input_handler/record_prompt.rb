@@ -28,7 +28,7 @@ module RubyMysqlTui
 
       def get_editable_columns(record, prompt, pk_column)
         if pk_column.nil?
-          prompt.say('主キーが設定されていないため、編集できません', color: :yellow)
+          warn_pk_missing(prompt)
           return nil
         end
 
@@ -39,6 +39,10 @@ module RubyMysqlTui
         end
 
         cols
+      end
+
+      def warn_pk_missing(prompt)
+        prompt.say('主キーが設定されていないため、編集できません', color: :yellow)
       end
 
       def warn_pk_not_editable(prompt)
