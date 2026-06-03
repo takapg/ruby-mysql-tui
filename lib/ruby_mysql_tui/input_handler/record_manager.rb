@@ -12,7 +12,7 @@ module RubyMysqlTui
 
         record = state[:records][state[:selected_record_index]]
         pk_column = client.primary_key_for(state[:selected_table])
-        return state unless record && pk_column
+        return state unless record
 
         edit_and_update(state, client, record, pk_column, prompt)
         state
