@@ -4,5 +4,6 @@ services:
     container_name: mysql
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
