@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    container_name: ruby-mysql-tui-app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ""
+    stdin_open: true
+    tty: true
