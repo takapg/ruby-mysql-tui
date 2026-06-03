@@ -30,6 +30,36 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record s
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record PK validation' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+  end
+
+  it 'shows a warning and does not update when the primary key is selected' do
+    # RecordPrompt のフィルタリングをバイパスして PK が選択された状況をシミュレート
+    expect(prompt).to receive(:select).and_return(pk_column)
+    expect(prompt).to receive(:ask).and_return('new_pk_val')
+    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
+    expect(client).not_to receive(:update_record)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record no primary key' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(nil)
+  end
+
+  it 'returns state without doing anything when no primary key is found' do
+    expect(prompt).not_to receive(:select)
+    result_state = described_class.handle_edit_record(state, client, prompt)
+    expect(result_state).to eq(state)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record no editable columns' do
   include_context 'record manager setup'
   before do
