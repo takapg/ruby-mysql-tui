@@ -58,6 +58,10 @@ module RubyMysqlTui
         prompt.say('主キーが設定されていないため、編集できません', color: :yellow)
       end
 
+      def warn_pk_not_editable(prompt)
+        prompt.say('主キーは編集できません', color: :red)
+      end
+
       def apply_required_validation(question, column, structure)
         return unless required_column?(column, structure)
 
