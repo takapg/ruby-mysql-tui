@@ -194,6 +194,18 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_edit' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+
+  it 'returns nil and warns when pk_column is nil' do
+    record = { 'id' => 1, 'name' => 'Alice' }
+    structure = []
+    expect(prompt).to receive(:say).with('主キーが設定されていないため、編集できません', color: :yellow)
+    result = described_class.prompt_for_edit(record, prompt, nil, structure)
+    expect(result).to be_nil
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_edit validation' do
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
