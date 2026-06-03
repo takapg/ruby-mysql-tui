@@ -73,25 +73,7 @@ module RubyMysqlTui
     end
 
     def handle_all_records_toggle(state, client)
-      return state unless can_toggle_all_records?(state)
-
-      state[:all_records_mode] = !state[:all_records_mode]
-      apply_all_records_mode(state, client)
-      state
-    end
-
-    def can_toggle_all_records?(state)
-      state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
-    end
-
-    def apply_all_records_mode(state, client)
-      if state[:all_records_mode]
-        state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
-        state[:page_offset] = 0
-      else
-        state[:page_offset] = state[:records_offset] || 0
-        state[:records] = client.list_records(state[:selected_table], state[:page_offset])
-      end
+      RecordManager.handle_all_records_toggle(state, client)
     end
 
     def handle_view_mode_toggle(state, client)

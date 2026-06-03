@@ -64,6 +64,28 @@ module RubyMysqlTui
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
         RecordRetryHandler.execute_update_with_retry(state, client, prompt, info)
       end
+
+      def self.handle_all_records_toggle(state, client)
+        return state unless can_toggle_all_records?(state)
+
+        state[:all_records_mode] = !state[:all_records_mode]
+        apply_all_records_mode(state, client)
+        state
+      end
+
+      def self.can_toggle_all_records?(state)
+        state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
+      end
+
+      def self.apply_all_records_mode(state, client)
+        if state[:all_records_mode]
+          state[:records] = client.list_records(state[:selected_table], 0, limit: nil)
+          state[:page_offset] = 0
+        else
+          state[:page_offset] = state[:records_offset] || 0
+          state[:records] = client.list_records(state[:selected_table], state[:page_offset])
+        end
+      end
     end
   end
 end

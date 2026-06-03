@@ -44,8 +44,8 @@ module RubyMysqlTui
     end
 
     def log_prepared_sql(sql, *values)
-      interpolated = sql.dup
-      values.each { |val| interpolated.sub!('?', quote_value(val)) }
+      vals = values.dup
+      interpolated = sql.gsub('?') { quote_value(vals.shift) }
       @last_sql = interpolated
       RubyMysqlTui.logger.info("Executing SQL: #{@last_sql}")
     end
