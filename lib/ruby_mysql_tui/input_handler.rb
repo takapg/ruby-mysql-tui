@@ -11,7 +11,7 @@ require_relative 'ui/layout'
 module RubyMysqlTui
   # InputHandler は ユーザー入力を処理し、状態を更新します。
   module InputHandler
-    module_function
+    extend self
 
     def handle_input(event, state, client)
       val = event.respond_to?(:value) ? event.value : event
