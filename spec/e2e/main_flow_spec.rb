@@ -163,9 +163,11 @@ RSpec.describe 'E2E Record Creation - Cancel Retry' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([])
     allow(client).to receive(:list_columns).and_return(['col1'])
+    error = Mysql2::Error.new('Invalid value')
+    allow(error).to receive(:errno).and_return(1062)
     expect(client).to receive(:insert_record)
       .with('test_table', { 'col1' => 'invalid' })
-      .and_raise(Mysql2::Error, 'Invalid value')
+      .and_raise(error)
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
@@ -183,9 +185,11 @@ RSpec.describe 'E2E Record Creation - Retry' do
     allow(client).to receive(:list_records).and_return([])
     allow(client).to receive(:list_columns).and_return(['col1'])
 
+    error = Mysql2::Error.new('Invalid value')
+    allow(error).to receive(:errno).and_return(1062)
     expect(client).to receive(:insert_record)
       .with('test_table', { 'col1' => 'invalid' })
-      .and_raise(Mysql2::Error, 'Invalid value')
+      .and_raise(error)
     expect(client).to receive(:insert_record).with('test_table', { 'col1' => 'valid' }).and_return(true)
 
     RubyMysqlTui.run_main_loop(client)

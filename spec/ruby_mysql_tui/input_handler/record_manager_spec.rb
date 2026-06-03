@@ -96,7 +96,9 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       allow(prompt).to receive(:ask).and_return('val')
       allow(prompt).to receive(:say)
 
-      expect(client).to receive(:insert_record).exactly(5).times.and_raise(Mysql2::Error, 'Persistent failure')
+      error = Mysql2::Error.new('Persistent failure')
+      allow(error).to receive(:errno).and_return(1062)
+      expect(client).to receive(:insert_record).exactly(5).times.and_raise(error)
 
       described_class.handle_create_record(state, client, prompt)
     end
@@ -127,9 +129,11 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
       allow(prompt).to receive(:ask).and_return('invalid', 'valid')
       allow(prompt).to receive(:say)
 
+      error = Mysql2::Error.new('Invalid value')
+      allow(error).to receive(:errno).and_return(1062)
       expect(client).to receive(:insert_record)
         .with('users', { 'id' => 'invalid' })
-        .and_raise(Mysql2::Error, 'Invalid value')
+        .and_raise(error)
       expect(client).to receive(:insert_record).with('users', { 'id' => 'valid' }).and_return(true)
       allow(client).to receive(:list_records).and_return([])
 
