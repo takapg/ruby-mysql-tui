@@ -10,6 +10,7 @@ module RubyMysqlTui
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
             apply_required_validation(question, col, structure)
+            apply_type_validation(question, col, structure)
           end
           return nil if val.nil?
 
@@ -26,6 +27,7 @@ module RubyMysqlTui
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
           apply_required_validation(question, column, structure)
+          apply_type_validation(question, column, structure)
         end
         [column, value]
       end
@@ -63,6 +65,28 @@ module RubyMysqlTui
       def required_column?(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
         col_info&.[]('Null') == 'NO'
+      end
+
+      def apply_type_validation(question, column, structure)
+        validation = type_validation_for(column, structure)
+        return unless validation
+
+        regex, message = validation
+        question.validate(regex, message)
+      end
+
+      def type_validation_for(column_name, structure)
+        col_info = structure.find { |c| c['Field'] == column_name }
+        return nil unless col_info
+
+        type = col_info['Type'].downcase
+        if type.include?('int')
+          [/\A-?\d+\z/, '数値のみ入力してください']
+        elsif type.include?('decimal') || type.include?('float') || type.include?('double')
+          [/\A-?\d+(\.\d+)?\z/, '数値を入力してください']
+        else
+          nil
+        end
       end
     end
   end

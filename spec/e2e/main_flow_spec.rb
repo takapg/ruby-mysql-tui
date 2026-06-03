@@ -253,6 +253,43 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
   end
 end
 
+RSpec.describe 'E2E Record Creation - Type Validation' do
+  include_context 'e2e setup'
+
+  it 'applies type validation for INT columns during record creation' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    
+    expect(prompt).to receive(:ask).with(/値を入力してください \(age\):/, any_args) do |*args, &block|
+      question = instance_double('TTY::Prompt::Question')
+      expect(question).to receive(:validate).with(/\A-?\d+\z/, '数値のみ入力してください')
+      block.call(question)
+      '25'
+    end
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return(['age'])
+    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'YES' }])
+    expect(client).to receive(:insert_record).with('test_table', { 'age' => '25' })
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 RSpec.describe 'E2E Connection Error' do
   include_context 'e2e setup'
 
