@@ -68,6 +68,11 @@ module RubyMysqlTui
         column, value = RecordPrompt.prompt_for_edit(record, prompt, pk_column)
         return if value.nil?
 
+        if column == pk_column
+          RecordPrompt.warn_pk_not_editable(prompt)
+          return
+        end
+
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
         execute_update_with_retry(state, client, prompt, info)
       end

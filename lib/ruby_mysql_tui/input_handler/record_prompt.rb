@@ -40,6 +40,10 @@ module RubyMysqlTui
 
         cols
       end
+
+      def warn_pk_not_editable(prompt)
+        prompt.say('主キーは編集できません', color: :red)
+      end
     end
   end
 end
