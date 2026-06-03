@@ -8,6 +8,8 @@ module RubyMysqlTui
   class Client
     include Writer
 
+    MAX_RECORDS_LIMIT = 10_000
+
     attr_reader :connection, :config, :last_sql
 
     def initialize(config = {})
@@ -55,7 +57,8 @@ module RubyMysqlTui
       escaped_table_name = table_name.gsub('`', '``')
       sql = "SELECT * FROM `#{escaped_table_name}`"
 
-      sql += " LIMIT #{limit} OFFSET #{offset}" if limit
+      actual_limit = limit || MAX_RECORDS_LIMIT
+      sql += " LIMIT #{actual_limit} OFFSET #{offset}"
 
       query(sql)
     end
