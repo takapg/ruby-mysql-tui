@@ -45,13 +45,29 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
 
   it 'updates records_offset when scrolling in :table_structure mode' do
     state = { focus: :right, view_mode: :table_structure, records: [1, 2, 3], records_offset: 0 }
+
+    # 下方向へのスクロール
     event_down = double('Event', value: "\e[B", key: double('Key'))
+    state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
+    expect(state[:records_offset]).to eq(1)
 
-    new_state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
-    expect(new_state[:records_offset]).to eq(1)
-
+    # 上方向へのスクロール (0に戻る)
     event_up = double('Event', value: "\e[A", key: double('Key'))
-    final_state = RubyMysqlTui::InputHandler.handle_input(event_up, new_state, client)
-    expect(final_state[:records_offset]).to eq(0)
+    state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
+    expect(state[:records_offset]).to eq(0)
+
+    # 上方向へのスクロール (0未満にならないこと)
+    state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
+    expect(state[:records_offset]).to eq(0)
+
+    # 最大値までスクロール
+    3.times do
+      state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
+    end
+    expect(state[:records_offset]).to eq(3)
+
+    # 最大値を超えないこと
+    state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
+    expect(state[:records_offset]).to eq(3)
   end
 end
