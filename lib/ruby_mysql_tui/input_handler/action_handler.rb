@@ -41,9 +41,10 @@ module RubyMysqlTui
       end
 
       def handle_delete_action(state, client, prompt)
-        if state[:view_mode] == :databases
+        case state[:view_mode]
+        when :databases
           DatabaseManager.handle_drop_database(state, client, prompt)
-        elsif state[:view_mode] == :tables
+        when :tables
           TableManager.handle_drop_table(state, client, prompt)
         else
           RecordManager.handle_delete_record(state, client, prompt)
