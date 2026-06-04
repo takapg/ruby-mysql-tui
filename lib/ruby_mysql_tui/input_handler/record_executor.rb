@@ -12,14 +12,19 @@ module RubyMysqlTui
       end
 
       def confirm_and_delete(state, client, prompt, record, pk_column)
-        return false unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
+        unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
+          state[:status_message] = 'Deletion cancelled'
+          return false
+        end
 
         table = state[:selected_table]
         client.delete_record(table, pk_column, record[pk_column])
         refresh_records_safe(state, client, prompt)
+        state[:status_message] = 'Record deleted successfully'
         true
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Failed to delete record: #{e.message}")
+        state[:status_message] = "Failed to delete record: #{e.message}"
         false
       end
 
