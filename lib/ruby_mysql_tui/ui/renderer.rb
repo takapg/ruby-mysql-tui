@@ -80,7 +80,16 @@ module RubyMysqlTui
 
       def render_footer(state)
         mode_text = state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
-        guide = "#{mode_text}[q] Quit | [b] Back | [Tab] Switch Focus | [↑/↓] Move | [Enter] Select | [a] All Records "
+        guides = ['[q] Quit', '[Tab] Switch Focus']
+
+        if state[:focus] == :left
+          guides += ['[b] Back', '[↑/↓] Move', '[Enter] Select']
+        elsif state[:focus] == :right && state[:view_mode] == :records
+          guides += ['[n] New', '[e] Edit', '[d] Delete']
+          guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
+        end
+
+        guide = "#{mode_text}#{guides.join(' | ')}"
         puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { guide }
       end
     end
