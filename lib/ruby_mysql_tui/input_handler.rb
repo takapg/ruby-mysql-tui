@@ -22,12 +22,12 @@ module RubyMysqlTui
       when "\e[B", "\eOB" then return handle_down(state, client)
       end
 
-      if (result = ActionHandler.handle_action_key(val, state, client))
-        return result
-      end
+      ActionHandler.handle_action_key(val, state, client) ||
+        handle_key_input(extract_key_name(event), state, client)
+    end
 
-      key_name = event.respond_to?(:key) && event.key.respond_to?(:name) ? event.key.name : nil
-      handle_key_input(key_name, state, client)
+    def extract_key_name(event)
+      event.respond_to?(:key) && event.key.respond_to?(:name) ? event.key.name : nil
     end
 
     def handle_key_input(key_name, state, client)
