@@ -12,21 +12,31 @@ module RubyMysqlTui
       end
 
       def confirm_and_delete(state, client, prompt, record, pk_column)
-        unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
-          state[:status_message] = 'Deletion cancelled'
-          return false
-        end
+        return handle_cancel(state) unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
 
-        table = state[:selected_table]
-        client.delete_record(table, pk_column, record[pk_column])
-        refresh_records_safe(state, client, prompt)
+        perform_deletion(state, client, prompt, record, pk_column)
         state[:status_message] = 'Record deleted successfully'
         true
       rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Failed to delete record: #{e.message}")
-        state[:status_message] = "Failed to delete record: #{e.message}"
+        handle_deletion_error(state, e)
         false
       end
+
+      def handle_cancel(state)
+        state[:status_message] = 'Deletion cancelled'
+        false
+      end
+
+      def perform_deletion(state, client, prompt, record, pk_column)
+        client.delete_record(state[:selected_table], pk_column, record[pk_column])
+        refresh_records_safe(state, client, prompt)
+      end
+
+      def handle_deletion_error(state, e)
+        RubyMysqlTui.logger.error("Failed to delete record: #{e.message}")
+        state[:status_message] = "Failed to delete record: #{e.message}"
+      end
+      private_class_method :handle_cancel, :perform_deletion, :handle_deletion_error
 
       def execute_update(state, client, prompt, info)
         if info[:pk_col].nil?

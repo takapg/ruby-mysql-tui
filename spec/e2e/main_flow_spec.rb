@@ -428,7 +428,7 @@ RSpec.describe 'E2E Table Creation' do
   end
 end
 
-RSpec.describe 'E2E Record Deletion' do
+RSpec.describe 'E2E Record Deletion - Cancellation' do
   include_context 'e2e setup'
 
   it 'shows cancellation message when deletion is cancelled' do
@@ -455,6 +455,10 @@ RSpec.describe 'E2E Record Deletion' do
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:status_message] == 'Deletion cancelled' }).to be true
   end
+end
+
+RSpec.describe 'E2E Record Deletion - Success' do
+  include_context 'e2e setup'
 
   it 'shows success message when record is deleted' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
