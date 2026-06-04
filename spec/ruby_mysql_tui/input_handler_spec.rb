@@ -35,5 +35,17 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(final_state[:view_mode]).to eq(:records)
       expect(final_state[:records]).to eq([{ 'id' => 1 }])
     end
+
+    it 'updates records_offset when scrolling in :table_structure mode' do
+      state = { focus: :right, view_mode: :table_structure, records: [1, 2, 3], records_offset: 0 }
+      event_down = double('Event', value: "\e[B", key: double('Key'))
+
+      new_state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
+      expect(new_state[:records_offset]).to eq(1)
+
+      event_up = double('Event', value: "\e[A", key: double('Key'))
+      final_state = RubyMysqlTui::InputHandler.handle_input(event_up, new_state, client)
+      expect(final_state[:records_offset]).to eq(0)
+    end
   end
 end

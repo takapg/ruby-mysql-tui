@@ -247,6 +247,31 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
     expect { renderer.render(client, state) }.not_to output(/\[n\] New/).to_stdout
   end
 
+  it 'displays [i] Records and [↑/↓] Move when focus is :right and view_mode is :table_structure' do
+    state = { focus: :right, items: [], selected_index: 0, view_mode: :table_structure, selected_table: 'users' }
+    expect { renderer.render(client, state) }.to output(/\[i\] Records \| \[↑\/↓\] Move/).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
+  include_context 'renderer setup'
+
+  it 'slices structure data based on records_offset' do
+    state = {
+      focus: :right,
+      view_mode: :table_structure,
+      selected_table: 'users',
+      records: [{ 'Field' => 'id' }, { 'Field' => 'name' }, { 'Field' => 'email' }],
+      records_offset: 1,
+      items: []
+    }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('name')
+    expect(output).to include('email')
+    expect(output).not_to include('id')
+  end
+end
+
   it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
     state = {
       focus: :right, items: [], selected_index: 0, view_mode: :records,

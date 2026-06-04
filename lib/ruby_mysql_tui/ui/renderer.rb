@@ -86,9 +86,14 @@ module RubyMysqlTui
 
         if state[:focus] == :left
           guides += ['[b] Back', '[↑/↓] Move', '[Enter] Select']
-        elsif state[:focus] == :right && state[:view_mode] == :records
-          guides += ['[n] New', '[e] Edit', '[d] Delete']
-          guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
+        elsif state[:focus] == :right
+          if state[:view_mode] == :records
+            guides += ['[n] New', '[e] Edit', '[d] Delete']
+            guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
+            guides << '[i] Structure'
+          elsif state[:view_mode] == :table_structure
+            guides += ['[i] Records', '[↑/↓] Move']
+          end
         end
 
         guide = "#{mode_text}#{guides.join(' | ')}"
