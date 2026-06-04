@@ -61,12 +61,13 @@ module RubyMysqlTui
         column, value = result
         return if value.nil?
 
-        info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
+        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
+        info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: value }
         perform_update(state, client, prompt, info)
       end
 
       def self.perform_update(state, client, prompt, info)
-        if info[:col] == info[:pk_col]
+        if info[:pk_cols].include?(info[:col])
           RecordPrompt.warn_pk_not_editable(prompt)
           return
         end
