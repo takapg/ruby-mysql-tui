@@ -12,7 +12,10 @@ module RubyMysqlTui
       end
 
       def confirm_and_delete(state, client, prompt, record, pk_column)
-        return set_cancellation_message(state) unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
+        unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
+          state[:status_message] = 'Deletion cancelled'
+          return false
+        end
 
         perform_deletion(state, client, prompt, record, pk_column)
         state[:status_message] = 'Record deleted successfully'
@@ -45,11 +48,6 @@ module RubyMysqlTui
       end
 
       private
-
-      def set_cancellation_message(state)
-        state[:status_message] = 'Deletion cancelled'
-        false
-      end
 
       def perform_deletion(state, client, prompt, record, pk_column)
         client.delete_record(state[:selected_table], pk_column, record[pk_column])
