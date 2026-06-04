@@ -284,7 +284,8 @@ RSpec.describe RubyMysqlTui::Client, '#create_table' do
 
   it 'executes CREATE TABLE with a basic schema' do
     table_name = 'test_table'
-    expect(mock_mysql_client).to receive(:query).with("CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT)")
+    sql = "CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT)"
+    expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name)
   end
 
