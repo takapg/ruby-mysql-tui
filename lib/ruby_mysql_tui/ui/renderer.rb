@@ -104,9 +104,10 @@ module RubyMysqlTui
           guides = ['[n] New', '[e] Edit', '[d] Delete']
           guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
           guides << '[i] Structure'
+          guides << '[←/→] Scroll Cols'
           guides
         elsif state[:view_mode] == :table_structure
-          ['[i] Records', '[↑/↓] Move']
+          ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
         else
           []
         end

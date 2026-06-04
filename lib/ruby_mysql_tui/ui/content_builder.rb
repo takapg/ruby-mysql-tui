@@ -55,7 +55,8 @@ module RubyMysqlTui
           options: {
             height: height,
             selected_index: state[:selected_record_index],
-            offset: state[:records_offset] || 0
+            offset: state[:records_offset] || 0,
+            columns_offset: state[:columns_offset] || 0
           }
         )
       end
@@ -78,26 +79,28 @@ module RubyMysqlTui
         height = options[:height]
         selected_index = options[:selected_index]
         offset = options[:offset] || 0
+        columns_offset = options[:columns_offset] || 0
 
         header = truncate("Table: #{table_name}", width)
         return "#{header}\n\n#{truncate('No records found', width)}" if records.nil? || records.none?
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_records_table(records, width, max_rows, selected_index, offset).to_s
+        table_output = create_records_table(records, width, max_rows, selected_index, offset, columns_offset).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_records_table(records, width, max_rows = nil, selected_index = nil, offset = 0)
+      def create_records_table(records, width, max_rows = nil, selected_index = nil, offset = 0, columns_offset = 0)
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
+        visible_columns = columns.drop(columns_offset)
         display_records = slice_records(records, max_rows, offset)
-        col_width = calculate_col_width(width, columns.size)
+        col_width = calculate_col_width(width, visible_columns.size)
 
         TTY::Table.new(
-          header: columns.map { |c| truncate(c, col_width) },
-          rows: format_records_rows(display_records, col_width, selected_index)
+          header: visible_columns.map { |c| truncate(c, col_width) },
+          rows: format_records_rows(display_records, col_width, selected_index, columns_offset)
         )
       end
 
@@ -109,9 +112,9 @@ module RubyMysqlTui
         [(width - (columns_count * 3) - 1) / columns_count, 1].max
       end
 
-      def format_records_rows(records, col_width, selected_index = nil)
+      def format_records_rows(records, col_width, selected_index = nil, columns_offset = 0)
         records.map.with_index do |row, idx|
-          row.values.map.with_index do |val, col_idx|
+          row.values.drop(columns_offset).map.with_index do |val, col_idx|
             text = truncate(val.to_s, col_width)
             idx == selected_index && col_idx.zero? ? "> #{text}" : text
           end
