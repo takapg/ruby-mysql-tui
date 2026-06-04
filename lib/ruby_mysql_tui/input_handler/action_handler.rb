@@ -14,7 +14,7 @@ module RubyMysqlTui
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
         when 'n', 'e', 'd' then handle_record_action(val, state, client)
-        else state
+        else nil
         end
       end
 

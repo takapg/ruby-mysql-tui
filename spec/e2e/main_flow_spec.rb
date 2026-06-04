@@ -341,7 +341,7 @@ RSpec.describe 'E2E Database Creation' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('new_e2e_db')
 
-    expect(client).to receive(:list_databases).twice.and_return([E2EHelper::TEST_DB])
+    expect(client).to receive(:list_databases).thrice.and_return([E2EHelper::TEST_DB])
     expect(client).to receive(:create_database).with('new_e2e_db')
     states = track_states(client)
 
