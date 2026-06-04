@@ -12,7 +12,7 @@ module RubyMysqlTui
       end
 
       def confirm_and_delete(state, client, prompt, record, pk_column)
-        return process_cancel(state) unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
+        return set_cancel_status(state) unless prompt.yes?('本当にこのレコードを削除しますか？ (y/N)')
 
         perform_deletion(state, client, prompt, record, pk_column)
         state[:status_message] = 'Record deleted successfully'
@@ -22,7 +22,7 @@ module RubyMysqlTui
         false
       end
 
-      def process_cancel(state)
+      def set_cancel_status(state)
         state[:status_message] = 'Deletion cancelled'
         false
       end
@@ -36,7 +36,7 @@ module RubyMysqlTui
         RubyMysqlTui.logger.error("Failed to delete record: #{error.message}")
         state[:status_message] = "Failed to delete record: #{error.message}"
       end
-      private_class_method :process_cancel, :perform_deletion, :handle_deletion_error
+      private_class_method :set_cancel_status, :perform_deletion, :handle_deletion_error
 
       def execute_update(state, client, prompt, info)
         if info[:pk_col].nil?
