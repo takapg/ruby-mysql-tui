@@ -4,54 +4,54 @@ require 'spec_helper'
 require 'ruby_mysql_tui/input_handler'
 require 'ruby_mysql_tui/input_handler/record_manager'
 
-RSpec.describe RubyMysqlTui::InputHandler do
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - edit' do
   let(:state) { { focus: :right, view_mode: :records, records: [{ 'id' => 1 }] } }
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:event) { double('Event', value: 'e', key: double('Key')) }
 
-  describe '.handle_input' do
-    context 'when "e" key is pressed' do
-      it 'calls RecordManager.handle_edit_record' do
-        prompt = instance_double('TTY::Prompt')
-        allow(TTY::Prompt).to receive(:new).and_return(prompt)
-        expect(RubyMysqlTui::InputHandler::RecordManager).to receive(:handle_edit_record).with(state, client, prompt)
+  it 'calls RecordManager.handle_edit_record when the "e" key is pressed' do
+    prompt = instance_double('TTY::Prompt')
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    expect(RubyMysqlTui::InputHandler::RecordManager).to receive(:handle_edit_record).with(state, client, prompt)
 
-        RubyMysqlTui::InputHandler.handle_input(event, state, client)
-      end
-    end
+    RubyMysqlTui::InputHandler.handle_input(event, state, client)
+  end
+end
 
-    context 'when "i" key is pressed' do
-      it 'toggles view_mode between :records and :table_structure' do
-        state = { focus: :right, view_mode: :records, selected_table: 'users', records: [] }
-        event = double('Event', value: 'i', key: double('Key'))
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - toggle' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
 
-        allow(client).to receive(:list_table_structure).with('users').and_return([{ 'Field' => 'id' }])
+  it 'toggles view_mode between :records and :table_structure when "i" key is pressed' do
+    state = { focus: :right, view_mode: :records, selected_table: 'users', records: [] }
+    event = double('Event', value: 'i', key: double('Key'))
 
-        new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
-        expect(new_state[:view_mode]).to eq(:table_structure)
-        expect(new_state[:records]).to eq([{ 'Field' => 'id' }])
+    allow(client).to receive(:list_table_structure).with('users').and_return([{ 'Field' => 'id' }])
 
-        event_back = double('Event', value: 'i', key: double('Key'))
-        allow(client).to receive(:list_records).with('users', 0).and_return([{ 'id' => 1 }])
+    new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+    expect(new_state[:view_mode]).to eq(:table_structure)
+    expect(new_state[:records]).to eq([{ 'Field' => 'id' }])
 
-        final_state = RubyMysqlTui::InputHandler.handle_input(event_back, new_state, client)
-        expect(final_state[:view_mode]).to eq(:records)
-        expect(final_state[:records]).to eq([{ 'id' => 1 }])
-      end
-    end
+    event_back = double('Event', value: 'i', key: double('Key'))
+    allow(client).to receive(:list_records).with('users', 0).and_return([{ 'id' => 1 }])
 
-    context 'when scrolling in :table_structure mode' do
-      it 'updates records_offset' do
-        state = { focus: :right, view_mode: :table_structure, records: [1, 2, 3], records_offset: 0 }
-        event_down = double('Event', value: "\e[B", key: double('Key'))
+    final_state = RubyMysqlTui::InputHandler.handle_input(event_back, new_state, client)
+    expect(final_state[:view_mode]).to eq(:records)
+    expect(final_state[:records]).to eq([{ 'id' => 1 }])
+  end
+end
 
-        new_state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
-        expect(new_state[:records_offset]).to eq(1)
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
 
-        event_up = double('Event', value: "\e[A", key: double('Key'))
-        final_state = RubyMysqlTui::InputHandler.handle_input(event_up, new_state, client)
-        expect(final_state[:records_offset]).to eq(0)
-      end
-    end
+  it 'updates records_offset when scrolling in :table_structure mode' do
+    state = { focus: :right, view_mode: :table_structure, records: [1, 2, 3], records_offset: 0 }
+    event_down = double('Event', value: "\e[B", key: double('Key'))
+
+    new_state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
+    expect(new_state[:records_offset]).to eq(1)
+
+    event_up = double('Event', value: "\e[A", key: double('Key'))
+    final_state = RubyMysqlTui::InputHandler.handle_input(event_up, new_state, client)
+    expect(final_state[:records_offset]).to eq(0)
   end
 end

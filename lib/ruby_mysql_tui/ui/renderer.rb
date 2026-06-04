@@ -85,8 +85,6 @@ module RubyMysqlTui
         puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { guide }
       end
 
-      private
-
       def footer_mode_text(state)
         state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
       end
