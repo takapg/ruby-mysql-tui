@@ -103,6 +103,7 @@ module RubyMysqlTui
         case state[:view_mode]
         when :records then records_guides(state)
         when :table_structure then structure_guides
+        when :record_detail then ['[b/Esc] Back', '[↑/↓] Scroll']
         else []
         end
       end

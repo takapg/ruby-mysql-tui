@@ -17,6 +17,10 @@ module RubyMysqlTui
       state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
 
+      if state[:view_mode] == :record_detail && (val == 'b' || val == "\e")
+        return state.merge(view_mode: :records)
+      end
+
       case val
       when "\e[A", "\eOA" then return handle_up(state, client)
       when "\e[B", "\eOB" then return handle_down(state, client)
@@ -109,6 +113,10 @@ module RubyMysqlTui
         Pagination.update_records_offset(state, delta, client, current_layout)
       elsif state[:view_mode] == :table_structure
         state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
+      elsif state[:view_mode] == :record_detail
+        record = state[:records][state[:selected_record_index]]
+        return unless record
+        state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, record.keys.size)
       end
     end
   end

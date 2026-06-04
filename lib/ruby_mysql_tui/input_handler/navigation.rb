@@ -12,13 +12,22 @@ module RubyMysqlTui
       end
 
       def handle_return(state, client)
-        return state unless state[:focus] == :left
-
-        case state[:view_mode]
-        when :databases then handle_databases_return(state, client)
-        when :tables then handle_tables_return(state, client)
+        if state[:focus] == :left
+          case state[:view_mode]
+          when :databases then handle_databases_return(state, client)
+          when :tables then handle_tables_return(state, client)
+          end
+        elsif state[:focus] == :right && state[:view_mode] == :records
+          handle_records_return(state)
         end
         state
+      end
+
+      def handle_records_return(state)
+        return if state[:records].empty?
+
+        state[:view_mode] = :record_detail
+        state[:records_offset] = 0
       end
 
       def handle_databases_return(state, client)
