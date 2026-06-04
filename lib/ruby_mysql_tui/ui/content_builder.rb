@@ -52,13 +52,17 @@ module RubyMysqlTui
           table_name: state[:selected_table],
           records: state[:records],
           width: width,
-          options: {
-            height: height,
-            selected_index: state[:selected_record_index],
-            offset: state[:records_offset] || 0,
-            columns_offset: state[:columns_offset] || 0
-          }
+          options: records_view_options(state, height)
         )
+      end
+
+      private_class_method def records_view_options(state, height)
+        {
+          height: height,
+          selected_index: state[:selected_record_index],
+          offset: state[:records_offset] || 0,
+          columns_offset: state[:columns_offset] || 0
+        }
       end
 
       def build_databases_text(width)
@@ -86,21 +90,23 @@ module RubyMysqlTui
 
         # 表示可能行数の計算: ヘッダー(1) + 空行(1) + テーブルヘッダー(2) = 4行を差し引く
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_records_table(records, width, max_rows, selected_index, offset, columns_offset).to_s
+        options = { max_rows: max_rows, selected_index: selected_index, offset: offset, columns_offset: columns_offset }
+        table_output = create_records_table(records, width, options).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_records_table(records, width, max_rows = nil, selected_index = nil, offset = 0, columns_offset = 0)
+      def create_records_table(records, width, options = {})
         columns = records.first.keys
         return TTY::Table.new(rows: [['No columns available']]) if columns.empty?
 
+        columns_offset = options[:columns_offset] || 0
         visible_columns = columns.drop(columns_offset)
-        display_records = slice_records(records, max_rows, offset)
+        display_records = slice_records(records, options[:max_rows], options[:offset] || 0)
         col_width = calculate_col_width(width, visible_columns.size)
 
         TTY::Table.new(
           header: visible_columns.map { |c| truncate(c, col_width) },
-          rows: format_records_rows(display_records, col_width, selected_index, columns_offset)
+          rows: format_records_rows(display_records, col_width, options[:selected_index], columns_offset)
         )
       end
 

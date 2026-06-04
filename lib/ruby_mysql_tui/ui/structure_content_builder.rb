@@ -43,8 +43,16 @@ module RubyMysqlTui
 
         TTY::Table.new(
           header: visible_columns.map { |c| ContentBuilder.truncate(c, col_width) },
-          rows: display_structure.map { |row| row.values.drop(columns_offset).map { |v| ContentBuilder.truncate(v.to_s, col_width) } }
+          rows: format_structure_rows(display_structure, columns_offset, col_width)
         )
+      end
+
+      private_class_method def format_structure_rows(structure, columns_offset, col_width)
+        structure.map do |row|
+          row.values.drop(columns_offset).map do |v|
+            ContentBuilder.truncate(v.to_s, col_width)
+          end
+        end
       end
     end
   end

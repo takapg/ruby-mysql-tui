@@ -100,17 +100,23 @@ module RubyMysqlTui
       end
 
       def build_right_pane_guides(state)
-        if state[:view_mode] == :records
-          guides = ['[n] New', '[e] Edit', '[d] Delete']
-          guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
-          guides << '[i] Structure'
-          guides << '[←/→] Scroll Cols'
-          guides
-        elsif state[:view_mode] == :table_structure
-          ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
-        else
-          []
+        case state[:view_mode]
+        when :records then records_guides(state)
+        when :table_structure then structure_guides
+        else []
         end
+      end
+
+      private_class_method def records_guides(state)
+        guides = ['[n] New', '[e] Edit', '[d] Delete']
+        guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
+        guides << '[i] Structure'
+        guides << '[←/→] Scroll Cols'
+        guides
+      end
+
+      private_class_method def structure_guides
+        ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
       end
     end
   end

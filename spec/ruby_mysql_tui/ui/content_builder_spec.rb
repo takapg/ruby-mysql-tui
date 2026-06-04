@@ -56,32 +56,27 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'column slicing' do
   let(:height) { 20 }
   let(:records) { [{ 'col1' => 'v1', 'col2' => 'v2', 'col3' => 'v3' }] }
 
-  it 'slices columns based on columns_offset' do
-    # offset 0: col1, col2, col3 が表示される
-    output0 = described_class.build_records_text(
+  it 'shows all columns when columns_offset is 0' do
+    output = described_class.build_records_text(
       table_name: 'test', records: records, width: width,
       options: { height: height, selected_index: 0, offset: 0, columns_offset: 0 }
     )
-    expect(output0).to include('col1')
-    expect(output0).to include('col2')
-    expect(output0).to include('col3')
+    expect(output).to include('col1', 'col2', 'col3')
+  end
 
-    # offset 1: col2, col3 が表示される
+  it 'slices columns when columns_offset is positive' do
     output1 = described_class.build_records_text(
       table_name: 'test', records: records, width: width,
       options: { height: height, selected_index: 0, offset: 0, columns_offset: 1 }
     )
     expect(output1).not_to include('col1')
-    expect(output1).to include('col2')
-    expect(output1).to include('col3')
+    expect(output1).to include('col2', 'col3')
 
-    # offset 2: col3 のみが表示される
     output2 = described_class.build_records_text(
       table_name: 'test', records: records, width: width,
       options: { height: height, selected_index: 0, offset: 0, columns_offset: 2 }
     )
-    expect(output2).not_to include('col1')
-    expect(output2).not_to include('col2')
+    expect(output2).not_to include('col1', 'col2')
     expect(output2).to include('col3')
   end
 end

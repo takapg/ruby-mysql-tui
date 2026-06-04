@@ -503,7 +503,7 @@ RSpec.describe 'E2E Column Scrolling' do
     RubyMysqlTui.run_main_loop(client)
 
     # columns_offset が 0 -> 1 -> 2 -> 1 と変化したことを検証
-    offsets = states.map { |s| s[:columns_offset] }.compact
+    offsets = states.filter_map { |s| s[:columns_offset] }
     expect(offsets).to include(0, 1, 2)
     expect(offsets.last).to eq(1)
   end

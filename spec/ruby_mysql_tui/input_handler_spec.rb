@@ -71,29 +71,34 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
     expect(state[:records_offset]).to eq(3)
   end
 
-  it 'updates columns_offset when scrolling horizontally in :records mode' do
+  it 'increments columns_offset when scrolling right' do
     state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 0 }
-
-    # 右方向へのスクロール
     event_right = double('Event', value: "\e[C", key: double('Key'))
+
     state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
     expect(state[:columns_offset]).to eq(1)
-
-    # さらに右方向へ
     state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
     expect(state[:columns_offset]).to eq(2)
+  end
 
-    # 最大値 (columns.size - 1) を超えないこと
-    state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
-    expect(state[:columns_offset]).to eq(2)
-
-    # 左方向へのスクロール
+  it 'decrements columns_offset when scrolling left' do
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 2 }
     event_left = double('Event', value: "\e[D", key: double('Key'))
+
     state = RubyMysqlTui::InputHandler.handle_input(event_left, state, client)
     expect(state[:columns_offset]).to eq(1)
+  end
 
-    # 0未満にならないこと
-    2.times { state = RubyMysqlTui::InputHandler.handle_input(event_left, state, client) }
+  it 'clamps columns_offset between 0 and max' do
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 0 }
+    event_left = double('Event', value: "\e[D", key: double('Key'))
+    event_right = double('Event', value: "\e[C", key: double('Key'))
+
+    state = RubyMysqlTui::InputHandler.handle_input(event_left, state, client)
     expect(state[:columns_offset]).to eq(0)
+
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 2 }
+    state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
+    expect(state[:columns_offset]).to eq(2)
   end
 end
