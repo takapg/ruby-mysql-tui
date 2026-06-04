@@ -51,6 +51,7 @@ module RubyMysqlTui
 
       def warn_pk_missing(prompt)
         prompt.say('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
+        true
       end
 
       def warn_pk_not_editable(prompt)
@@ -64,6 +65,7 @@ module RubyMysqlTui
 
       def warn_no_editable_cols(prompt)
         prompt.say('編集可能なカラムがありません', color: :yellow)
+        true
       end
 
       def apply_required_validation(question, column, structure)
