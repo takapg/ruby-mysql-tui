@@ -62,7 +62,6 @@ module RubyMysqlTui
         end
       end
 
-
       def calculate_col_width(width, columns_count)
         [(width - (columns_count * 3) - 1) / columns_count, 1].max
       end
