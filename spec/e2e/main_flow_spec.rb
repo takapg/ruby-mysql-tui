@@ -487,6 +487,38 @@ RSpec.describe 'E2E Record Deletion - Success' do
   end
 end
 
+RSpec.describe 'E2E Record Deletion - Error' do
+  include_context 'e2e setup'
+
+  it 'shows error message when record deletion fails' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'd', key: double('Key', name: :d)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    
+    error_msg = 'Internal Server Error'
+    expect(client).to receive(:delete_record).and_raise(Mysql2::Error.new(error_msg))
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Failed to delete record: #{error_msg}" }).to be true
+  end
+end
+
 RSpec.describe 'E2E Table Creation - Empty Name' do
   include_context 'e2e setup'
 
