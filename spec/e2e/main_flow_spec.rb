@@ -400,3 +400,30 @@ RSpec.describe 'E2E All Records Mode' do
     expect(states.last[:all_records_mode]).to be false
   end
 end
+
+RSpec.describe 'E2E Table Creation' do
+  include_context 'e2e setup'
+
+  it 'creates a new table when n is pressed in table view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 1. DB選択 -> 2. テーブル作成(n) -> 3. 終了(q)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('new_e2e_table')
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['existing_table', 'new_e2e_table'])
+    expect(client).to receive(:create_table).with('new_e2e_table')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+  end
+end
