@@ -57,7 +57,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record n
   end
 
   it 'returns state and shows warning when no primary key is found' do
-    expect(prompt).to receive(:say).with('主キーが設定されていないため、編集できません', color: :yellow)
+    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
     expect(prompt).not_to receive(:select)
     result_state = described_class.handle_edit_record(state, client, prompt)
     expect(result_state).to eq(state)

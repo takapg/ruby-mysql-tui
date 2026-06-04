@@ -212,7 +212,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_edit' do
   it 'returns nil and warns when pk_column is nil' do
     record = { 'id' => 1, 'name' => 'Alice' }
     structure = []
-    expect(prompt).to receive(:say).with('主キーが設定されていないため、編集できません', color: :yellow)
+    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
     result = described_class.prompt_for_edit(record, prompt, nil, structure)
     expect(result).to be_nil
   end
