@@ -10,7 +10,7 @@ module RubyMysqlTui
         name = prompt.ask('作成するデータベース名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        client.create_database(name)
+        client.create_database(name.strip)
         state[:items] = client.list_databases
         state
       rescue Mysql2::Error => e
