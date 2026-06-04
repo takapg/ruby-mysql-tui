@@ -510,7 +510,7 @@ RSpec.describe 'E2E Record Deletion - Error' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
     allow(client).to receive(:primary_key_for).and_return('id')
-    
+
     error_msg = 'Internal Server Error'
     expect(client).to receive(:delete_record).and_raise(Mysql2::Error.new(error_msg))
 
