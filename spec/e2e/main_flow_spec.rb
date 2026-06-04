@@ -427,3 +427,60 @@ RSpec.describe 'E2E Table Creation' do
     expect(states.any? { |s| s[:view_mode] == :tables }).to be true
   end
 end
+
+RSpec.describe 'E2E Table Creation - Empty Name' do
+  include_context 'e2e setup'
+
+  it 'does not create a table when an empty name is provided' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('  ')
+
+    expect(client).not_to receive(:create_table)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['existing_table'])
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+  end
+end
+
+RSpec.describe 'E2E Table Creation - Error' do
+  include_context 'e2e setup'
+
+  it 'handles error when creating a table with an invalid name' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('invalid_table')
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Table creation failed/)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['existing_table'])
+    error = Mysql2::Error.new('Table creation failed')
+    expect(client).to receive(:create_table).with('invalid_table').and_raise(error)
+
+    expect(RubyMysqlTui.logger).to receive(:error).with(/Table Creation Error: Table creation failed/)
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+  end
+end
