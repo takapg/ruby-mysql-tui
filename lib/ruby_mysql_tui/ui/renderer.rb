@@ -107,7 +107,7 @@ module RubyMysqlTui
         end
       end
 
-      private_class_method def records_guides(state)
+      def records_guides(state)
         guides = ['[n] New', '[e] Edit', '[d] Delete']
         guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
         guides << '[i] Structure'
@@ -115,7 +115,7 @@ module RubyMysqlTui
         guides
       end
 
-      private_class_method def structure_guides
+      def structure_guides
         ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
       end
     end
