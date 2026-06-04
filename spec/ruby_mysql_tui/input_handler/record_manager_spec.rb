@@ -115,14 +115,14 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.perform_update' do
   it 'prevents updating the primary key and shows a warning' do
     info = { pk_col: 'id', pk_val: '1', col: 'id', val: '2' }
     expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
-    expect(RecordRetryHandler).not_to receive(:execute_update_with_retry)
+    expect(RubyMysqlTui::InputHandler::RecordRetryHandler).not_to receive(:execute_update_with_retry)
 
     described_class.perform_update(state, client, prompt, info)
   end
 
   it 'calls RecordRetryHandler when the column is not the primary key' do
     info = { pk_col: 'id', pk_val: '1', col: 'name', val: 'Bob' }
-    expect(RecordRetryHandler).to receive(:execute_update_with_retry).with(state, client, prompt, info)
+    expect(RubyMysqlTui::InputHandler::RecordRetryHandler).to receive(:execute_update_with_retry).with(state, client, prompt, info)
 
     described_class.perform_update(state, client, prompt, info)
   end
