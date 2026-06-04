@@ -41,7 +41,7 @@ module RubyMysqlTui
       end
 
       def left_content(state)
-        ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w)
+        ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w, @layout.main_h)
       end
 
       def right_content(state)
