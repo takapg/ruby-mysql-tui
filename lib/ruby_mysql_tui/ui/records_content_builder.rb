@@ -55,11 +55,11 @@ module RubyMysqlTui
         )
       end
 
-      def slice_records(records, max_rows, offset = 0)
+      private_class_method def slice_records(records, max_rows, offset = 0)
         records.drop(offset).take(max_rows || records.size)
       end
 
-      def format_records_rows(records, col_width, selected_index = nil, columns_offset = 0)
+      private_class_method def format_records_rows(records, col_width, selected_index = nil, columns_offset = 0)
         records.map.with_index do |row, idx|
           row.values.drop(columns_offset).map.with_index do |val, col_idx|
             text = ContentBuilder.truncate(val.to_s, col_width)
