@@ -16,7 +16,7 @@ module RubyMysqlTui
         return state unless record
 
         if pk_column.nil?
-          RecordPrompt.warn_pk_missing?(prompt)
+          RecordPrompt.warn_pk_missing(prompt)
           return state
         end
 
