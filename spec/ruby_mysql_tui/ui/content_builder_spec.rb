@@ -51,7 +51,7 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'scrolling edges' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'column slicing' do
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'column slicing' do
   let(:width) { 100 }
   let(:height) { 20 }
   let(:records) { [{ 'col1' => 'v1', 'col2' => 'v2', 'col3' => 'v3' }] }
