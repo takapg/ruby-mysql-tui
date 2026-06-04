@@ -229,12 +229,16 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
 
   it 'displays left-pane guides when focus is :left' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
-    expect { renderer.render(client, state) }.to output(/\[q\] Quit \| \[Tab\] Switch Focus \| \[b\] Back \| \[↑\/↓\] Move \| \[Enter\] Select/).to_stdout
+    expect { renderer.render(client, state) }.to output(
+      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[b\] Back \| \[↑\/↓\] Move \| \[Enter\] Select}
+    ).to_stdout
   end
 
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
-    expect { renderer.render(client, state) }.to output(/\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| \[d\] Delete \| \[a\] All Records/).to_stdout
+    expect { renderer.render(client, state) }.to output(
+      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| \[d\] Delete \| \[a\] All Records}
+    ).to_stdout
   end
 
   it 'excludes record-action guides when focus is :right and view_mode is not :records' do
@@ -244,7 +248,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
   end
 
   it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
-    state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users', all_records_mode: true }
+    state = {
+      focus: :right, items: [], selected_index: 0, view_mode: :records,
+      selected_table: 'users', all_records_mode: true
+    }
     expect { renderer.render(client, state) }.to output(/\[ALL RECORDS MODE\] \[q\] Quit.*\[a\] Normal Mode/).to_stdout
   end
 end
