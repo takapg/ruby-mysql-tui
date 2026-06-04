@@ -29,15 +29,15 @@ module RubyMysqlTui
     end
 
     private_class_method def arrow_key?(val)
-      ['\e[A', '\eOA', '\e[B', '\eOB', '\e[C', '\e[D'].include?(val)
+      ["\e[A", "\eOA", "\e[B", "\eOB", "\e[C", "\e[D"].include?(val)
     end
 
     private_class_method def handle_arrow_keys(val, state, client)
       case val
-      when "\e[A", "\eOA" then handle_up(state, client)
-      when "\e[B", "\eOB" then handle_down(state, client)
-      when "\e[C" then handle_column_scroll(state, 1)
-      when "\e[D" then handle_column_scroll(state, -1)
+      when "\e[A", "\eOA" then self.handle_up(state, client)
+      when "\e[B", "\eOB" then self.handle_down(state, client)
+      when "\e[C" then self.handle_column_scroll(state, 1)
+      when "\e[D" then self.handle_column_scroll(state, -1)
       end
     end
 
