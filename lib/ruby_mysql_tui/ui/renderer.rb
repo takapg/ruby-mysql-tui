@@ -70,6 +70,8 @@ module RubyMysqlTui
       def render_log(client, state)
         if state[:sql_mode]
           text = "SQL MODE: #{state[:sql_input]} (Esc to cancel)"
+        elsif state[:status_message]
+          text = "Status: #{state[:status_message]}"
         else
           sql = client.last_sql
           text = sql ? "Last SQL: #{sql}" : 'No SQL executed'
