@@ -27,7 +27,12 @@ module RubyMysqlTui
       def handle_record_action(val, state, client)
         prompt = TTY::Prompt.new
         case val
-        when 'n' then RecordManager.handle_create_record(state, client, prompt)
+        when 'n'
+          if state[:view_mode] == :databases
+            DatabaseManager.handle_create_database(state, client, prompt)
+          else
+            RecordManager.handle_create_record(state, client, prompt)
+          end
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then RecordManager.handle_delete_record(state, client, prompt)
         end
