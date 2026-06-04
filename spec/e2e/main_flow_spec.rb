@@ -326,6 +326,58 @@ RSpec.describe 'E2E Connection Error' do
   end
 end
 
+RSpec.describe 'E2E Database Creation - Success' do
+  include_context 'e2e setup'
+
+  it 'creates a new database when n is pressed in database view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('new_e2e_db')
+
+    expect(client).to receive(:list_databases).thrice.and_return([E2EHelper::TEST_DB])
+    expect(client).to receive(:create_database).with('new_e2e_db')
+    states = track_states(client)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :databases }).to be true
+  end
+end
+
+RSpec.describe 'E2E Database Creation - Error' do
+  include_context 'e2e setup'
+
+  it 'handles error when creating a database with a duplicate name' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('duplicate_db')
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Database already exists/)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    error = Mysql2::Error.new('Database already exists')
+    expect(client).to receive(:create_database).with('duplicate_db').and_raise(error)
+
+    expect(RubyMysqlTui.logger).to receive(:error).with(/Database Creation Error: Database already exists/)
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :databases }).to be true
+  end
+end
+
 RSpec.describe 'E2E All Records Mode' do
   include_context 'e2e setup'
 

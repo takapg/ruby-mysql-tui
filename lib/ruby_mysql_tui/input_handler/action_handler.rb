@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'database_manager'
+require_relative 'record_manager'
+require_relative 'navigation'
+
 module RubyMysqlTui
   module InputHandler
     # ActionHandler は システムアクションやレコード操作アクションのルーティングを提供します。
@@ -21,15 +25,25 @@ module RubyMysqlTui
         when "\t" then Navigation.handle_tab(state)
         when "\r" then Navigation.handle_return(state, client)
         when 'a' then RecordManager.handle_all_records_toggle(state, client)
+        else state
         end
       end
 
       def handle_record_action(val, state, client)
         prompt = TTY::Prompt.new
         case val
-        when 'n' then RecordManager.handle_create_record(state, client, prompt)
+        when 'n' then handle_new_record_action(state, client, prompt)
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then RecordManager.handle_delete_record(state, client, prompt)
+        else state
+        end
+      end
+
+      def handle_new_record_action(state, client, prompt)
+        if state[:view_mode] == :databases
+          DatabaseManager.handle_create_database(state, client, prompt)
+        else
+          RecordManager.handle_create_record(state, client, prompt)
         end
       end
     end

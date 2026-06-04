@@ -82,6 +82,11 @@ module RubyMysqlTui
       query("SHOW COLUMNS FROM `#{escaped_table_name}`")
     end
 
+    # データベースを作成します。
+    def create_database(name)
+      query("CREATE DATABASE `#{name.gsub('`', '``')}`")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
