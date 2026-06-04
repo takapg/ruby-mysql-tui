@@ -12,16 +12,23 @@ module RubyMysqlTui
       def build_list_text(items, selected_index, width, height = nil)
         return 'No items found' if items.nil? || items.empty?
 
-        content_width = width - 2
+        start_idx = calculate_start_index(items, selected_index, height)
         max_rows = height ? [0, height - 2].max : items.size
-        start_idx = 0
 
-        if items.size > max_rows
-          start_idx = (selected_index - max_rows / 2).clamp(0, items.size - max_rows)
-        end
+        render_visible_items(items, start_idx, max_rows, selected_index, width)
+      end
 
-        visible_items = items[start_idx, max_rows]
-        visible_items.map.with_index do |item, idx|
+      private_class_method def calculate_start_index(items, selected_index, height)
+        return 0 unless height
+        max_rows = [0, height - 2].max
+        return 0 unless items.size > max_rows
+
+        (selected_index - max_rows / 2).clamp(0, items.size - max_rows)
+      end
+
+      private_class_method def render_visible_items(items, start_idx, max_rows, selected_index, width)
+        content_width = width - 2
+        items[start_idx, max_rows].map.with_index do |item, idx|
           actual_idx = start_idx + idx
           text = actual_idx == selected_index ? "> #{item}" : "  #{item}"
           truncate(text, content_width)
