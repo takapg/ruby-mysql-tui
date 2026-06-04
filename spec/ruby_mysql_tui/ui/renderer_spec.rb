@@ -252,6 +252,14 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
     expect { renderer.render(client, state) }.to output(/\[i\] Records \| \[↑\/↓\] Move/).to_stdout
   end
 
+  it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
+    state = {
+      focus: :right, items: [], selected_index: 0, view_mode: :records,
+      selected_table: 'users', all_records_mode: true
+    }
+    expect { renderer.render(client, state) }.to output(/\[ALL RECORDS MODE\] \[q\] Quit.*\[a\] Normal Mode/).to_stdout
+  end
+end
 
 RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
   include_context 'renderer setup'
@@ -269,14 +277,5 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
     expect(output).to include('name')
     expect(output).to include('email')
     expect(output).not_to include('id')
-  end
-end
-
-  it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
-    state = {
-      focus: :right, items: [], selected_index: 0, view_mode: :records,
-      selected_table: 'users', all_records_mode: true
-    }
-    expect { renderer.render(client, state) }.to output(/\[ALL RECORDS MODE\] \[q\] Quit.*\[a\] Normal Mode/).to_stdout
   end
 end
