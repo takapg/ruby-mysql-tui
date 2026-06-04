@@ -39,17 +39,22 @@ module RubyMysqlTui
 
       def get_editable_columns(record, prompt, pk_column, structure = [])
         pk_cols = identify_primary_keys(structure, pk_column)
-        return nil if pk_cols.empty? && warn_pk_missing(prompt)
+        if pk_cols.empty?
+          warn_pk_missing(prompt)
+          return nil
+        end
 
         cols = record.keys - pk_cols
-        return nil if cols.empty? && warn_no_editable_cols(prompt)
+        if cols.empty?
+          warn_no_editable_cols(prompt)
+          return nil
+        end
 
         cols
       end
 
       def warn_pk_missing(prompt)
         prompt.say('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
-        true
       end
 
       def warn_pk_not_editable(prompt)
@@ -63,7 +68,6 @@ module RubyMysqlTui
 
       def warn_no_editable_cols(prompt)
         prompt.say('編集可能なカラムがありません', color: :yellow)
-        true
       end
 
       def apply_validations(question, column, structure)
