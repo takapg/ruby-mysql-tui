@@ -39,16 +39,10 @@ module RubyMysqlTui
 
       def get_editable_columns(record, prompt, pk_column, structure = [])
         pk_cols = identify_primary_keys(structure, pk_column)
-        if pk_cols.empty?
-          warn_pk_missing(prompt)
-          return nil
-        end
+        return handle_missing_pk(prompt) if pk_cols.empty?
 
         cols = record.keys - pk_cols
-        if cols.empty?
-          warn_no_editable_cols(prompt)
-          return nil
-        end
+        return handle_no_editable_cols(prompt) if cols.empty?
 
         cols
       end
@@ -69,6 +63,17 @@ module RubyMysqlTui
       def warn_no_editable_cols(prompt)
         prompt.say('編集可能なカラムがありません', color: :yellow)
       end
+
+      def handle_missing_pk(prompt)
+        warn_pk_missing(prompt)
+        nil
+      end
+
+      def handle_no_editable_cols(prompt)
+        warn_no_editable_cols(prompt)
+        nil
+      end
+      private_class_method :handle_missing_pk, :handle_no_editable_cols
 
       def apply_validations(question, column, structure)
         is_required = required_column?(column, structure)
