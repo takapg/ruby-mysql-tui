@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'database_manager'
+require_relative 'table_manager'
 require_relative 'record_manager'
 require_relative 'navigation'
 
@@ -42,6 +43,8 @@ module RubyMysqlTui
       def handle_new_record_action(state, client, prompt)
         if state[:view_mode] == :databases
           DatabaseManager.handle_create_database(state, client, prompt)
+        elsif state[:view_mode] == :tables
+          TableManager.handle_create_table(state, client, prompt)
         else
           RecordManager.handle_create_record(state, client, prompt)
         end

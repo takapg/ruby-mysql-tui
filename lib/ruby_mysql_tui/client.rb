@@ -87,6 +87,11 @@ module RubyMysqlTui
       query("CREATE DATABASE `#{name.gsub('`', '``')}`")
     end
 
+    # テーブルを作成します（最小構成）。
+    def create_table(name)
+      query("CREATE TABLE `#{name.gsub('`', '``')}` (id INT PRIMARY KEY AUTO_INCREMENT)")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close

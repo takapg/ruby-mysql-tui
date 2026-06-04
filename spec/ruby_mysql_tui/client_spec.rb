@@ -278,6 +278,24 @@ RSpec.describe RubyMysqlTui::Client, '#create_database' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#create_table' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes CREATE TABLE with a basic schema' do
+    table_name = 'test_table'
+    sql = "CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT)"
+    expect(mock_mysql_client).to receive(:query).with(sql)
+    client.create_table(table_name)
+  end
+
+  it 'escapes backticks in table name' do
+    table_name = 'my`table'
+    expect(mock_mysql_client).to receive(:query).with('CREATE TABLE `my``table` (id INT PRIMARY KEY AUTO_INCREMENT)')
+    client.create_table(table_name)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#update_record' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
