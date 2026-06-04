@@ -251,7 +251,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :table_structure, selected_table: 'users' }
     expect { renderer.render(client, state) }.to output(/\[i\] Records \| \[↑\/↓\] Move/).to_stdout
   end
-end
+
 
 RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
   include_context 'renderer setup'
