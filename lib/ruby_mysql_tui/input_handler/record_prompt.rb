@@ -16,8 +16,7 @@ module RubyMysqlTui
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
-            apply_required_validation(question, col, structure)
-            apply_type_validation(question, col, structure)
+            apply_validations(question, col, structure)
           end
           return nil if val.nil?
 
@@ -33,15 +32,14 @@ module RubyMysqlTui
         return nil if column.nil?
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
-          apply_required_validation(question, column, structure)
-          apply_type_validation(question, column, structure)
+          apply_validations(question, column, structure)
         end
         [column, value]
       end
 
       def get_editable_columns(record, prompt, pk_column, structure = [])
         pk_cols = identify_primary_keys(structure, pk_column)
-        return nil if pk_cols.empty? && warn_pk_missing?(prompt)
+        return nil if pk_cols.empty?
 
         cols = record.keys - pk_cols
         return nil if cols.empty? && warn_no_editable_cols?(prompt)
@@ -68,27 +66,25 @@ module RubyMysqlTui
         true
       end
 
-      def apply_required_validation(question, column, structure)
-        return unless required_column?(column, structure)
+      def apply_validations(question, column, structure)
+        is_required = required_column?(column, structure)
 
-        question.required true
-        question.validate(/\S+/, '入力してください')
+        if is_required
+          question.required true
+          question.validate(/\S+/, '入力してください')
+        end
+
+        if (validation = type_validation_for(column, structure))
+          regex, message = validation
+          # Nullableな場合は空文字を許容する
+          regex = Regexp.union(regex, /\A\s*\z/) unless is_required
+          question.validate(regex, message)
+        end
       end
 
       def required_column?(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
         col_info&.[]('Null') == 'NO'
-      end
-
-      def apply_type_validation(question, column, structure)
-        validation = type_validation_for(column, structure)
-        return unless validation
-
-        regex, message = validation
-        # Nullableな場合は空文字を許容する
-        regex = Regexp.union(regex, /\A\s*\z/) unless required_column?(column, structure)
-
-        question.validate(regex, message)
       end
 
       def type_validation_for(column_name, structure)
