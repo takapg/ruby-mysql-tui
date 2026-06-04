@@ -62,6 +62,15 @@ module RubyMysqlTui
         return if value.nil?
 
         info = { pk_col: pk_column, pk_val: record[pk_column], col: column, val: value }
+        perform_update(state, client, prompt, info)
+      end
+
+      def self.perform_update(state, client, prompt, info)
+        if info[:col] == info[:pk_col]
+          RecordPrompt.warn_pk_not_editable(prompt)
+          return
+        end
+
         RecordRetryHandler.execute_update_with_retry(state, client, prompt, info)
       end
 

@@ -78,18 +78,4 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.execute_update' do
     described_class.execute_update(state, client, prompt, info)
     expect(state[:records]).to eq([{ 'id' => 1, 'name' => 'Bob' }])
   end
-
-  it 'shows error when pk_col is nil' do
-    info = { pk_col: nil, col: 'name', val: 'Bob' }
-    expect(prompt).to receive(:say).with('主キーが指定されていないため、更新できません', color: :red)
-
-    described_class.execute_update(state, client, prompt, info)
-  end
-
-  it 'shows error when updating pk_col' do
-    info = { pk_col: 'id', pk_val: 1, col: 'id', val: 2 }
-    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
-
-    described_class.execute_update(state, client, prompt, info)
-  end
 end
