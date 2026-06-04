@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'deletable'
+
 module RubyMysqlTui
   module InputHandler
     # TableManager は テーブルの作成などの操作を提供します。
@@ -23,29 +25,17 @@ module RubyMysqlTui
         table_name = state[:items][state[:selected_index]]
         return state if table_name.nil?
 
-        return cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
+        return Deletable.cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
 
         execute_drop_table(state, client, table_name)
       rescue Mysql2::Error => e
-        handle_drop_error(prompt, e, state)
-      end
-
-      private_class_method def cancel_deletion(state)
-        state[:status_message] = 'Deletion cancelled'
-        state
+        Deletable.handle_drop_error(prompt, e, state, 'Table')
       end
 
       private_class_method def execute_drop_table(state, client, table_name)
         client.drop_table(table_name)
-        state[:items] = client.list_tables(state[:selected_db])
-        state[:selected_index] = state[:selected_index].clamp(0, [0, state[:items].size - 1].max)
+        state = Deletable.update_state_after_deletion(state, client.list_tables(state[:selected_db]))
         state[:status_message] = "Table '#{table_name}' deleted successfully"
-        state
-      end
-
-      private_class_method def handle_drop_error(prompt, error, state)
-        RubyMysqlTui.logger.error("Table Drop Error: #{error.message}")
-        prompt.error("エラーが発生しました: #{error.message}")
         state
       end
     end

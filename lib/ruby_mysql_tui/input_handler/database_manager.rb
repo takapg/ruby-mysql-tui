@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'deletable'
+
 module RubyMysqlTui
   module InputHandler
     # DatabaseManager は データベースの作成などの操作を提供します。
@@ -23,29 +25,17 @@ module RubyMysqlTui
         db_name = state[:items][state[:selected_index]]
         return state if db_name.nil?
 
-        return cancel_deletion(state) unless prompt.yes?("本当にデータベース '#{db_name}' を削除しますか？ (y/N)")
+        return Deletable.cancel_deletion(state) unless prompt.yes?("本当にデータベース '#{db_name}' を削除しますか？ (y/N)")
 
         execute_drop_database(state, client, db_name)
       rescue Mysql2::Error => e
-        handle_drop_error(prompt, e, state)
-      end
-
-      private_class_method def cancel_deletion(state)
-        state[:status_message] = 'Deletion cancelled'
-        state
+        Deletable.handle_drop_error(prompt, e, state, 'Database')
       end
 
       private_class_method def execute_drop_database(state, client, db_name)
         client.drop_database(db_name)
-        state[:items] = client.list_databases
-        state[:selected_index] = state[:selected_index].clamp(0, [0, state[:items].size - 1].max)
+        state = Deletable.update_state_after_deletion(state, client.list_databases)
         state[:status_message] = "Database '#{db_name}' deleted successfully"
-        state
-      end
-
-      private_class_method def handle_drop_error(prompt, error, state)
-        RubyMysqlTui.logger.error("Database Drop Error: #{error.message}")
-        prompt.error("エラーが発生しました: #{error.message}")
         state
       end
     end
