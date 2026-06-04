@@ -3,44 +3,46 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler/record_prompt'
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.get_editable_columns' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.get_editable_columns with primary keys' do
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
   let(:pk_column) { 'id' }
 
-  context 'when primary keys are present' do
-    it 'excludes the primary key column' do
-      structure = [{ 'Field' => 'id', 'Key' => 'PRI' }]
-      cols = described_class.get_editable_columns(record, prompt, pk_column, structure)
-      expect(cols).to eq(%w[name email])
-      expect(cols).not_to include(pk_column)
-    end
-
-    it 'excludes multiple primary key columns (composite key)' do
-      record_composite = { 'id1' => 1, 'id2' => 2, 'name' => 'Alice' }
-      structure = [
-        { 'Field' => 'id1', 'Key' => 'PRI' },
-        { 'Field' => 'id2', 'Key' => 'PRI' }
-      ]
-      cols = described_class.get_editable_columns(record_composite, prompt, 'id1', structure)
-      expect(cols).to eq(['name'])
-      expect(cols).not_to include('id1', 'id2')
-    end
+  it 'excludes the primary key column' do
+    structure = [{ 'Field' => 'id', 'Key' => 'PRI' }]
+    cols = described_class.get_editable_columns(record, prompt, pk_column, structure)
+    expect(cols).to eq(%w[name email])
+    expect(cols).not_to include(pk_column)
   end
 
-  context 'when no primary keys are found' do
-    it 'returns nil and warns when pk_column is nil and no PRI key in structure' do
-      expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
-      cols = described_class.get_editable_columns(record, prompt, nil, [])
-      expect(cols).to be_nil
-    end
+  it 'excludes multiple primary key columns (composite key)' do
+    record_composite = { 'id1' => 1, 'id2' => 2, 'name' => 'Alice' }
+    structure = [
+      { 'Field' => 'id1', 'Key' => 'PRI' },
+      { 'Field' => 'id2', 'Key' => 'PRI' }
+    ]
+    cols = described_class.get_editable_columns(record_composite, prompt, 'id1', structure)
+    expect(cols).to eq(['name'])
+    expect(cols).not_to include('id1', 'id2')
+  end
+end
 
-    it 'returns nil and warns when no editable columns exist' do
-      record_only_pk = { 'id' => 1 }
-      expect(prompt).to receive(:say).with('編集可能なカラムがありません', color: :yellow)
-      cols = described_class.get_editable_columns(record_only_pk, prompt, pk_column)
-      expect(cols).to be_nil
-    end
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.get_editable_columns without primary keys' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
+  let(:pk_column) { 'id' }
+
+  it 'returns nil and warns when pk_column is nil and no PRI key in structure' do
+    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
+    cols = described_class.get_editable_columns(record, prompt, nil, [])
+    expect(cols).to be_nil
+  end
+
+  it 'returns nil and warns when no editable columns exist' do
+    record_only_pk = { 'id' => 1 }
+    expect(prompt).to receive(:say).with('編集可能なカラムがありません', color: :yellow)
+    cols = described_class.get_editable_columns(record_only_pk, prompt, pk_column)
+    expect(cols).to be_nil
   end
 end
 
