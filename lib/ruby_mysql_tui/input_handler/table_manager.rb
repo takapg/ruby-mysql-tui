@@ -18,8 +18,6 @@ module RubyMysqlTui
         prompt.error("エラーが発生しました: #{e.message}")
         state
       end
-    end
-
     def handle_drop_table(state, client, prompt)
       table_name = state[:items][state[:selected_index]]
       return state if table_name.nil?
