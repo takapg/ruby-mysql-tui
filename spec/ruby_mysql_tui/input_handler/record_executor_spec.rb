@@ -19,7 +19,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.execute_insert' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.confirm_and_delete' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.confirm_and_delete (cancellation)' do
   let(:state) { { selected_table: 'test_table', records_offset: 0 } }
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
@@ -34,6 +34,14 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.confirm_and_delete'
     expect(result).to be false
     expect(state[:status_message]).to eq('Deletion cancelled')
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordExecutor, '.confirm_and_delete (execution)' do
+  let(:state) { { selected_table: 'test_table', records_offset: 0 } }
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:record) { { 'id' => 1, 'name' => 'Alice' } }
+  let(:pk_column) { 'id' }
 
   it 'deletes record and sets success message when user says yes' do
     allow(prompt).to receive(:yes?).and_return(true)
