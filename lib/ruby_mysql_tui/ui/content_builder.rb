@@ -20,10 +20,11 @@ module RubyMysqlTui
 
       private_class_method def calculate_start_index(items, selected_index, height)
         return 0 unless height
+
         max_rows = [0, height - 2].max
         return 0 unless items.size > max_rows
 
-        (selected_index - max_rows / 2).clamp(0, items.size - max_rows)
+        (selected_index - (max_rows / 2)).clamp(0, items.size - max_rows)
       end
 
       private_class_method def render_visible_items(items, start_idx, max_rows, selected_index, width)
