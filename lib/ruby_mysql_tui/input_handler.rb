@@ -39,6 +39,7 @@ module RubyMysqlTui
       when "\e[B", "\eOB" then ScrollHandler.handle_down(state, client)
       when "\e[C" then ScrollHandler.handle_column_scroll(state, 1)
       when "\e[D" then ScrollHandler.handle_column_scroll(state, -1)
+      else state
       end
     end
 
