@@ -18,6 +18,7 @@ module RubyMysqlTui
         prompt.error("エラーが発生しました: #{e.message}")
         state
       end
+
       def handle_drop_database(state, client, prompt)
         db_name = state[:items][state[:selected_index]]
         return state if db_name.nil?
@@ -42,9 +43,9 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def handle_drop_error(prompt, e, state)
-        RubyMysqlTui.logger.error("Database Drop Error: #{e.message}")
-        prompt.error("エラーが発生しました: #{e.message}")
+      private_class_method def handle_drop_error(prompt, error, state)
+        RubyMysqlTui.logger.error("Database Drop Error: #{error.message}")
+        prompt.error("エラーが発生しました: #{error.message}")
         state
       end
     end
