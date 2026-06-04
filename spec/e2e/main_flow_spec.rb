@@ -419,7 +419,7 @@ RSpec.describe 'E2E Table Creation' do
     allow(prompt).to receive(:ask).and_return('new_e2e_table')
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['existing_table', 'new_e2e_table'])
+    allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
     expect(client).to receive(:create_table).with('new_e2e_table')
 
     states = track_states(client)
