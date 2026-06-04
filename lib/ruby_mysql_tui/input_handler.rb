@@ -17,19 +17,28 @@ module RubyMysqlTui
       state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
 
-      if state[:view_mode] == :record_detail && (val == 'b' || val == "\e")
-        return state.merge(view_mode: :records)
-      end
-
-      case val
-      when "\e[A", "\eOA" then return handle_up(state, client)
-      when "\e[B", "\eOB" then return handle_down(state, client)
-      when "\e[C" then return handle_column_scroll(state, 1)
-      when "\e[D" then return handle_column_scroll(state, -1)
-      end
+      return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
+      return handle_arrow_keys(val, state, client) if arrow_key?(val)
 
       ActionHandler.handle_action_key(val, state, client) ||
         handle_key_input(extract_key_name(event), state, client)
+    end
+
+    private_class_method def detail_back_pressed?(val, state)
+      state[:view_mode] == :record_detail && ['b', "\e"].include?(val)
+    end
+
+    private_class_method def arrow_key?(val)
+      ['\e[A', '\eOA', '\e[B', '\eOB', '\e[C', '\e[D'].include?(val)
+    end
+
+    private_class_method def handle_arrow_keys(val, state, client)
+      case val
+      when "\e[A", "\eOA" then handle_up(state, client)
+      when "\e[B", "\eOB" then handle_down(state, client)
+      when "\e[C" then handle_column_scroll(state, 1)
+      when "\e[D" then handle_column_scroll(state, -1)
+      end
     end
 
     def extract_key_name(event)
@@ -109,15 +118,27 @@ module RubyMysqlTui
     private_class_method def handle_right_scroll(state, client, delta)
       return unless state[:records]
 
-      if state[:view_mode] == :records
-        Pagination.update_records_offset(state, delta, client, current_layout)
-      elsif state[:view_mode] == :table_structure
-        state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
-      elsif state[:view_mode] == :record_detail
-        record = state[:records][state[:selected_record_index]]
-        return unless record
-        state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, record.keys.size)
+      case state[:view_mode]
+      when :records then scroll_records(state, client, delta)
+      when :table_structure then scroll_structure(state, delta)
+      when :record_detail then scroll_detail(state, delta)
       end
+      state
+    end
+
+    private_class_method def scroll_records(state, client, delta)
+      Pagination.update_records_offset(state, delta, client, current_layout)
+    end
+
+    private_class_method def scroll_structure(state, delta)
+      state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
+    end
+
+    private_class_method def scroll_detail(state, delta)
+      record = state[:records][state[:selected_record_index]]
+      return unless record
+
+      state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, record.keys.size)
     end
   end
 end
