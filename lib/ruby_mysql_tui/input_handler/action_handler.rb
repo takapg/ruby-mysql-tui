@@ -14,7 +14,6 @@ module RubyMysqlTui
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
         when 'n', 'e', 'd' then handle_record_action(val, state, client)
-        else nil
         end
       end
 
@@ -33,15 +32,18 @@ module RubyMysqlTui
       def handle_record_action(val, state, client)
         prompt = TTY::Prompt.new
         case val
-        when 'n'
-          if state[:view_mode] == :databases
-            DatabaseManager.handle_create_database(state, client, prompt)
-          else
-            RecordManager.handle_create_record(state, client, prompt)
-          end
+        when 'n' then handle_new_record_action(state, client, prompt)
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then RecordManager.handle_delete_record(state, client, prompt)
         else state
+        end
+      end
+
+      def handle_new_record_action(state, client, prompt)
+        if state[:view_mode] == :databases
+          DatabaseManager.handle_create_database(state, client, prompt)
+        else
+          RecordManager.handle_create_record(state, client, prompt)
         end
       end
     end
