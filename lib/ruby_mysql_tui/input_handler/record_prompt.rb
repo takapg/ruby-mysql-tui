@@ -26,7 +26,7 @@ module RubyMysqlTui
       end
 
       def prompt_for_edit(record, prompt, pk_column = nil, structure = [])
-        editable_columns = get_editable_columns(record, prompt, pk_column)
+        editable_columns = get_editable_columns(record, prompt, pk_column, structure)
         return nil if editable_columns.nil?
 
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
@@ -39,13 +39,16 @@ module RubyMysqlTui
         [column, value]
       end
 
-      def get_editable_columns(record, prompt, pk_column)
-        if pk_column.nil?
+      def get_editable_columns(record, prompt, pk_column, structure = [])
+        pk_cols = structure.select { |c| c['Key'] == 'PRI' }.map { |c| c['Field'] }
+        pk_cols = [pk_column] if pk_cols.empty? && pk_column
+
+        if pk_cols.empty?
           warn_pk_missing(prompt)
           return nil
         end
 
-        cols = record.keys - [pk_column]
+        cols = record.keys - pk_cols
         if cols.empty?
           prompt.say('編集可能なカラムがありません', color: :yellow)
           return nil
@@ -55,7 +58,7 @@ module RubyMysqlTui
       end
 
       def warn_pk_missing(prompt)
-        prompt.say('主キーが設定されていないため、編集できません', color: :yellow)
+        prompt.say('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
       end
 
       def warn_pk_not_editable(prompt)
