@@ -369,7 +369,7 @@ RSpec.describe 'E2E Database Creation - Error' do
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     error = Mysql2::Error.new('Database already exists')
     expect(client).to receive(:create_database).with('duplicate_db').and_raise(error)
-    
+
     expect(RubyMysqlTui.logger).to receive(:error).with(/Database Creation Error: Database already exists/)
 
     states = track_states(client)
