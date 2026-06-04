@@ -40,7 +40,7 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - toggle' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
   it 'updates records_offset when scrolling in :table_structure mode' do
@@ -70,6 +70,10 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
     state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
     expect(state[:records_offset]).to eq(3)
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - column scroll' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
 
   it 'increments columns_offset when scrolling right' do
     state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 0 }
