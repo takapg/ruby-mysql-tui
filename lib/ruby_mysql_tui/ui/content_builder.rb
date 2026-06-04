@@ -9,12 +9,21 @@ module RubyMysqlTui
     module ContentBuilder
       module_function
 
-      def build_list_text(items, selected_index, width)
+      def build_list_text(items, selected_index, width, height = nil)
         return 'No items found' if items.nil? || items.empty?
 
         content_width = width - 2
-        items.map.with_index do |item, idx|
-          text = idx == selected_index ? "> #{item}" : "  #{item}"
+        max_rows = height ? [0, height - 2].max : items.size
+        start_idx = 0
+
+        if items.size > max_rows
+          start_idx = (selected_index - max_rows / 2).clamp(0, items.size - max_rows)
+        end
+
+        visible_items = items[start_idx, max_rows]
+        visible_items.map.with_index do |item, idx|
+          actual_idx = start_idx + idx
+          text = actual_idx == selected_index ? "> #{item}" : "  #{item}"
           truncate(text, content_width)
         end.join("\n")
       end
