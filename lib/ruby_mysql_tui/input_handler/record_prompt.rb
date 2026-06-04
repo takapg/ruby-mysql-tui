@@ -16,8 +16,7 @@ module RubyMysqlTui
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
           val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
-            apply_required_validation(question, col, structure)
-            apply_type_validation(question, col, structure)
+            apply_validations(question, col, structure)
           end
           return nil if val.nil?
 
@@ -26,63 +25,75 @@ module RubyMysqlTui
       end
 
       def prompt_for_edit(record, prompt, pk_column = nil, structure = [])
-        editable_columns = get_editable_columns(record, prompt, pk_column)
+        editable_columns = get_editable_columns(record, prompt, pk_column, structure)
         return nil if editable_columns.nil?
 
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
         return nil if column.nil?
 
         value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
-          apply_required_validation(question, column, structure)
-          apply_type_validation(question, column, structure)
+          apply_validations(question, column, structure)
         end
         [column, value]
       end
 
-      def get_editable_columns(record, prompt, pk_column)
-        if pk_column.nil?
-          warn_pk_missing(prompt)
-          return nil
-        end
+      def get_editable_columns(record, prompt, pk_column, structure = [])
+        pk_cols = identify_primary_keys(structure, pk_column)
+        return handle_missing_pk(prompt) if pk_cols.empty?
 
-        cols = record.keys - [pk_column]
-        if cols.empty?
-          prompt.say('編集可能なカラムがありません', color: :yellow)
-          return nil
-        end
+        cols = record.keys - pk_cols
+        return handle_no_editable_cols(prompt) if cols.empty?
 
         cols
       end
 
       def warn_pk_missing(prompt)
-        prompt.say('主キーが設定されていないため、編集できません', color: :yellow)
+        prompt.say('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
       end
 
       def warn_pk_not_editable(prompt)
         prompt.say('主キーは編集できません', color: :red)
       end
 
-      def apply_required_validation(question, column, structure)
-        return unless required_column?(column, structure)
+      def identify_primary_keys(structure, pk_column)
+        pk_cols = structure.select { |c| c['Key'] == 'PRI' }.map { |c| c['Field'] }
+        pk_cols.empty? ? [pk_column].compact : pk_cols
+      end
 
-        question.required true
-        question.validate(/\S+/, '入力してください')
+      def warn_no_editable_cols(prompt)
+        prompt.say('編集可能なカラムがありません', color: :yellow)
+      end
+
+      def handle_missing_pk(prompt)
+        warn_pk_missing(prompt)
+        nil
+      end
+
+      def handle_no_editable_cols(prompt)
+        warn_no_editable_cols(prompt)
+        nil
+      end
+      private_class_method :handle_missing_pk, :handle_no_editable_cols
+
+      def apply_validations(question, column, structure)
+        is_required = required_column?(column, structure)
+
+        if is_required
+          question.required true
+          question.validate(/\S+/, '入力してください')
+        end
+
+        if (validation = type_validation_for(column, structure))
+          regex, message = validation
+          # Nullableな場合は空文字を許容する
+          regex = Regexp.union(regex, /\A\s*\z/) unless is_required
+          question.validate(regex, message)
+        end
       end
 
       def required_column?(column_name, structure)
         col_info = structure.find { |c| c['Field'] == column_name }
         col_info&.[]('Null') == 'NO'
-      end
-
-      def apply_type_validation(question, column, structure)
-        validation = type_validation_for(column, structure)
-        return unless validation
-
-        regex, message = validation
-        # Nullableな場合は空文字を許容する
-        regex = Regexp.union(regex, /\A\s*\z/) unless required_column?(column, structure)
-
-        question.validate(regex, message)
       end
 
       def type_validation_for(column_name, structure)

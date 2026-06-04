@@ -503,7 +503,7 @@ RSpec.describe 'E2E Record Edit - No Primary Key' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    expect(prompt).to receive(:say).with('主キーが設定されていないため、編集できません', color: :yellow)
+    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
 
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
