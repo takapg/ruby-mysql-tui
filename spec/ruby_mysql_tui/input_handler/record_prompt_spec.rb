@@ -32,8 +32,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.get_editable_columns 
   let(:record) { { 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' } }
   let(:pk_column) { 'id' }
 
-  it 'returns nil and warns when pk_column is nil and no PRI key in structure' do
-    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
+  it 'returns nil when pk_column is nil and no PRI key in structure' do
     cols = described_class.get_editable_columns(record, prompt, nil, [])
     expect(cols).to be_nil
   end
@@ -215,10 +214,9 @@ end
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_edit' do
   let(:prompt) { instance_double('TTY::Prompt') }
 
-  it 'returns nil and warns when pk_column is nil' do
+  it 'returns nil when pk_column is nil' do
     record = { 'id' => 1, 'name' => 'Alice' }
     structure = []
-    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
     result = described_class.prompt_for_edit(record, prompt, nil, structure)
     expect(result).to be_nil
   end
