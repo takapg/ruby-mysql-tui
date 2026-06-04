@@ -40,4 +40,5 @@ module RubyMysqlTui
       state
     end
   end
+  end
 end
