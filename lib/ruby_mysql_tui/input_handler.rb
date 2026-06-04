@@ -14,6 +14,7 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
+      state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
 
       case val
