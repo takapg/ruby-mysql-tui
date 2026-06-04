@@ -49,10 +49,10 @@ module RubyMysqlTui
     end
 
     def handle_scroll(state, client, delta)
-      if state[:focus] == :left && !state[:items].empty?
-        update_selected_index(state, delta)
-      elsif state[:focus] == :right && state[:view_mode] == :records && state[:records]
-        Pagination.update_records_offset(state, delta, client, current_layout)
+      if state[:focus] == :left
+        handle_left_scroll(state, delta)
+      elsif state[:focus] == :right
+        handle_right_scroll(state, client, delta)
       end
       state
     end
@@ -84,6 +84,20 @@ module RubyMysqlTui
         state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
       end
       state
+    end
+
+    private_class_method def handle_left_scroll(state, delta)
+      update_selected_index(state, delta) unless state[:items].empty?
+    end
+
+    private_class_method def handle_right_scroll(state, client, delta)
+      return unless state[:records]
+
+      if state[:view_mode] == :records
+        Pagination.update_records_offset(state, delta, client, current_layout)
+      elsif state[:view_mode] == :table_structure
+        state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
+      end
     end
   end
 end

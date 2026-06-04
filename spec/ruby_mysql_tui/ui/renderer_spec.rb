@@ -224,7 +224,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'content records - pagination offset'
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - basic' do
   include_context 'renderer setup'
 
   it 'displays left-pane guides when focus is :left' do
@@ -234,17 +234,21 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
     ).to_stdout
   end
 
+  it 'excludes record-action guides when focus is :right and view_mode is not :records' do
+    state = { focus: :right, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
+    expect { renderer.render(client, state) }.to output(/\[q\] Quit \| \[Tab\] Switch Focus/).to_stdout
+    expect { renderer.render(client, state) }.not_to output(/\[n\] New/).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
+  include_context 'renderer setup'
+
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
     expect { renderer.render(client, state) }.to output(
       /\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| \[d\] Delete \| \[a\] All Records/
     ).to_stdout
-  end
-
-  it 'excludes record-action guides when focus is :right and view_mode is not :records' do
-    state = { focus: :right, items: [], selected_index: 0, view_mode: :tables, selected_db: 'test_db' }
-    expect { renderer.render(client, state) }.to output(/\[q\] Quit \| \[Tab\] Switch Focus/).to_stdout
-    expect { renderer.render(client, state) }.not_to output(/\[n\] New/).to_stdout
   end
 
   it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
@@ -253,5 +257,33 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide' do
       selected_table: 'users', all_records_mode: true
     }
     expect { renderer.render(client, state) }.to output(/\[ALL RECORDS MODE\] \[q\] Quit.*\[a\] Normal Mode/).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - structure' do
+  include_context 'renderer setup'
+
+  it 'displays [i] Records and [↑/↓] Move when focus is :right and view_mode is :table_structure' do
+    state = { focus: :right, items: [], selected_index: 0, view_mode: :table_structure, selected_table: 'users' }
+    expect { renderer.render(client, state) }.to output(%r{\[i\] Records \| \[↑/↓\] Move}).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
+  include_context 'renderer setup'
+
+  it 'slices structure data based on records_offset' do
+    state = {
+      focus: :right,
+      view_mode: :table_structure,
+      selected_table: 'users',
+      records: [{ 'Field' => 'id' }, { 'Field' => 'name' }, { 'Field' => 'email' }],
+      records_offset: 1,
+      items: []
+    }
+    output = capture_stdout { renderer.render(client, state) }
+    expect(output).to include('name')
+    expect(output).to include('email')
+    expect(output).not_to include('id')
   end
 end
