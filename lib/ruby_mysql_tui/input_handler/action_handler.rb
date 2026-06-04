@@ -35,8 +35,19 @@ module RubyMysqlTui
         case val
         when 'n' then handle_new_record_action(state, client, prompt)
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
-        when 'd' then RecordManager.handle_delete_record(state, client, prompt)
+        when 'd' then handle_delete_action(state, client, prompt)
         else state
+        end
+      end
+
+      def handle_delete_action(state, client, prompt)
+        case state[:view_mode]
+        when :databases
+          DatabaseManager.handle_drop_database(state, client, prompt)
+        when :tables
+          TableManager.handle_drop_table(state, client, prompt)
+        else
+          RecordManager.handle_delete_record(state, client, prompt)
         end
       end
 

@@ -428,6 +428,56 @@ RSpec.describe 'E2E Table Creation' do
   end
 end
 
+RSpec.describe 'E2E Database Deletion' do
+  include_context 'e2e setup'
+
+  it 'deletes a database when d is pressed in database view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: 'd', key: double('Key', name: :d)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    expect(client).to receive(:list_databases).at_least(:once).and_return([E2EHelper::TEST_DB])
+    expect(client).to receive(:drop_database).with(E2EHelper::TEST_DB)
+    states = track_states(client)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Database '#{E2EHelper::TEST_DB}' deleted successfully" }).to be true
+  end
+end
+
+RSpec.describe 'E2E Table Deletion' do
+  include_context 'e2e setup'
+
+  it 'deletes a table when d is pressed in table view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'd', key: double('Key', name: :d)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    expect(client).to receive(:drop_table).with('test_table')
+    states = track_states(client)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Table 'test_table' deleted successfully" }).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Deletion - Cancellation' do
   include_context 'e2e setup'
 
