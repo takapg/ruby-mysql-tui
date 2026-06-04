@@ -52,7 +52,8 @@ module RubyMysqlTui
         return unless state[:records]
 
         case state[:view_mode]
-        when :records then scroll_records(state, client, delta)
+        when :records
+          scroll_records(state, client, delta) if state[:selected_table]
         when :table_structure then scroll_structure(state, delta)
         when :record_detail then scroll_detail(state, delta)
         end
