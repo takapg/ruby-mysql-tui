@@ -26,16 +26,6 @@ module RubyMysqlTui
       end
 
       def execute_update(state, client, prompt, info)
-        if info[:pk_col].nil?
-          prompt.say('主キーが指定されていないため、更新できません', color: :red)
-          return
-        end
-
-        if info[:col] == info[:pk_col]
-          prompt.say('主キーは編集できません', color: :red)
-          return
-        end
-
         client.update_record(state[:selected_table], info[:pk_col], info[:pk_val], info[:col], info[:val])
         refresh_records_safe(state, client, prompt)
       end

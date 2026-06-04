@@ -487,6 +487,35 @@ RSpec.describe 'E2E Record Deletion - Success' do
   end
 end
 
+RSpec.describe 'E2E Record Edit - No Primary Key' do
+  include_context 'e2e setup'
+
+  it 'warns and refuses edit when table has no primary key' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    expect(prompt).to receive(:say).with('主キーが設定されていないため、編集できません', color: :yellow)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['no_pk_table'])
+    allow(client).to receive(:list_records).and_return([{ 'col1' => 'val1' }])
+    allow(client).to receive(:primary_key_for).with('no_pk_table').and_return(nil)
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Deletion - Error' do
   include_context 'e2e setup'
 
