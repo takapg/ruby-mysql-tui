@@ -61,6 +61,10 @@ module RubyMysqlTui
         column, value = result
         return if value.nil?
 
+        perform_update(state, client, record, pk_column, column, value, prompt)
+      end
+
+      def self.perform_update(state, client, record, pk_column, column, value, prompt)
         if column == pk_column
           RecordPrompt.warn_pk_not_editable(prompt)
           return
