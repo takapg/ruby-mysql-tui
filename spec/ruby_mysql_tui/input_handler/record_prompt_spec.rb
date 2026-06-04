@@ -45,6 +45,15 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.get_editable_columns 
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_missing' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+
+  it 'shows a yellow warning message' do
+    expect(prompt).to receive(:say).with('このテーブルには主キーが設定されていないため、レコードを特定して更新することができず、編集は不可能です', color: :yellow)
+    described_class.warn_pk_missing(prompt)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable' do
   let(:prompt) { instance_double('TTY::Prompt') }
 
