@@ -92,6 +92,16 @@ module RubyMysqlTui
       query("CREATE TABLE `#{name.gsub('`', '``')}` (id INT PRIMARY KEY AUTO_INCREMENT)")
     end
 
+    # データベースを削除します。
+    def drop_database(name)
+      query("DROP DATABASE `#{name.gsub('`', '``')}`")
+    end
+
+    # テーブルを削除します。
+    def drop_table(name)
+      query("DROP TABLE `#{name.gsub('`', '``')}`")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
