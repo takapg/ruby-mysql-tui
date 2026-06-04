@@ -4,7 +4,7 @@ module RubyMysqlTui
   module InputHandler
     # RecordExecutor は レコードのDB操作とリトライロジックを提供します。
     module RecordExecutor
-      module_function
+      extend self
 
       def execute_insert(state, client, prompt, data)
         client.insert_record(state[:selected_table], data)
@@ -21,25 +21,6 @@ module RubyMysqlTui
         handle_deletion_error(state, e)
         false
       end
-
-      private
-
-      def handle_cancellation(state)
-        state[:status_message] = 'Deletion cancelled'
-        false
-      end
-
-      def perform_deletion(state, client, prompt, record, pk_column)
-        client.delete_record(state[:selected_table], pk_column, record[pk_column])
-        refresh_records_safe(state, client, prompt)
-      end
-
-      def handle_deletion_error(state, error)
-        RubyMysqlTui.logger.error("Failed to delete record: #{error.message}")
-        state[:status_message] = "Failed to delete record: #{error.message}"
-      end
-
-      public
 
       def execute_update(state, client, prompt, info)
         if info[:pk_col].nil?
@@ -61,6 +42,23 @@ module RubyMysqlTui
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Failed to refresh records: #{e.message}")
         prompt.say("更新は成功しましたが、一覧の再取得に失敗しました: #{e.message}", color: :yellow)
+      end
+
+      private
+
+      def handle_cancellation(state)
+        state[:status_message] = 'Deletion cancelled'
+        false
+      end
+
+      def perform_deletion(state, client, prompt, record, pk_column)
+        client.delete_record(state[:selected_table], pk_column, record[pk_column])
+        refresh_records_safe(state, client, prompt)
+      end
+
+      def handle_deletion_error(state, error)
+        RubyMysqlTui.logger.error("Failed to delete record: #{error.message}")
+        state[:status_message] = "Failed to delete record: #{error.message}"
       end
     end
   end
