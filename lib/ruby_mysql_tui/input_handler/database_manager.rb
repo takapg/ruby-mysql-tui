@@ -22,17 +22,27 @@ module RubyMysqlTui
         db_name = state[:items][state[:selected_index]]
         return state if db_name.nil?
 
-        unless prompt.yes?("本当にデータベース '#{db_name}' を削除しますか？ (y/N)")
-          state[:status_message] = 'Deletion cancelled'
-          return state
-        end
+        return cancel_deletion(state) unless prompt.yes?("本当にデータベース '#{db_name}' を削除しますか？ (y/N)")
 
+        execute_drop_database(state, client, db_name)
+      rescue Mysql2::Error => e
+        handle_drop_error(prompt, e, state)
+      end
+
+      private_class_method def cancel_deletion(state)
+        state[:status_message] = 'Deletion cancelled'
+        state
+      end
+
+      private_class_method def execute_drop_database(state, client, db_name)
         client.drop_database(db_name)
         state[:items] = client.list_databases
         state[:selected_index] = state[:selected_index].clamp(0, [0, state[:items].size - 1].max)
         state[:status_message] = "Database '#{db_name}' deleted successfully"
         state
-      rescue Mysql2::Error => e
+      end
+
+      private_class_method def handle_drop_error(prompt, e, state)
         RubyMysqlTui.logger.error("Database Drop Error: #{e.message}")
         prompt.error("エラーが発生しました: #{e.message}")
         state
