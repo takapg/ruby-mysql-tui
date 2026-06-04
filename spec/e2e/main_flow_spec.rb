@@ -326,7 +326,7 @@ RSpec.describe 'E2E Connection Error' do
   end
 end
 
-RSpec.describe 'E2E Database Creation' do
+RSpec.describe 'E2E Database Creation - Success' do
   include_context 'e2e setup'
 
   it 'creates a new database when n is pressed in database view' do
@@ -348,6 +348,10 @@ RSpec.describe 'E2E Database Creation' do
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :databases }).to be true
   end
+end
+
+RSpec.describe 'E2E Database Creation - Error' do
+  include_context 'e2e setup'
 
   it 'handles error when creating a database with a duplicate name' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
