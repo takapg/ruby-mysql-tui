@@ -45,13 +45,14 @@ module RubyMysqlTui
 
       private_class_method def prepare_table_data(records, width, max_rows, options)
         columns_offset = options[:columns_offset] || 0
-        visible_columns = records.first.keys.drop(columns_offset)
+        actual_offset = columns_offset.clamp(0, [0, records.first.keys.size - 1].max)
+        visible_columns = records.first.keys.drop(actual_offset)
         display_records = slice_records(records, max_rows, options[:offset] || 0)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
 
         TTY::Table.new(
           header: visible_columns.map { |c| ContentBuilder.truncate(c, col_width) },
-          rows: format_records_rows(display_records, col_width, options[:selected_index], columns_offset)
+          rows: format_records_rows(display_records, col_width, options[:selected_index], actual_offset)
         )
       end
 
@@ -60,8 +61,11 @@ module RubyMysqlTui
       end
 
       private_class_method def format_records_rows(records, col_width, selected_index = nil, columns_offset = 0)
+        columns_count = records.first&.keys&.size || 0
+        actual_offset = columns_offset.clamp(0, [0, columns_count - 1].max)
+
         records.map.with_index do |row, idx|
-          row.values.drop(columns_offset).map.with_index do |val, col_idx|
+          row.values.drop(actual_offset).map.with_index do |val, col_idx|
             text = ContentBuilder.truncate(val.to_s, col_width)
             idx == selected_index && col_idx.zero? ? "> #{text}" : text
           end

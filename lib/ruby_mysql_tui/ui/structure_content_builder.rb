@@ -37,7 +37,8 @@ module RubyMysqlTui
 
       def create_table(structure, width, max_rows = nil, offset = 0, columns_offset = 0)
         columns = structure.first.keys
-        visible_columns = columns.drop(columns_offset)
+        actual_offset = columns_offset.clamp(0, [0, columns.size - 1].max)
+        visible_columns = columns.drop(actual_offset)
         display_structure = structure.drop(offset).take(max_rows || structure.size)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
 
@@ -48,8 +49,12 @@ module RubyMysqlTui
       end
 
       private_class_method def format_structure_rows(structure, columns_offset, col_width)
+        # create_table で計算した actual_offset と整合性を取るため、ここでもクランプする
+        columns_count = structure.first&.keys&.size || 0
+        actual_offset = columns_offset.clamp(0, [0, columns_count - 1].max)
+
         structure.map do |row|
-          row.values.drop(columns_offset).map do |v|
+          row.values.drop(actual_offset).map do |v|
             ContentBuilder.truncate(v.to_s, col_width)
           end
         end
