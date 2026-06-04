@@ -44,14 +44,13 @@ module RubyMysqlTui
       end
 
       private_class_method def prepare_table_data(records, width, max_rows, options)
-        columns_offset = options[:columns_offset] || 0
-        actual_offset = columns_offset.clamp(0, [0, records.first.keys.size - 1].max)
+        actual_offset = ContentBuilder.calculate_actual_offset(records, options[:columns_offset])
         visible_columns = records.first.keys.drop(actual_offset)
-        display_records = slice_records(records, max_rows, options[:offset] || 0)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
+        display_records = slice_records(records, max_rows, options[:offset] || 0)
 
         TTY::Table.new(
-          header: visible_columns.map { |c| ContentBuilder.truncate(c, col_width) },
+          header: ContentBuilder.format_header(visible_columns, col_width),
           rows: format_records_rows(display_records, col_width, options[:selected_index], actual_offset)
         )
       end
@@ -60,15 +59,16 @@ module RubyMysqlTui
         records.drop(offset).take(max_rows || records.size)
       end
 
-      private_class_method def format_records_rows(records, col_width, selected_index = nil, columns_offset = 0)
-        columns_count = records.first&.keys&.size || 0
-        actual_offset = columns_offset.clamp(0, [0, columns_count - 1].max)
-
+      private_class_method def format_records_rows(records, col_width, selected_index = nil, actual_offset = 0)
         records.map.with_index do |row, idx|
-          row.values.drop(actual_offset).map.with_index do |val, col_idx|
-            text = ContentBuilder.truncate(val.to_s, col_width)
-            idx == selected_index && col_idx.zero? ? "> #{text}" : text
-          end
+          format_record_row(row, col_width, idx == selected_index, actual_offset)
+        end
+      end
+
+      private_class_method def format_record_row(row, col_width, is_selected, actual_offset)
+        row.values.drop(actual_offset).map.with_index do |val, col_idx|
+          text = ContentBuilder.truncate(val.to_s, col_width)
+          is_selected && col_idx.zero? ? "> #{text}" : text
         end
       end
     end

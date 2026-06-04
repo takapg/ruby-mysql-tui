@@ -36,23 +36,18 @@ module RubyMysqlTui
       end
 
       def create_table(structure, width, max_rows = nil, offset = 0, columns_offset = 0)
-        columns = structure.first.keys
-        actual_offset = columns_offset.clamp(0, [0, columns.size - 1].max)
-        visible_columns = columns.drop(actual_offset)
-        display_structure = structure.drop(offset).take(max_rows || structure.size)
+        actual_offset = ContentBuilder.calculate_actual_offset(structure, columns_offset)
+        visible_columns = structure.first.keys.drop(actual_offset)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
+        display_structure = structure.drop(offset).take(max_rows || structure.size)
 
         TTY::Table.new(
-          header: visible_columns.map { |c| ContentBuilder.truncate(c, col_width) },
-          rows: format_structure_rows(display_structure, columns_offset, col_width)
+          header: ContentBuilder.format_header(visible_columns, col_width),
+          rows: format_structure_rows(display_structure, actual_offset, col_width)
         )
       end
 
-      private_class_method def format_structure_rows(structure, columns_offset, col_width)
-        # create_table で計算した actual_offset と整合性を取るため、ここでもクランプする
-        columns_count = structure.first&.keys&.size || 0
-        actual_offset = columns_offset.clamp(0, [0, columns_count - 1].max)
-
+      private_class_method def format_structure_rows(structure, actual_offset, col_width)
         structure.map do |row|
           row.values.drop(actual_offset).map do |v|
             ContentBuilder.truncate(v.to_s, col_width)

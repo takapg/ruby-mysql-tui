@@ -68,6 +68,14 @@ module RubyMysqlTui
         [(width - (columns_count * 3) - 1) / columns_count, 1].max
       end
 
+      def calculate_actual_offset(records, offset)
+        (offset || 0).clamp(0, [0, records.first&.keys&.size.to_i - 1].max)
+      end
+
+      def format_header(columns, col_width)
+        columns.map { |c| truncate(c, col_width) }
+      end
+
       def truncate(text, width)
         return text if text.nil? || width <= 0
         return text[0...width] if width < 3
