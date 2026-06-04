@@ -120,6 +120,14 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.perform_update' do
     described_class.perform_update(state, client, prompt, info)
   end
 
+  it 'prevents updating any column that is part of a composite primary key' do
+    info = { pk_col: 'id1', pk_val: '1', pk_cols: ['id1', 'id2'], col: 'id2', val: '2' }
+    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
+    expect(RubyMysqlTui::InputHandler::RecordRetryHandler).not_to receive(:execute_update_with_retry)
+
+    described_class.perform_update(state, client, prompt, info)
+  end
+
   it 'calls RecordRetryHandler when the column is not the primary key' do
     info = { pk_col: 'id', pk_val: '1', pk_cols: ['id'], col: 'name', val: 'Bob' }
     expect(RubyMysqlTui::InputHandler::RecordRetryHandler)
