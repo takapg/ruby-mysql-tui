@@ -20,6 +20,8 @@ module RubyMysqlTui
       case val
       when "\e[A", "\eOA" then return handle_up(state, client)
       when "\e[B", "\eOB" then return handle_down(state, client)
+      when "\e[C" then return handle_column_scroll(state, 1)
+      when "\e[D" then return handle_column_scroll(state, -1)
       end
 
       ActionHandler.handle_action_key(val, state, client) ||
@@ -35,6 +37,8 @@ module RubyMysqlTui
       when :tab then Navigation.handle_tab(state)
       when :up then handle_up(state, client)
       when :down then handle_down(state, client)
+      when :left then handle_column_scroll(state, -1)
+      when :right then handle_column_scroll(state, 1)
       when :return then Navigation.handle_return(state, client)
       else state
       end
@@ -46,6 +50,14 @@ module RubyMysqlTui
 
     def handle_down(state, client)
       handle_scroll(state, client, 1)
+    end
+
+    def handle_column_scroll(state, delta)
+      return state unless state[:focus] == :right && state[:records]
+
+      total_cols = state[:records].first&.keys&.size || 0
+      state[:columns_offset] = ((state[:columns_offset] || 0) + delta).clamp(0, [0, total_cols - 1].max)
+      state
     end
 
     def handle_scroll(state, client, delta)

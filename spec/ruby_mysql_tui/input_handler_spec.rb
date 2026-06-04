@@ -40,7 +40,7 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - toggle' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
   it 'updates records_offset when scrolling in :table_structure mode' do
@@ -69,5 +69,40 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - scroll' do
     # 最大値を超えないこと
     state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
     expect(state[:records_offset]).to eq(3)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - column scroll' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'increments columns_offset when scrolling right' do
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 0 }
+    event_right = double('Event', value: "\e[C", key: double('Key'))
+
+    state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
+    expect(state[:columns_offset]).to eq(1)
+    state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
+    expect(state[:columns_offset]).to eq(2)
+  end
+
+  it 'decrements columns_offset when scrolling left' do
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 2 }
+    event_left = double('Event', value: "\e[D", key: double('Key'))
+
+    state = RubyMysqlTui::InputHandler.handle_input(event_left, state, client)
+    expect(state[:columns_offset]).to eq(1)
+  end
+
+  it 'clamps columns_offset between 0 and max' do
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 0 }
+    event_left = double('Event', value: "\e[D", key: double('Key'))
+    event_right = double('Event', value: "\e[C", key: double('Key'))
+
+    state = RubyMysqlTui::InputHandler.handle_input(event_left, state, client)
+    expect(state[:columns_offset]).to eq(0)
+
+    state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 2 }
+    state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
+    expect(state[:columns_offset]).to eq(2)
   end
 end

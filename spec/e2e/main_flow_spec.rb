@@ -478,6 +478,37 @@ RSpec.describe 'E2E Table Deletion' do
   end
 end
 
+RSpec.describe 'E2E Column Scrolling' do
+  include_context 'e2e setup'
+
+  it 'increments and decrements columns_offset when left/right keys are pressed in records view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: "\e[C", key: double('Key', name: :right)),
+      double('Event', value: "\e[C", key: double('Key', name: :right)),
+      double('Event', value: "\e[D", key: double('Key', name: :left)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    # 3つのカラムを持つレコードを返す
+    allow(client).to receive(:list_records).and_return([{ 'col1' => 1, 'col2' => 2, 'col3' => 3 }])
+
+    RubyMysqlTui.run_main_loop(client)
+
+    # columns_offset が 0 -> 1 -> 2 -> 1 と変化したことを検証
+    offsets = states.filter_map { |s| s[:columns_offset] }
+    expect(offsets).to include(0, 1, 2)
+    expect(offsets.last).to eq(1)
+  end
+end
+
 RSpec.describe 'E2E Record Deletion - Cancellation' do
   include_context 'e2e setup'
 

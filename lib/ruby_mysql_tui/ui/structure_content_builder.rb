@@ -13,32 +13,46 @@ module RubyMysqlTui
           table_name: state[:selected_table],
           structure: state[:records],
           width: width,
-          options: { height: height, offset: state[:records_offset] || 0 }
+          options: {
+            height: height,
+            offset: state[:records_offset] || 0,
+            columns_offset: state[:columns_offset] || 0
+          }
         )
       end
 
       def build_text(table_name:, structure:, width:, options: {})
         height = options[:height]
         offset = options[:offset] || 0
+        columns_offset = options[:columns_offset] || 0
         header = ContentBuilder.truncate("Table Structure: #{table_name}", width)
         if structure.nil? || structure.none?
           return "#{header}\n\n#{ContentBuilder.truncate('No structure information found', width)}"
         end
 
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_table(structure, width, max_rows, offset).to_s
+        table_output = create_table(structure, width, max_rows, offset, columns_offset).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_table(structure, width, max_rows = nil, offset = 0)
-        columns = structure.first.keys
+      def create_table(structure, width, max_rows = nil, offset = 0, columns_offset = 0)
+        actual_offset = ContentBuilder.calculate_actual_offset(structure, columns_offset)
+        visible_columns = structure.first.keys.drop(actual_offset)
+        col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
         display_structure = structure.drop(offset).take(max_rows || structure.size)
-        col_width = ContentBuilder.calculate_col_width(width, columns.size)
 
         TTY::Table.new(
-          header: columns.map { |c| ContentBuilder.truncate(c, col_width) },
-          rows: display_structure.map { |row| row.values.map { |v| ContentBuilder.truncate(v.to_s, col_width) } }
+          header: ContentBuilder.format_header(visible_columns, col_width),
+          rows: format_structure_rows(display_structure, actual_offset, col_width)
         )
+      end
+
+      private_class_method def format_structure_rows(structure, actual_offset, col_width)
+        structure.map do |row|
+          row.values.drop(actual_offset).map do |v|
+            ContentBuilder.truncate(v.to_s, col_width)
+          end
+        end
       end
     end
   end
