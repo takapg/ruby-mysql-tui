@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'database_manager'
+require_relative 'record_manager'
+require_relative 'navigation'
+
 module RubyMysqlTui
   module InputHandler
     # ActionHandler は システムアクションやレコード操作アクションのルーティングを提供します。
@@ -10,6 +14,7 @@ module RubyMysqlTui
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
         when 'n', 'e', 'd' then handle_record_action(val, state, client)
+        else state
         end
       end
 
@@ -21,6 +26,7 @@ module RubyMysqlTui
         when "\t" then Navigation.handle_tab(state)
         when "\r" then Navigation.handle_return(state, client)
         when 'a' then RecordManager.handle_all_records_toggle(state, client)
+        else state
         end
       end
 
@@ -35,6 +41,7 @@ module RubyMysqlTui
           end
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then RecordManager.handle_delete_record(state, client, prompt)
+        else state
         end
       end
     end
