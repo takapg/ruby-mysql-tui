@@ -48,14 +48,12 @@ module RubyMysqlTui
       def self.handle_create_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
-        columns = client.list_columns(state[:selected_table])
-        structure = client.list_table_structure(state[:selected_table])
-        data = RecordPrompt.prompt_for_record_data(columns, prompt, {}, structure)
+        cols = client.list_columns(state[:selected_table])
+        struct = client.list_table_structure(state[:selected_table])
+        data = RecordPrompt.prompt_for_record_data(cols, prompt, {}, struct)
         return state if data.nil? || data.empty?
 
-        RecordRetryHandler.execute_insert_with_retry(
-          state, client, prompt, data, { columns: columns, structure: structure }
-        )
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, { columns: cols, structure: struct })
         state
       end
 
@@ -109,19 +107,18 @@ module RubyMysqlTui
       end
 
       def self.apply_all_records_mode(state, client)
+        opts = sort_options(state)
         if state[:all_records_mode]
-          options = { limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT }
-          options[:sort_column] = state[:sort_column] if state[:sort_column]
-          options[:sort_direction] = state[:sort_direction] if state[:sort_column]
-          state[:records] = client.list_records(state[:selected_table], 0, **options)
+          state[:records] = client.list_records(state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT, **opts)
           state[:page_offset] = 0
         else
           state[:page_offset] = state[:records_offset] || 0
-          options = {}
-          options[:sort_column] = state[:sort_column] if state[:sort_column]
-          options[:sort_direction] = state[:sort_direction] if state[:sort_column]
-          state[:records] = client.list_records(state[:selected_table], state[:page_offset], **options)
+          state[:records] = client.list_records(state[:selected_table], state[:page_offset], **opts)
         end
+      end
+
+      private_class_method def self.sort_options(state)
+        state[:sort_column] ? { sort_column: state[:sort_column], sort_direction: state[:sort_direction] } : {}
       end
 
       def self.handle_sort_record(state, client, prompt)
@@ -136,13 +133,8 @@ module RubyMysqlTui
       end
 
       def self.update_sort_state(state, client, col, dir)
-        state[:sort_column] = col
-        state[:sort_direction] = dir
-        state[:page_offset] = 0
-        state[:records_offset] = 0
-        state[:records] = client.list_records(
-          state[:selected_table], 0, sort_column: col, sort_direction: dir
-        )
+        state.merge!(sort_column: col, sort_direction: dir, page_offset: 0, records_offset: 0)
+        state[:records] = client.list_records(state[:selected_table], 0, sort_column: col, sort_direction: dir)
         state
       end
     end
