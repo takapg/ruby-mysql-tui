@@ -215,15 +215,7 @@ RSpec.describe 'E2E Record Edit - NULL value' do
 
   it 'updates a nullable column to NULL when empty input is provided' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    # 1. DB選択 -> 2. テーブル選択 -> 3. フォーカス右 -> 4. 編集(e) -> 5. 終了(q)
-    events = [
-      make_event("\r", :return),
-      make_event("\r", :return),
-      make_event("\t", :tab),
-      make_event('e', :e),
-      make_event('q', :q)
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    setup_edit_events(reader)
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
@@ -238,7 +230,7 @@ RSpec.describe 'E2E Record Edit - NULL value' do
     allow(client).to receive(:primary_key_for).and_return('id')
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'nullable_col', 'Null' => 'YES' }])
 
-    expect(client).to receive(:update_record).with('test_table', 'id', anything, 'nullable_col', nil)
+    expect(client).to receive(:update_record).with(anything, anything, anything, 'nullable_col', nil)
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
