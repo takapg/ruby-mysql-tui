@@ -302,6 +302,14 @@ RSpec.describe RubyMysqlTui::Client, '#create_table' do
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name, columns)
   end
+
+  it 'escapes backticks in custom column names' do
+    table_name = 'test_table'
+    columns = ['name`s', 'email`s']
+    sql = "CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT, `name``s` VARCHAR(255), `email``s` VARCHAR(255))"
+    expect(mock_mysql_client).to receive(:query).with(sql)
+    client.create_table(table_name, columns)
+  end
 end
 
 RSpec.describe RubyMysqlTui::Client, '#update_record' do
