@@ -23,7 +23,7 @@ module RubyMysqlTui
       def handle_record_navigation(val, state)
         return state unless state[:view_mode] == :record_detail
 
-        delta = (val == ']') ? 1 : -1
+        delta = val == ']' ? 1 : -1
         new_index = (state[:selected_record_index] || 0) + delta
         state[:selected_record_index] = new_index.clamp(0, (state[:records] || []).size - 1)
         state[:detail_offset] = 0

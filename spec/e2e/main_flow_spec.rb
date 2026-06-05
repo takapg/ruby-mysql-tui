@@ -485,7 +485,7 @@ RSpec.describe 'E2E Record Detail View' do
       double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
       double('Event', value: "\r", key: double('Key', name: :return)), # Detail
       double('Event', value: 'b', key: double('Key', name: :b)),       # Back
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+      double('Event', value: 'q', key: double('Key', name: :q)) # Quit
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 

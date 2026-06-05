@@ -72,10 +72,10 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation' do
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (next)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
-  it 'increments selected_record_index and resets detail_offset when "]" is pressed in :record_detail mode' do
+  it 'increments selected_record_index and resets detail_offset when "]" is pressed' do
     state = {
       view_mode: :record_detail,
       selected_record_index: 0,
@@ -88,8 +88,12 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail naviga
     expect(new_state[:selected_record_index]).to eq(1)
     expect(new_state[:detail_offset]).to eq(0)
   end
+end
 
-  it 'decrements selected_record_index and resets detail_offset when "[" is pressed in :record_detail mode' do
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (prev)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'decrements selected_record_index and resets detail_offset when "[" is pressed' do
     state = {
       view_mode: :record_detail,
       selected_record_index: 1,
@@ -102,6 +106,10 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail naviga
     expect(new_state[:selected_record_index]).to eq(0)
     expect(new_state[:detail_offset]).to eq(0)
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (clamp)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
 
   it 'clamps selected_record_index within the range of records' do
     state = {
