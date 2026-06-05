@@ -75,7 +75,7 @@ module RubyMysqlTui
         record = state[:records][state[:selected_record_index]]
         return state unless record
 
-        state[:detail_offset] = ((state[:detail_offset] || 0) + delta).clamp(0, record.keys.size)
+        state[:detail_offset] = ((state[:detail_offset] || 0) + delta).clamp(0, [0, record.keys.size - 1].max)
         state
       end
 

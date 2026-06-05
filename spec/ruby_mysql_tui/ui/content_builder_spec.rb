@@ -96,3 +96,27 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'scrolling middle' do
     expect(output.count("\n")).to eq(7)
   end
 end
+
+RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
+  let(:width) { 40 }
+  let(:height) { 5 } # max_rows = 3
+  let(:record) { { 'col1' => 'v1', 'col2' => 'v2', 'col3' => 'v3', 'col4' => 'v4', 'col5' => 'v5' } }
+  let(:state) { { records: [record], selected_record_index: 0, detail_offset: 0 } }
+
+  it 'shows first few columns when offset is 0' do
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).to include('col1: v1')
+    expect(output).to include('col2: v2')
+    expect(output).to include('col3: v3')
+    expect(output).not_to include('col4: v4')
+  end
+
+  it 'shows shifted columns when offset is 2' do
+    state[:detail_offset] = 2
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).not_to include('col1: v1')
+    expect(output).to include('col3: v3')
+    expect(output).to include('col4: v4')
+    expect(output).to include('col5: v5')
+  end
+end
