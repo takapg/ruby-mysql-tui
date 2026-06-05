@@ -25,9 +25,6 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(new_state[:sql_input]).to eq('SELECT *')
     end
   end
-end
-
-RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.update_sql_history' do
     let(:state) { { sql_history: [] } }
 
@@ -48,9 +45,6 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(state[:sql_history]).to eq(['SELECT 1'])
     end
   end
-end
-
-RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.handle_sql_history_up' do
     let(:state) { { sql_history: %w[SQL1 SQL2], sql_input: 'current', sql_history_index: nil } }
 
@@ -74,9 +68,6 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(new_state[:sql_input]).to eq('current')
     end
   end
-end
-
-RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.handle_sql_history_down' do
     let(:state) do
       {
@@ -102,6 +93,16 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       state[:sql_history_index] = nil
       new_state = described_class.handle_sql_history_down(state).first
       expect(new_state[:sql_input]).to eq('SQL1')
+    end
+  end
+
+  describe '.execute_sql' do
+    let(:client) { double('Client', query: []) }
+    let(:state) { { sql_history: [], sql_history_index: 1 } }
+
+    it 'resets sql_history_index to nil after execution' do
+      described_class.execute_sql('SELECT 1', state, client)
+      expect(state[:sql_history_index]).to be_nil
     end
   end
 end
