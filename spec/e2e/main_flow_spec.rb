@@ -4,6 +4,85 @@ require 'spec_helper'
 require_relative 'e2e_helper'
 require 'ruby_mysql_tui'
 
+module E2EEventHelpers
+  def make_event(value, key_name)
+    double('Event', value: value, key: double('Key', name: key_name))
+  end
+
+  def retry_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event('n', :n),
+      make_event('q', :q)
+    ]
+  end
+
+  def setup_edit_events(reader)
+    events = [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event('e', :e),
+      make_event('q', :q)
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+  end
+
+  def detail_edit_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event("\r", :return),
+      make_event('e', :e),
+      make_event('q', :q)
+    ]
+  end
+
+  def detail_delete_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event("\r", :return),
+      make_event('d', :d),
+      make_event('q', :q)
+    ]
+  end
+
+  def all_records_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event('a', :a),
+      make_event('a', :a),
+      make_event('q', :q)
+    ]
+  end
+
+  def sql_history_events
+    [
+      make_event('s', :s),
+      make_event('S', :unknown),
+      make_event('E', :unknown),
+      make_event('L', :unknown),
+      make_event('E', :unknown),
+      make_event('C', :unknown),
+      make_event('T', :unknown),
+      make_event(' ', :unknown),
+      make_event('1', :unknown),
+      make_event("\r", :return),
+      make_event('s', :s),
+      make_event("\e[A", :up),
+      make_event("\r", :return),
+      make_event('q', :q)
+    ]
+  end
+end
+
 module E2EFlowHelpers
   def track_states(client)
     states = [RubyMysqlTui.initial_state(client).dup]
@@ -15,15 +94,6 @@ module E2EFlowHelpers
     states
   end
 
-  def retry_events
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'n', key: double('Key', name: :n)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
 
   def setup_retry_reader(reader)
     allow(TTY::Reader).to receive(:new).and_return(reader)
@@ -61,16 +131,6 @@ module E2EFlowHelpers
     allow(client).to receive(:list_table_structure).and_return(structure)
   end
 
-  def setup_edit_events(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'e', key: double('Key', name: :e)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
-  end
 
   def setup_edit_prompt_mocks(prompt)
     allow(prompt).to receive(:select).and_return('name')
@@ -78,61 +138,12 @@ module E2EFlowHelpers
     allow(prompt).to receive(:say)
   end
 
-  def detail_edit_events
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 'e', key: double('Key', name: :e)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
 
-  def detail_delete_events
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 'd', key: double('Key', name: :d)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
-
-  def all_records_events
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'a', key: double('Key', name: :a)),
-      double('Event', value: 'a', key: double('Key', name: :a)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
-
-  def sql_history_events
-    [
-      double('Event', value: 's', key: double('Key', name: :s)),
-      double('Event', value: 'S', key: double('Key', name: :unknown)),
-      double('Event', value: 'E', key: double('Key', name: :unknown)),
-      double('Event', value: 'L', key: double('Key', name: :unknown)),
-      double('Event', value: 'E', key: double('Key', name: :unknown)),
-      double('Event', value: 'C', key: double('Key', name: :unknown)),
-      double('Event', value: 'T', key: double('Key', name: :unknown)),
-      double('Event', value: ' ', key: double('Key', name: :unknown)),
-      double('Event', value: '1', key: double('Key', name: :unknown)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 's', key: double('Key', name: :s)),
-      double('Event', value: "\e[A", key: double('Key', name: :up)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
 end
 
 RSpec.shared_context 'e2e setup' do
   include E2EFlowHelpers
+  include E2EEventHelpers
 
   before(:all) { E2EHelper.setup_test_db }
   after(:all) { E2EHelper.cleanup_test_db }
