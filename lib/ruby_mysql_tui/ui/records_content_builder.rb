@@ -31,19 +31,22 @@ module RubyMysqlTui
       end
 
       def build_records_text(table_name:, records:, width:, options: {})
-        height = options[:height]
-        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
-        header_text = if options[:sql_result_mode]
-                       "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
-                     else
-                       "Table: #{table_name}#{sort_info}"
-                     end
-        header = ContentBuilder.truncate(header_text, width)
+        header = build_header(table_name, width, options)
         return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.none?
 
-        max_rows = height ? [0, height - 4].max : nil
+        max_rows = options[:height] ? [0, options[:height] - 4].max : nil
         table_output = create_records_table(records, width, max_rows, options).to_s
         "#{header}\n\n#{table_output}"
+      end
+
+      private_class_method def build_header(table_name, width, options)
+        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
+        text = if options[:sql_result_mode]
+                 "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
+               else
+                 "Table: #{table_name}#{sort_info}"
+               end
+        ContentBuilder.truncate(text, width)
       end
 
       def create_records_table(records, width, max_rows, options = {})
