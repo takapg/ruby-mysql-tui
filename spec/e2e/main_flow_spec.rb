@@ -683,9 +683,9 @@ RSpec.describe 'E2E Table Rename' do
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
-    expect(states.any? { |s|
+    expect(states.any? do |s|
       s[:status_message] == "Table 'old_table' renamed to 'renamed_table' successfully"
-    }).to be true
+    end).to be true
   end
 end
 
