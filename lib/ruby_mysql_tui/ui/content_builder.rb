@@ -43,6 +43,7 @@ module RubyMysqlTui
         when :databases then build_databases_text(content_width)
         when :tables then build_tables_text(state[:selected_db], state[:items], content_width)
         when :records then RecordsContentBuilder.build_view(state, content_width, height)
+        when :record_detail then build_record_detail_text(state, content_width, height)
         when :table_structure then StructureContentBuilder.build_view(state, content_width, height)
         else truncate('Unknown view mode', content_width)
         end
@@ -60,6 +61,19 @@ module RubyMysqlTui
           table_list = items.map { |item| truncate(item, width) }.join("\n")
           "#{header}\n\n#{table_list}"
         end
+      end
+
+      def build_record_detail_text(state, width, height)
+        record = state[:records][state[:selected_record_index]]
+        return truncate('No record selected', width) unless record
+
+        rows = record.map { |k, v| "#{k}: #{v}" }
+        offset = state[:detail_offset] || 0
+        max_rows = height ? [0, height - 2].max : rows.size
+
+        rows.drop(offset).take(max_rows).map do |row|
+          truncate(row, width)
+        end.join("\n")
       end
 
       def calculate_col_width(width, columns_count)

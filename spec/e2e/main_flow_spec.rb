@@ -452,6 +452,32 @@ RSpec.describe 'E2E Database Deletion' do
   end
 end
 
+RSpec.describe 'E2E Record Detail View' do
+  include_context 'e2e setup'
+
+  it 'navigates from records to detail and back' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: 'b', key: double('Key', name: :b)),       # Back
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
+    expect(states.last[:view_mode]).to eq(:records)
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 
@@ -475,6 +501,36 @@ RSpec.describe 'E2E Table Deletion' do
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:status_message] == "Table 'test_table' deleted successfully" }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Detail Scrolling' do
+  include_context 'e2e setup'
+
+  it 'scrolls through columns in detail view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Scroll Down
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Scroll Down
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    record = { 'c1' => 1, 'c2' => 2, 'c3' => 3, 'c4' => 4, 'c5' => 5 }
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([record])
+
+    RubyMysqlTui.run_main_loop(client)
+
+    offsets = states.filter_map { |s| s[:detail_offset] }
+    expect(offsets).to include(0, 1, 2)
+    expect(offsets.last).to eq(2)
   end
 end
 
