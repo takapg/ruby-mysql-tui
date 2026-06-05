@@ -6,6 +6,7 @@ require_relative 'ruby_mysql_tui/client'
 require 'tty-reader'
 require_relative 'ruby_mysql_tui/ui/layout'
 require_relative 'ruby_mysql_tui/ui/renderer'
+require_relative 'ruby_mysql_tui/input_handler/sql_history_manager'
 require_relative 'ruby_mysql_tui/input_handler'
 
 # RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
@@ -84,7 +85,8 @@ module RubyMysqlTui
       selected_db: nil, selected_table: nil, records: [],
       items: client.list_databases, sql_mode: false, sql_input: '',
       records_offset: 0, page_offset: 0, all_records_mode: false,
-      columns_offset: 0, sql_history: [], sql_history_index: nil, sql_temp_input: ''
+      columns_offset: 0, sql_history: InputHandler::SqlHistoryManager.load_history,
+      sql_history_index: nil, sql_temp_input: ''
     }
   end
 

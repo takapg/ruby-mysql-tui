@@ -53,6 +53,17 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.update_sql_history('   ', state)
       expect(state[:sql_history]).to eq([])
     end
+
+    it 'saves history to file when a new SQL is added' do
+      expect(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:save_history)
+      described_class.update_sql_history('SELECT 1', state)
+    end
+
+    it 'does not save history when SQL is duplicate' do
+      state[:sql_history] = ['SELECT 1']
+      expect(RubyMysqlTui::InputHandler::SqlHistoryManager).not_to receive(:save_history)
+      described_class.update_sql_history('SELECT 1', state)
+    end
   end
 end
 

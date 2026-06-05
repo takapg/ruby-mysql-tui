@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'sql_history_manager'
+
 module RubyMysqlTui
   # InputHandler の SQL モードに関する処理を定義します。
   module InputHandler
@@ -23,8 +25,11 @@ module RubyMysqlTui
       return if sql.nil? || sql.strip.empty?
 
       history = state[:sql_history] || []
-      history << sql if history.empty? || history.last != sql
-      state[:sql_history] = history
+      if history.empty? || history.last != sql
+        history << sql
+        state[:sql_history] = history
+        SqlHistoryManager.save_history(history)
+      end
     end
 
     def query_mysql(sql, client)
