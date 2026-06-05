@@ -614,6 +614,37 @@ RSpec.describe 'E2E Record Detail Operations - Deletion' do
   end
 end
 
+RSpec.describe 'E2E Record Detail Navigation' do
+  include_context 'e2e setup'
+
+  it 'switches between records using [ and ] keys in detail view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: ']', key: double('Key', name: :bracket_right)), # Next
+      double('Event', value: '[', key: double('Key', name: :bracket_left)),  # Prev
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    records = [{ 'id' => 1 }, { 'id' => 2 }, { 'id' => 3 }]
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return(records)
+
+    RubyMysqlTui.run_main_loop(client)
+
+    indices = states.filter_map { |s| s[:view_mode] == :record_detail ? s[:selected_record_index] : nil }
+    # 初期(0) -> ](1) -> [(0)
+    expect(indices).to include(0, 1)
+    expect(indices.last).to eq(0)
+  end
+end
+
 RSpec.describe 'E2E Record Detail Scrolling' do
   include_context 'e2e setup'
 
