@@ -29,6 +29,9 @@ module RubyMysqlTui
       else
         client.list_databases
       end
+    rescue StandardError => e
+      RubyMysqlTui.logger.error("Failed to refresh items: #{e.message}")
+      []
     end
 
     def update_sql_history(sql, state)
