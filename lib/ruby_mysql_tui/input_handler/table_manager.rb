@@ -40,13 +40,17 @@ module RubyMysqlTui
         new_name = prompt.ask("テーブル '#{table_name}' の新しい名前を入力してください:")
         return state if new_name.nil? || new_name.strip.empty?
 
-        client.rename_table(table_name, new_name.strip)
-        state[:items] = client.list_tables(state[:selected_db])
-        state[:status_message] = "Table '#{table_name}' renamed to '#{new_name.strip}' successfully"
-        state
+        execute_rename_table(state, client, table_name, new_name.strip)
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Table Rename Error: #{e.message}")
         prompt.error("エラーが発生しました: #{e.message}")
+        state
+      end
+
+      private_class_method def execute_rename_table(state, client, old_name, new_name)
+        client.rename_table(old_name, new_name)
+        state[:items] = client.list_tables(state[:selected_db])
+        state[:status_message] = "Table '#{old_name}' renamed to '#{new_name}' successfully"
         state
       end
 
