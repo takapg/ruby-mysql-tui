@@ -59,8 +59,6 @@ module RubyMysqlTui
       end
     end
 
-
-
     def handle_sql_mode_toggle(state)
       state[:sql_mode] = !state[:sql_mode]
       state[:sql_input] = '' if state[:sql_mode]
@@ -79,6 +77,5 @@ module RubyMysqlTui
       end
       state
     end
-
   end
 end
