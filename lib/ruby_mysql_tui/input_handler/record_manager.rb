@@ -64,12 +64,15 @@ module RubyMysqlTui
         pk_column = client.primary_key_for(state[:selected_table])
         return state unless record && pk_column
 
-        state[:selected_record_index] = 0 if RecordExecutor.confirm_and_delete(state, client, prompt, record, pk_column)
+        if RecordExecutor.confirm_and_delete(state, client, prompt, record, pk_column)
+          state[:selected_record_index] = 0
+          state[:view_mode] = :records if state[:view_mode] == :record_detail
+        end
         state
       end
 
       def self.can_manage_record?(state)
-        state[:focus] == :right && state[:view_mode] == :records && state[:records]
+        state[:focus] == :right && %i[records record_detail].include?(state[:view_mode]) && !state[:records].nil?
       end
 
       def self.edit_and_update(state, client, record, pk_column, prompt)

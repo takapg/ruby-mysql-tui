@@ -78,6 +78,28 @@ module E2EFlowHelpers
     allow(prompt).to receive(:say)
   end
 
+  def detail_edit_events
+    [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
+
+  def detail_delete_events
+    [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'd', key: double('Key', name: :d)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
+
   def all_records_events
     [
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -536,6 +558,59 @@ RSpec.describe 'E2E Table Deletion' do
 
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:status_message] == "Table 'test_table' deleted successfully" }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Detail Operations - Editing' do
+  include_context 'e2e setup'
+
+  it 'allows editing a record from detail view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    allow(reader).to receive(:read_keypress).and_return(*detail_edit_events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:select).and_return('name')
+    allow(prompt).to receive(:ask).and_return('edited_name')
+    allow(prompt).to receive(:say)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(client).to receive(:list_table_structure).and_return([])
+
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'name', 'edited_name')
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Detail Operations - Deletion' do
+  include_context 'e2e setup'
+
+  it 'allows deleting a record from detail view and returns to records view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    allow(reader).to receive(:read_keypress).and_return(*detail_delete_events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    expect(client).to receive(:delete_record).and_return(true)
+
+    RubyMysqlTui.run_main_loop(client)
+
+    # 詳細ビューにいたことが確認でき、かつ最終的にレコード一覧に戻っていることを検証
+    expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
+    expect(states.last[:view_mode]).to eq(:records)
   end
 end
 

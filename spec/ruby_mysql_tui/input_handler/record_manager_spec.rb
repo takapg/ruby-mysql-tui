@@ -95,6 +95,49 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' 
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.can_manage_record?' do
+  include_context 'record manager setup'
+
+  it 'returns true when focus is :right and view_mode is :records' do
+    state[:focus] = :right
+    state[:view_mode] = :records
+    state[:records] = [{ 'id' => 1 }]
+    expect(described_class.can_manage_record?(state)).to be true
+  end
+
+  it 'returns true when focus is :right and view_mode is :record_detail' do
+    state[:focus] = :right
+    state[:view_mode] = :record_detail
+    state[:records] = [{ 'id' => 1 }]
+    expect(described_class.can_manage_record?(state)).to be true
+  end
+
+  it 'returns false when focus is :left' do
+    state[:focus] = :left
+    state[:view_mode] = :records
+    state[:records] = [{ 'id' => 1 }]
+    expect(described_class.can_manage_record?(state)).to be false
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_delete_record transition' do
+  include_context 'record manager setup'
+
+  it 'transitions from :record_detail to :records after successful deletion' do
+    state[:focus] = :right
+    state[:view_mode] = :record_detail
+    state[:records] = [{ 'id' => 1 }]
+    state[:selected_record_index] = 0
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(client).to receive(:delete_record).and_return(true)
+    allow(client).to receive(:list_records).and_return([])
+
+    result = described_class.handle_delete_record(state, client, prompt)
+    expect(result[:view_mode]).to eq(:records)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record guards' do
   include_context 'record manager setup'
 
