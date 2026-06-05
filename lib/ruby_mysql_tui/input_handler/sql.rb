@@ -45,8 +45,8 @@ module RubyMysqlTui
       results = client.query(sql)
       return results if results
 
-      affected = client.connection.affected_rows
-      last_id = client.connection.last_id
+      affected = client.affected_rows
+      last_id = client.last_id
       message = "Query OK, #{affected} rows affected"
       message += " (last id: #{last_id})" if last_id&.positive?
       [{ 'Result' => message }]

@@ -160,8 +160,7 @@ end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.query_mysql' do
-    let(:connection) { double('Connection', affected_rows: 1, last_id: 0) }
-    let(:client) { double('Client', connection: connection) }
+    let(:client) { double('Client', affected_rows: 1, last_id: 0) }
 
     it 'returns results when client.query returns data' do
       allow(client).to receive(:query).and_return([{ 'id' => 1 }])
@@ -176,7 +175,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 
     it 'includes last_id in message when present' do
       allow(client).to receive(:query).and_return(nil)
-      allow(connection).to receive(:last_id).and_return(100)
+      allow(client).to receive(:last_id).and_return(100)
       expect(described_class.query_mysql('INSERT INTO users...', client))
         .to eq([{ 'Result' => 'Query OK, 1 rows affected (last id: 100)' }])
     end
