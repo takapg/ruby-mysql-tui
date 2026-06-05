@@ -121,38 +121,40 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::ContentBuilder do
-  describe '.filtered_items' do
-    let(:items) { ['Database_A', 'Database_B', 'Test_DB', 'Production_DB'] }
+RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items basic' do
+  let(:items) { %w[Database_A Database_B Test_DB Production_DB] }
 
-    it 'filter_query が nil の場合は全件返すこと' do
-      state = { items: items, filter_query: nil }
-      expect(described_class.filtered_items(state)).to eq(items)
-    end
+  it 'filter_query が nil の場合は全件返すこと' do
+    state = { items: items, filter_query: nil }
+    expect(described_class.filtered_items(state)).to eq(items)
+  end
 
-    it 'filter_query が空文字の場合は全件返すこと' do
-      state = { items: items, filter_query: '' }
-      expect(described_class.filtered_items(state)).to eq(items)
-    end
+  it 'filter_query が空文字の場合は全件返すこと' do
+    state = { items: items, filter_query: '' }
+    expect(described_class.filtered_items(state)).to eq(items)
+  end
 
-    it 'キーワードに一致するアイテムのみを返すこと' do
-      state = { items: items, filter_query: 'Database' }
-      expect(described_class.filtered_items(state)).to eq(['Database_A', 'Database_B'])
-    end
+  it 'キーワードに一致するアイテムのみを返すこと' do
+    state = { items: items, filter_query: 'Database' }
+    expect(described_class.filtered_items(state)).to eq(%w[Database_A Database_B])
+  end
+end
 
-    it '大文字小文字を区別せずにフィルタリングすること' do
-      state = { items: items, filter_query: 'db' }
-      expect(described_class.filtered_items(state)).to eq(['Test_DB', 'Production_DB'])
-    end
+RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items edge cases' do
+  let(:items) { %w[Database_A Database_B Test_DB Production_DB] }
 
-    it '一致するアイテムがない場合は空配列を返すこと' do
-      state = { items: items, filter_query: 'NonExistent' }
-      expect(described_class.filtered_items(state)).to eq([])
-    end
+  it '大文字小文字を区別せずにフィルタリングすること' do
+    state = { items: items, filter_query: 'db' }
+    expect(described_class.filtered_items(state)).to eq(%w[Test_DB Production_DB])
+  end
 
-    it 'items が nil の場合は空配列を返すこと' do
-      state = { items: nil, filter_query: 'db' }
-      expect(described_class.filtered_items(state)).to eq([])
-    end
+  it '一致するアイテムがない場合は空配列を返すこと' do
+    state = { items: items, filter_query: 'NonExistent' }
+    expect(described_class.filtered_items(state)).to eq([])
+  end
+
+  it 'items が nil の場合は空配列を返すこと' do
+    state = { items: nil, filter_query: 'db' }
+    expect(described_class.filtered_items(state)).to eq([])
   end
 end

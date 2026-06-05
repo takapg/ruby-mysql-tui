@@ -164,7 +164,7 @@ end
 
 RSpec.describe RubyMysqlTui::InputHandler do
   let(:client) { double('Client') }
-  let(:state) { { focus: :left, items: ['db1', 'db2'], filter_query: '', selected_index: 0 } }
+  let(:state) { { focus: :left, items: %w[db1 db2], filter_query: '', selected_index: 0 } }
 
   describe '.handle_input' do
     context '左ペインにフォーカスがあるとき' do
