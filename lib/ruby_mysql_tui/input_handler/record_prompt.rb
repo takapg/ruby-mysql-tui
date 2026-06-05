@@ -36,6 +36,8 @@ module RubyMysqlTui
         value = prompt.ask("新しい値を入力してください (#{column})#{hint}:", default: record[column]) do |question|
           apply_validations(question, column, structure)
         end
+        return nil if value.nil?
+
         [column, process_input_value(value, column, structure)]
       end
 
