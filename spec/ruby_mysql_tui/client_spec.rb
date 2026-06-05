@@ -278,7 +278,7 @@ RSpec.describe RubyMysqlTui::Client, '#create_database' do
   end
 end
 
-RSpec.describe RubyMysqlTui::Client, '#create_table' do
+RSpec.describe RubyMysqlTui::Client, '#create_table (basic)' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
 
@@ -294,6 +294,11 @@ RSpec.describe RubyMysqlTui::Client, '#create_table' do
     expect(mock_mysql_client).to receive(:query).with('CREATE TABLE `my``table` (id INT PRIMARY KEY AUTO_INCREMENT)')
     client.create_table(table_name)
   end
+end
+
+RSpec.describe RubyMysqlTui::Client, '#create_table (custom columns)' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
 
   it 'creates a table with custom columns' do
     table_name = 'test_table'
@@ -306,7 +311,8 @@ RSpec.describe RubyMysqlTui::Client, '#create_table' do
   it 'escapes backticks in custom column names' do
     table_name = 'test_table'
     columns = ['name`s', 'email`s']
-    sql = "CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT, `name``s` VARCHAR(255), `email``s` VARCHAR(255))"
+    sql = "CREATE TABLE `#{table_name}` " \
+          "(id INT PRIMARY KEY AUTO_INCREMENT, `name``s` VARCHAR(255), `email``s` VARCHAR(255))"
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name, columns)
   end
