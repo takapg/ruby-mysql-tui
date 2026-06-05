@@ -539,7 +539,7 @@ RSpec.describe 'E2E Table Deletion' do
   end
 end
 
-RSpec.describe 'E2E Record Detail Operations' do
+RSpec.describe 'E2E Record Detail Operations - Editing' do
   include_context 'e2e setup'
 
   it 'allows editing a record from detail view' do
@@ -572,6 +572,10 @@ RSpec.describe 'E2E Record Detail Operations' do
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
   end
+end
+
+RSpec.describe 'E2E Record Detail Operations - Deletion' do
+  include_context 'e2e setup'
 
   it 'allows deleting a record from detail view and returns to records view' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
@@ -597,7 +601,7 @@ RSpec.describe 'E2E Record Detail Operations' do
     expect(client).to receive(:delete_record).and_return(true)
 
     RubyMysqlTui.run_main_loop(client)
-    
+
     # 詳細ビューにいたことが確認でき、かつ最終的にレコード一覧に戻っていることを検証
     expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
     expect(states.last[:view_mode]).to eq(:records)
