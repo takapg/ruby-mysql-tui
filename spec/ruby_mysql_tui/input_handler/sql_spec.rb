@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'tempfile'
 require 'ruby_mysql_tui/input_handler/sql'
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
@@ -52,6 +53,23 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.update_sql_history('', state)
       described_class.update_sql_history('   ', state)
       expect(state[:sql_history]).to eq([])
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.update_sql_history persistence' do
+    let(:state) { { sql_history: [] } }
+
+    it 'saves history to file when a new SQL is added' do
+      expect(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:save_history)
+      described_class.update_sql_history('SELECT 1', state)
+    end
+
+    it 'does not save history when SQL is duplicate' do
+      state[:sql_history] = ['SELECT 1']
+      expect(RubyMysqlTui::InputHandler::SqlHistoryManager).not_to receive(:save_history)
+      described_class.update_sql_history('SELECT 1', state)
     end
   end
 end
@@ -122,6 +140,47 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     it 'resets sql_history_index to nil after execution' do
       described_class.execute_sql('SELECT 1', state, client)
       expect(state[:sql_history_index]).to be_nil
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  let(:temp_file) { Tempfile.new('ruby_mysql_tui_history_test') }
+  before { stub_const('RubyMysqlTui::InputHandler::SqlHistoryManager::HISTORY_FILE', temp_file.path) }
+  after { temp_file.unlink }
+
+  describe '.load_history' do
+    it 'reads history from the file' do
+      history = ['SELECT 1', 'SELECT 2']
+      File.write(temp_file.path, "#{history.join("\n")}\n")
+      expect(described_class.load_history).to eq(history)
+    end
+
+    it 'returns an empty array and logs error when File.readlines fails' do
+      allow(File).to receive(:exist?).and_return(true)
+      allow(File).to receive(:readlines).and_raise(StandardError.new('Read error'))
+      expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to load SQL history: Read error/)
+      expect(described_class.load_history).to eq([])
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  let(:temp_file) { Tempfile.new('ruby_mysql_tui_history_test') }
+  before { stub_const('RubyMysqlTui::InputHandler::SqlHistoryManager::HISTORY_FILE', temp_file.path) }
+  after { temp_file.unlink }
+
+  describe '.save_history' do
+    it 'writes history to the file' do
+      history = ['SELECT 1', 'SELECT 2']
+      described_class.save_history(history)
+      expect(File.readlines(temp_file.path, chomp: true)).to eq(history)
+    end
+
+    it 'logs error when File.open fails' do
+      allow(File).to receive(:open).and_raise(StandardError.new('Write error'))
+      expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to save SQL history: Write error/)
+      expect { described_class.save_history(['SQL1']) }.not_to raise_error
     end
   end
 end
