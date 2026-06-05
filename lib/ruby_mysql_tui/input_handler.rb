@@ -77,5 +77,9 @@ module RubyMysqlTui
       end
       state
     end
+
+    def sort_options(state)
+      state[:sort_column] ? { sort_column: state[:sort_column], sort_direction: state[:sort_direction] } : {}
+    end
   end
 end

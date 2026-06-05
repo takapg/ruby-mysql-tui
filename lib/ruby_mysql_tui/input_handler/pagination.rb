@@ -34,7 +34,7 @@ module RubyMysqlTui
 
       def fetch_next_page(state, client, page_offset:, size:)
         new_offset = page_offset + size
-        records = client.list_records(state[:selected_table], new_offset, **sort_options(state)).to_a
+        records = client.list_records(state[:selected_table], new_offset, **InputHandler.sort_options(state)).to_a
 
         if records.empty?
           state[:records_offset] = [0, new_offset - 1].max
@@ -47,11 +47,7 @@ module RubyMysqlTui
       def fetch_prev_page(state, client)
         new_offset = [0, (state[:page_offset] || 0) - RubyMysqlTui::PAGE_SIZE].max
         state[:page_offset] = new_offset
-        state[:records] = client.list_records(state[:selected_table], new_offset, **sort_options(state)).to_a
-      end
-
-      def sort_options(state)
-        state[:sort_column] ? { sort_column: state[:sort_column], sort_direction: state[:sort_direction] } : {}
+        state[:records] = client.list_records(state[:selected_table], new_offset, **InputHandler.sort_options(state)).to_a
       end
     end
   end
