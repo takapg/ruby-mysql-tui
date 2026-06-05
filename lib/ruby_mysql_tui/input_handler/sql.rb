@@ -48,7 +48,7 @@ module RubyMysqlTui
       affected = client.connection.affected_rows
       last_id = client.connection.last_id
       message = "Query OK, #{affected} rows affected"
-      message += " (last id: #{last_id})" if last_id && last_id > 0
+      message += " (last id: #{last_id})" if last_id&.positive?
       [{ 'Result' => message }]
     rescue StandardError => e
       [{ 'Error' => e.message }]
