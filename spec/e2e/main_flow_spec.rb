@@ -228,10 +228,12 @@ RSpec.describe 'E2E Record Edit - NULL value' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'nullable_col' => 'some_value' }])
     allow(client).to receive(:primary_key_for).and_return('id')
-    allow(client).to receive(:list_table_structure).and_return([
-      { 'Field' => 'id', 'Null' => 'NO', 'Key' => 'PRI' },
-      { 'Field' => 'nullable_col', 'Null' => 'YES', 'Key' => '' }
-    ])
+    allow(client).to receive(:list_table_structure).and_return(
+      [
+        { 'Field' => 'id', 'Null' => 'NO', 'Key' => 'PRI' },
+        { 'Field' => 'nullable_col', 'Null' => 'YES', 'Key' => '' }
+      ]
+    )
 
     expect(client).to receive(:update_record).with(anything, anything, anything, 'nullable_col', nil)
 
