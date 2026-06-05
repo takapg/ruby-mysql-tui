@@ -510,7 +510,7 @@ RSpec.describe 'E2E Record Cloning' do
       double('Event', value: "\r", key: double('Key', name: :return)), # Table
       double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
       double('Event', value: 'c', key: double('Key', name: :c)),       # Clone
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+      double('Event', value: 'q', key: double('Key', name: :q)) # Quit
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
