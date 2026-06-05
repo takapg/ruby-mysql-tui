@@ -164,6 +164,11 @@ RSpec.describe RubyMysqlTui::InputHandler, '.execute_sql' do
   let(:sql) { 'SELECT * FROM users' }
   let(:results) { [{ 'id' => 1, 'name' => 'Alice' }] }
 
+  before do
+    allow(client).to receive(:list_databases).and_return([])
+    allow(client).to receive(:list_tables).and_return([])
+  end
+
   it 'SQLを実行し、結果を records に格納して view_mode を :records に変更する' do
     state = { sql_mode: true }
     allow(client).to receive(:query).with(sql).and_return(results)
