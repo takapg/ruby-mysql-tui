@@ -8,24 +8,27 @@ module RubyMysqlTui
     def execute_sql(sql, state, client)
       return state if sql.nil? || sql.strip.empty?
 
-      history = state[:sql_history] || []
-      if history.empty? || history.last != sql
-        history << sql
-      end
-
-      results = begin
-        client.query(sql)
-      rescue StandardError => e
-        [{ 'Error' => e.message }]
-      end
+      update_sql_history(sql, state)
+      results = query_mysql(sql, client)
 
       state.merge!(
         records: results,
         view_mode: :records,
         sql_mode: false,
-        sql_history: history,
         sql_history_index: nil
       )
+    end
+
+    def update_sql_history(sql, state)
+      history = state[:sql_history] || []
+      history << sql if history.empty? || history.last != sql
+      state[:sql_history] = history
+    end
+
+    def query_mysql(sql, client)
+      client.query(sql)
+    rescue StandardError => e
+      [{ 'Error' => e.message }]
     end
 
     def handle_sql_mode_input(reader, state, client)
@@ -65,31 +68,39 @@ module RubyMysqlTui
       history = state[:sql_history] || []
       return [state, false] if history.empty?
 
+      index = calculate_up_index(state, history)
+      state[:sql_input] = history[index]
+      state[:sql_history_index] = index
+      [state, false]
+    end
+
+    def calculate_up_index(state, history)
       index = state[:sql_history_index]
       if index.nil?
         state[:sql_temp_input] = state[:sql_input]
-        index = history.size - 1
+        history.size - 1
       else
-        index = [0, index - 1].max
+        [0, index - 1].max
       end
-
-      state.merge!(sql_input: history[index], sql_history_index: index)
-      [state, false]
     end
 
     def handle_sql_history_down(state)
       index = state[:sql_history_index]
       return [state, false] if index.nil?
 
-      history = state[:sql_history] || []
-      index += 1
-
-      if index >= history.size
-        state.merge!(sql_input: state[:sql_temp_input] || '', sql_history_index: nil)
-      else
-        state.merge!(sql_input: history[index], sql_history_index: index)
-      end
+      update_state_from_down_index(state, index + 1)
       [state, false]
+    end
+
+    def update_state_from_down_index(state, index)
+      history = state[:sql_history] || []
+      if index >= history.size
+        state[:sql_input] = state[:sql_temp_input] || ''
+        state[:sql_history_index] = nil
+      else
+        state[:sql_input] = history[index]
+        state[:sql_history_index] = index
+      end
     end
   end
 end
