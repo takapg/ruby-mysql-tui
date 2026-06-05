@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+
 RSpec.describe 'E2E Record Clone' do
   include_context 'e2e setup'
 
