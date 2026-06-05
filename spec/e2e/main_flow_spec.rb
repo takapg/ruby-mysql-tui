@@ -64,22 +64,13 @@ module E2EEventHelpers
   end
 
   def sql_history_events
-    [
-      make_event('s', :s),
-      make_event('S', :unknown),
-      make_event('E', :unknown),
-      make_event('L', :unknown),
-      make_event('E', :unknown),
-      make_event('C', :unknown),
-      make_event('T', :unknown),
-      make_event(' ', :unknown),
-      make_event('1', :unknown),
-      make_event("\r", :return),
-      make_event('s', :s),
-      make_event("\e[A", :up),
-      make_event("\r", :return),
-      make_event('q', :q)
+    data = [
+      ['s', :s], ['S', :unknown], ['E', :unknown], ['L', :unknown],
+      ['E', :unknown], ['C', :unknown], ['T', :unknown], [' ', :unknown],
+      ['1', :unknown], ["\r", :return], ['s', :s], ["\e[A", :up],
+      ["\r", :return], ['q', :q]
     ]
+    data.map { |val, key| make_event(val, key) }
   end
 end
 
@@ -93,7 +84,6 @@ module E2EFlowHelpers
     end
     states
   end
-
 
   def setup_retry_reader(reader)
     allow(TTY::Reader).to receive(:new).and_return(reader)
@@ -131,14 +121,11 @@ module E2EFlowHelpers
     allow(client).to receive(:list_table_structure).and_return(structure)
   end
 
-
   def setup_edit_prompt_mocks(prompt)
     allow(prompt).to receive(:select).and_return('name')
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
   end
-
-
 end
 
 RSpec.shared_context 'e2e setup' do
