@@ -6,18 +6,44 @@ module E2EHelper
   TEST_DB = 'tui_test_db'
 
   def self.setup_test_db
-    client = create_client
-    client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
-    client.query("CREATE DATABASE #{TEST_DB}")
-    client.query("USE #{TEST_DB}")
-    setup_schema(client)
-    client.close
+    attempts = 0
+    begin
+      attempts += 1
+      client = create_client
+      client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
+      client.query("CREATE DATABASE #{TEST_DB}")
+      client.query("USE #{TEST_DB}")
+      setup_schema(client)
+      client.close
+    rescue Mysql2::Error => e
+      if attempts < 5
+        warn "MySQL connection failed during setup (attempt #{attempts}/5): #{e.message}. Retrying in 1s..."
+        sleep 1
+        retry
+      else
+        warn "MySQL connection failed after 5 attempts: #{e.message}"
+        raise e
+      end
+    end
   end
 
   def self.cleanup_test_db
-    client = create_client
-    client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
-    client.close
+    attempts = 0
+    begin
+      attempts += 1
+      client = create_client
+      client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
+      client.close
+    rescue Mysql2::Error => e
+      if attempts < 5
+        warn "MySQL connection failed during cleanup (attempt #{attempts}/5): #{e.message}. Retrying in 1s..."
+        sleep 1
+        retry
+      else
+        warn "MySQL connection failed during cleanup after 5 attempts: #{e.message}"
+        raise e
+      end
+    end
   end
 
   def self.create_client
