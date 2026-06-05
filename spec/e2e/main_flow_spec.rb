@@ -110,6 +110,25 @@ module E2EFlowHelpers
       double('Event', value: 'q', key: double('Key', name: :q))
     ]
   end
+
+  def sql_history_events
+    [
+      double('Event', value: 's', key: double('Key', name: :s)),
+      double('Event', value: 'S', key: double('Key', name: :unknown)),
+      double('Event', value: 'E', key: double('Key', name: :unknown)),
+      double('Event', value: 'L', key: double('Key', name: :unknown)),
+      double('Event', value: 'E', key: double('Key', name: :unknown)),
+      double('Event', value: 'C', key: double('Key', name: :unknown)),
+      double('Event', value: 'T', key: double('Key', name: :unknown)),
+      double('Event', value: ' ', key: double('Key', name: :unknown)),
+      double('Event', value: '1', key: double('Key', name: :unknown)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 's', key: double('Key', name: :s)),
+      double('Event', value: "\e[A", key: double('Key', name: :up)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -540,24 +559,7 @@ RSpec.describe 'E2E SQL History' do
 
   it 'allows recalling and executing SQL from history' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-
-    events = [
-      double('Event', value: 's', key: double('Key', name: :s)),
-      double('Event', value: 'S', key: double('Key', name: :unknown)),
-      double('Event', value: 'E', key: double('Key', name: :unknown)),
-      double('Event', value: 'L', key: double('Key', name: :unknown)),
-      double('Event', value: 'E', key: double('Key', name: :unknown)),
-      double('Event', value: 'C', key: double('Key', name: :unknown)),
-      double('Event', value: 'T', key: double('Key', name: :unknown)),
-      double('Event', value: ' ', key: double('Key', name: :unknown)),
-      double('Event', value: '1', key: double('Key', name: :unknown)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 's', key: double('Key', name: :s)),
-      double('Event', value: "\e[A", key: double('Key', name: :up)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(reader).to receive(:read_keypress).and_return(*sql_history_events)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     expect(client).to receive(:query).with('SELECT 1').twice.and_return([{ '1' => 1 }])
