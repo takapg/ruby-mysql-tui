@@ -168,7 +168,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
-  describe '.query_mysql' do
+  describe '.query_mysql (success)' do
     let(:client) { double('Client', affected_rows: 1, last_id: 0) }
 
     it 'returns results when client.query returns data' do
@@ -188,6 +188,12 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(described_class.query_mysql('INSERT INTO users...', client))
         .to eq([{ 'Result' => 'Query OK, 1 rows affected (last id: 100)' }])
     end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.query_mysql (error)' do
+    let(:client) { double('Client') }
 
     it 'returns error message when an exception occurs' do
       allow(client).to receive(:query).and_raise(StandardError.new('SQL Error'))
