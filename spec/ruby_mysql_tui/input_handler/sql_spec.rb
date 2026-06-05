@@ -69,9 +69,11 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 
     it 'decrements index when already browsing history' do
       state[:sql_history_index] = 1
+      state[:sql_temp_input] = 'original'
       new_state = described_class.handle_sql_history_up(state).first
       expect(new_state[:sql_input]).to eq('SQL1')
       expect(new_state[:sql_history_index]).to eq(0)
+      expect(new_state[:sql_temp_input]).to eq('original')
     end
 
     it 'does nothing when history is empty' do
