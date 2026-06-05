@@ -34,7 +34,8 @@ module RubyMysqlTui
         items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
         return if items.empty?
 
-        db_name = items[state[:selected_index]]
+        safe_index = state[:selected_index].clamp(0, items.size - 1)
+        db_name = items[safe_index]
         client.select_database(db_name)
         apply_tables_view_state(state, db_name, client)
       end
@@ -51,7 +52,8 @@ module RubyMysqlTui
         items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
         return if items.empty?
 
-        table_name = items[state[:selected_index]]
+        safe_index = state[:selected_index].clamp(0, items.size - 1)
+        table_name = items[safe_index]
         reset_record_state(state, table_name, client)
       end
 
