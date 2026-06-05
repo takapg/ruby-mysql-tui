@@ -6,6 +6,54 @@ require 'ruby_mysql_tui/input_handler/record_manager'
 
 require_relative '../support/record_manager_setup'
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_clone_record' do
+  include_context 'record manager setup'
+
+  it 'prompts for record data with existing values as defaults (excluding PK)' do
+    Timeout.timeout(10) do
+      state[:selected_table] = 'users'
+      state[:records] = [{ 'id' => '1', 'name' => 'Alice', 'email' => 'alice@example.com' }]
+      state[:selected_record_index] = 0
+      allow(client).to receive(:primary_key_for).with('users').and_return('id')
+      allow(client).to receive(:list_columns).with('users').and_return(['id', 'name', 'email'])
+      allow(client).to receive(:list_table_structure).and_return([])
+
+      # PK 'id' は除外され、name と email がデフォルト値として渡されることを検証
+      expect(prompt).to receive(:ask).with(/id/, anything).and_return('2')
+      expect(prompt).to receive(:ask).with(/name/, hash_including(default: 'Alice')).and_return('Bob')
+      expect(prompt).to receive(:ask).with(/email/, hash_including(default: 'alice@example.com')).and_return('bob@example.com')
+
+      expect(client).to receive(:insert_record).with('users', { 'id' => '2', 'name' => 'Bob', 'email' => 'bob@example.com' })
+      allow(client).to receive(:list_records).and_return(state[:records])
+
+      described_class.handle_clone_record(state, client, prompt)
+    end
+  end
+
+  it 'returns state immediately if record is not selected' do
+    Timeout.timeout(10) do
+      state[:records] = []
+      expect(client).not_to receive(:primary_key_for)
+      expect(described_class.handle_clone_record(state, client, prompt)).to eq(state)
+    end
+  end
+
+  it 'returns state if user cancels input' do
+    Timeout.timeout(10) do
+      state[:selected_table] = 'users'
+      state[:records] = [{ 'id' => '1', 'name' => 'Alice' }]
+      state[:selected_record_index] = 0
+      allow(client).to receive(:primary_key_for).and_return('id')
+      allow(client).to receive(:list_columns).and_return(['id', 'name'])
+      allow(client).to receive(:list_table_structure).and_return([])
+      allow(prompt).to receive(:ask).and_return(nil)
+
+      expect(client).not_to receive(:insert_record)
+      expect(described_class.handle_clone_record(state, client, prompt)).to eq(state)
+    end
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record' do
   include_context 'record manager setup'
 

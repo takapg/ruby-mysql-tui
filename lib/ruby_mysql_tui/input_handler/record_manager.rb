@@ -8,6 +8,21 @@ module RubyMysqlTui
   module InputHandler
     # RecordManager は レコードの削除などの操作を提供します。
     module RecordManager
+      def self.handle_clone_record(state, client, prompt)
+        return state unless can_manage_record?(state)
+        record = state[:records][state[:selected_record_index]]
+        return state unless record
+
+        pk_col = client.primary_key_for(state[:selected_table])
+        cols = client.list_columns(state[:selected_table])
+        struct = client.list_table_structure(state[:selected_table])
+        data = RecordPrompt.prompt_for_record_data(cols, prompt, record.reject { |k, _| k == pk_col }, struct)
+        return state if data.nil? || data.empty?
+
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, { columns: cols, structure: struct })
+        state
+      end
+
       def self.handle_edit_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
