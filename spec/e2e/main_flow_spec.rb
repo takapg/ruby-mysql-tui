@@ -478,6 +478,41 @@ RSpec.describe 'E2E Record Detail View' do
   end
 end
 
+RSpec.describe 'E2E Record Cloning' do
+  include_context 'e2e setup'
+
+  it 'clones a record when c is pressed in records view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: 'c', key: double('Key', name: :c)),       # Clone
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    # 既存レコード { 'id' => 1, 'name' => 'Alice' } がある想定
+    # prompt_for_record_data が呼ばれ、値を入力して確定させる
+    allow(prompt).to receive(:ask).and_return('2', 'Alice-Cloned')
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(client).to receive(:list_columns).and_return(%w[id name])
+    allow(client).to receive(:list_table_structure).and_return([])
+
+    expect(client).to receive(:insert_record).with('test_table', { 'id' => '2', 'name' => 'Alice-Cloned' })
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 

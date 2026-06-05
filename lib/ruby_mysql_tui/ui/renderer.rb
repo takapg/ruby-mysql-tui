@@ -112,7 +112,7 @@ module RubyMysqlTui
       end
 
       def records_guides(state)
-        guides = ['[n] New', '[e] Edit', '[d] Delete']
+        guides = ['[n] New', '[e] Edit', '[d] Delete', '[c] Clone']
         guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
         guides << '[i] Structure'
         guides << '[←/→] Scroll Cols'
