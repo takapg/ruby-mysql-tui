@@ -626,7 +626,7 @@ RSpec.describe 'E2E Record Detail Navigation' do
       double('Event', value: "\r", key: double('Key', name: :return)), # Detail
       double('Event', value: ']', key: double('Key', name: :bracket_right)), # Next
       double('Event', value: '[', key: double('Key', name: :bracket_left)),  # Prev
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+      double('Event', value: 'q', key: double('Key', name: :q)) # Quit
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
