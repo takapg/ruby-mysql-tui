@@ -163,8 +163,6 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
       expect(described_class.load_history).to eq([])
     end
   end
-
-  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
