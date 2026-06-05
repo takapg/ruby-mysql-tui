@@ -74,26 +74,33 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(new_state[:sql_input]).to eq('current')
     end
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.handle_sql_history_down' do
-    let(:state) { { sql_history: ['SQL1', 'SQL2'], sql_input: 'SQL1', sql_history_index: 0, sql_temp_input: 'current' } }
+    let(:state) do
+      {
+        sql_history: %w[SQL1 SQL2], sql_input: 'SQL1',
+        sql_history_index: 0, sql_temp_input: 'current'
+      }
+    end
 
     it 'increments index' do
-      new_state, _ = described_class.handle_sql_history_down(state)
+      new_state = described_class.handle_sql_history_down(state).first
       expect(new_state[:sql_input]).to eq('SQL2')
       expect(new_state[:sql_history_index]).to eq(1)
     end
 
     it 'restores temp input when reaching the end of history' do
       state[:sql_history_index] = 1
-      new_state, _ = described_class.handle_sql_history_down(state)
+      new_state = described_class.handle_sql_history_down(state).first
       expect(new_state[:sql_input]).to eq('current')
       expect(new_state[:sql_history_index]).to be_nil
     end
 
     it 'does nothing when index is nil' do
       state[:sql_history_index] = nil
-      new_state, _ = described_class.handle_sql_history_down(state)
+      new_state = described_class.handle_sql_history_down(state).first
       expect(new_state[:sql_input]).to eq('SQL1')
     end
   end
