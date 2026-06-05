@@ -46,6 +46,27 @@ module E2EHelper
     end
   end
 
+  def self.with_mysql_retry(context)
+    5.times do |i|
+      begin
+        client = create_client
+        return yield client
+      rescue Mysql2::Error => e
+        handle_mysql_retry(e, i + 1, context)
+      ensure
+        client&.close
+      end
+    end
+  end
+
+  def self.handle_mysql_retry(error, attempts, context)
+    raise error if attempts >= 5
+
+    warn "MySQL connection failed during #{context} (attempt #{attempts}/5): #{error.message}. Retrying in 1s..."
+    sleep 1
+  end
+  private_class_method :with_mysql_retry, :handle_mysql_retry
+
   def self.create_client
     Mysql2::Client.new(
       host: ENV.fetch('MYSQL_HOST', '127.0.0.1'),
