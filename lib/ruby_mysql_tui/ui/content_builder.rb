@@ -10,6 +10,14 @@ module RubyMysqlTui
     module ContentBuilder
       module_function
 
+      def self.filtered_items(state)
+        items = state[:items] || []
+        query = state[:filter_query]
+        return items if query.nil? || query.empty?
+
+        items.select { |item| item.downcase.include?(query.downcase) }
+      end
+
       def build_list_text(items, selected_index, width, height = nil)
         return 'No items found' if items.nil? || items.empty?
 

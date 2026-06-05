@@ -31,7 +31,7 @@ module RubyMysqlTui
       end
 
       def handle_databases_return(state, client)
-        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
         return if items.empty?
 
         db_name = items[state[:selected_index]]
@@ -48,7 +48,7 @@ module RubyMysqlTui
       end
 
       def handle_tables_return(state, client)
-        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
         return if items.empty?
 
         table_name = items[state[:selected_index]]

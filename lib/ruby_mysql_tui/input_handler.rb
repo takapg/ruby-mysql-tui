@@ -27,14 +27,6 @@ module RubyMysqlTui
         handle_key_input(extract_key_name(event), state, client)
     end
 
-    def self.filtered_items(state)
-      items = state[:items] || []
-      query = state[:filter_query]
-      return items if query.nil? || query.empty?
-
-      items.select { |item| item.downcase.include?(query.downcase) }
-    end
-
     private_class_method def handle_filter_input(val, state)
       if val == '/'
         prompt = TTY::Prompt.new

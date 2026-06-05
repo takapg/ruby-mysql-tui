@@ -41,7 +41,7 @@ module RubyMysqlTui
       end
 
       def left_content(state)
-        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
         ContentBuilder.build_list_text(items, state[:selected_index], @layout.left_w, @layout.main_h)
       end
 
