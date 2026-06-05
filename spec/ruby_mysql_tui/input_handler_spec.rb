@@ -3,6 +3,7 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler'
 require 'ruby_mysql_tui/input_handler/record_manager'
+require 'ruby_mysql_tui/input_handler/navigation'
 
 RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - edit' do
   let(:state) { { focus: :right, view_mode: :records, records: [{ 'id' => 1 }] } }
@@ -159,5 +160,71 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - column scroll' do
     state = { focus: :right, view_mode: :records, records: [{ 'a' => 1, 'b' => 2, 'c' => 3 }], columns_offset: 2 }
     state = RubyMysqlTui::InputHandler.handle_input(event_right, state, client)
     expect(state[:columns_offset]).to eq(2)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler do
+  let(:client) { double('Client') }
+  let(:state) { { focus: :left, items: %w[db1 db2], filter_query: '', selected_index: 0 } }
+
+  describe '.handle_input' do
+    context '左ペインにフォーカスがあるとき' do
+      it '/ キーが押されたとき、プロンプトを表示し filter_query を更新すること' do
+        prompt = instance_double(TTY::Prompt)
+        allow(TTY::Prompt).to receive(:new).and_return(prompt)
+        allow(prompt).to receive(:ask).and_return('test_query')
+
+        new_state = described_class.handle_input('/', state, client)
+
+        expect(new_state[:filter_query]).to eq('test_query')
+        expect(new_state[:selected_index]).to eq(0)
+      end
+
+      it 'Esc キー (\e) が押され、filter_query が設定されているとき、フィルタをクリアすること' do
+        state_with_filter = state.merge(filter_query: 'some_query', selected_index: 2)
+        new_state = described_class.handle_input("\e", state_with_filter, client)
+
+        expect(new_state[:filter_query]).to eq('')
+        expect(new_state[:selected_index]).to eq(0)
+      end
+
+      it 'Esc キー (\e) が押されたが、filter_query が空のときは状態を変更しないこと' do
+        new_state = described_class.handle_input("\e", state, client)
+        expect(new_state).to eq(state)
+      end
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::Navigation, '.handle_databases_return' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'データベースからテーブル一覧へ遷移する際、filter_query をリセットすること' do
+    state = {
+      view_mode: :databases,
+      items: ['test_db'],
+      selected_index: 0,
+      filter_query: 'test'
+    }
+    allow(client).to receive(:select_database).with('test_db')
+    allow(client).to receive(:list_tables).with('test_db').and_return(['table1'])
+
+    RubyMysqlTui::InputHandler::Navigation.handle_databases_return(state, client)
+    expect(state[:filter_query]).to eq('')
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::Navigation, '.handle_back_navigation' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'データベース一覧に戻る際、filter_query をリセットすること' do
+    state = {
+      view_mode: :tables,
+      filter_query: 'some_filter'
+    }
+    allow(client).to receive(:list_databases).and_return(%w[db1 db2])
+
+    RubyMysqlTui::InputHandler::Navigation.handle_back_navigation(state, client)
+    expect(state[:filter_query]).to eq('')
   end
 end

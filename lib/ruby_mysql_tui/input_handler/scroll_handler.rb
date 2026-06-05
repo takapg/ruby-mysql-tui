@@ -35,7 +35,10 @@ module RubyMysqlTui
       end
 
       def update_selected_index(state, delta)
-        state[:selected_index] = (state[:selected_index] + delta).clamp(0, state[:items].size - 1)
+        items = RubyMysqlTui::UI::ContentBuilder.filtered_items(state)
+        return if items.empty?
+
+        state[:selected_index] = (state[:selected_index] + delta).clamp(0, items.size - 1)
       end
 
       def current_layout
@@ -45,7 +48,7 @@ module RubyMysqlTui
       end
 
       private_class_method def handle_left_scroll(state, delta)
-        update_selected_index(state, delta) unless state[:items].empty?
+        update_selected_index(state, delta)
         state
       end
 
