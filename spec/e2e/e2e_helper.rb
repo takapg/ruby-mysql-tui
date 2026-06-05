@@ -6,19 +6,38 @@ module E2EHelper
   TEST_DB = 'tui_test_db'
 
   def self.setup_test_db
-    client = create_client
-    client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
-    client.query("CREATE DATABASE #{TEST_DB}")
-    client.query("USE #{TEST_DB}")
-    setup_schema(client)
-    client.close
+    with_mysql_retry('setup') do |client|
+      client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
+      client.query("CREATE DATABASE #{TEST_DB}")
+      client.query("USE #{TEST_DB}")
+      setup_schema(client)
+    end
   end
 
   def self.cleanup_test_db
-    client = create_client
-    client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
-    client.close
+    with_mysql_retry('cleanup') do |client|
+      client.query("DROP DATABASE IF EXISTS #{TEST_DB}")
+    end
   end
+
+  def self.with_mysql_retry(context)
+    5.times do |i|
+      client = create_client
+      return yield client
+    rescue Mysql2::Error => e
+      handle_mysql_retry(e, i + 1, context)
+    ensure
+      client&.close
+    end
+  end
+
+  def self.handle_mysql_retry(error, attempts, context)
+    raise error if attempts >= 5
+
+    warn "MySQL connection failed during #{context} (attempt #{attempts}/5): #{error.message}. Retrying in 1s..."
+    sleep 1
+  end
+  private_class_method :with_mysql_retry, :handle_mysql_retry
 
   def self.create_client
     Mysql2::Client.new(

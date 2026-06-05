@@ -15,14 +15,19 @@ module RubyMysqlTui
 
       update_sql_history(sql, state)
       results = query_mysql(sql, client)
-
       state[:items] = refresh_items(state, client)
 
+      apply_sql_result_state(state, results, sql)
+    end
+
+    def apply_sql_result_state(state, results, sql)
       state.merge!(
         records: results,
         view_mode: :records,
         sql_mode: false,
-        sql_history_index: nil
+        sql_history_index: nil,
+        sql_result_mode: true,
+        last_executed_sql: sql
       )
     end
 

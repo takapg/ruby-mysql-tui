@@ -634,6 +634,33 @@ RSpec.describe 'E2E SQL History' do
   end
 end
 
+RSpec.describe 'E2E SQL Result Scrolling' do
+  include_context 'e2e setup'
+
+  it 'does not trigger pagination fetch when scrolling SQL results' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # s (SQL mode) -> 'SELECT 1' -> \r (execute) -> \t (focus right) -> \e[B (down) -> q (quit)
+    events = [
+      make_event('s', :s),
+      make_event('S', :unknown), make_event('E', :unknown), make_event('L', :unknown),
+      make_event('E', :unknown), make_event('C', :unknown), make_event('T', :unknown),
+      make_event(' ', :unknown), make_event('1', :unknown),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event("\e[B", :down),
+      make_event('q', :q)
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    # SQL実行結果をモック
+    allow(client).to receive(:query).and_return([{ '1' => 1 }])
+    # スクロール時に list_records が呼ばれないことを検証
+    expect(client).not_to receive(:list_records)
+
+    RubyMysqlTui.run_main_loop(client)
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 

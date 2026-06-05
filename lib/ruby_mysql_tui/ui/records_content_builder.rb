@@ -24,19 +24,29 @@ module RubyMysqlTui
           offset: state[:records_offset] || 0,
           columns_offset: state[:columns_offset] || 0,
           sort_column: state[:sort_column],
-          sort_direction: state[:sort_direction]
+          sort_direction: state[:sort_direction],
+          sql_result_mode: state[:sql_result_mode],
+          last_executed_sql: state[:last_executed_sql]
         }
       end
 
       def build_records_text(table_name:, records:, width:, options: {})
-        height = options[:height]
-        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
-        header = ContentBuilder.truncate("Table: #{table_name}#{sort_info}", width)
+        header = build_header(table_name, width, options)
         return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.none?
 
-        max_rows = height ? [0, height - 4].max : nil
+        max_rows = options[:height] ? [0, options[:height] - 4].max : nil
         table_output = create_records_table(records, width, max_rows, options).to_s
         "#{header}\n\n#{table_output}"
+      end
+
+      private_class_method def build_header(table_name, width, options)
+        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
+        text = if options[:sql_result_mode]
+                 "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
+               else
+                 "Table: #{table_name}#{sort_info}"
+               end
+        ContentBuilder.truncate(text, width)
       end
 
       def create_records_table(records, width, max_rows, options = {})
