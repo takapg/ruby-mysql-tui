@@ -18,7 +18,7 @@ module RubyMysqlTui
       end
 
       def handle_column_scroll(state, delta)
-        return state unless state[:focus] == :right && state[:records] && state[:view_mode] != :record_detail
+        return state unless can_scroll_columns?(state)
 
         total_cols = state[:records].first&.keys&.size || 0
         state[:columns_offset] = ((state[:columns_offset] || 0) + delta).clamp(0, [0, total_cols - 1].max)
@@ -77,6 +77,10 @@ module RubyMysqlTui
 
         state[:detail_offset] = ((state[:detail_offset] || 0) + delta).clamp(0, record.keys.size)
         state
+      end
+
+      private_class_method def can_scroll_columns?(state)
+        state[:focus] == :right && state[:records] && state[:view_mode] != :record_detail
       end
     end
   end
