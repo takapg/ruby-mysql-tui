@@ -8,14 +8,24 @@ module RubyMysqlTui
     def execute_sql(sql, state, client)
       return state if sql.nil? || sql.strip.empty?
 
+      history = state[:sql_history] || []
+      if history.empty? || history.last != sql
+        history << sql
+      end
+
       results = begin
         client.query(sql)
       rescue StandardError => e
         [{ 'Error' => e.message }]
       end
 
-      state.merge!(records: results, view_mode: :records, sql_mode: false)
-      state
+      state.merge!(
+        records: results,
+        view_mode: :records,
+        sql_mode: false,
+        sql_history: history,
+        sql_history_index: nil
+      )
     end
 
     def handle_sql_mode_input(reader, state, client)
@@ -29,6 +39,8 @@ module RubyMysqlTui
       case event.key.name
       when :escape then [state.merge!(sql_mode: false, sql_input: ''), false]
       when :return then handle_sql_return(state, client)
+      when :up then handle_sql_history_up(state)
+      when :down then handle_sql_history_down(state)
       else handle_sql_text_input(event, state)
       end
     end
@@ -47,6 +59,37 @@ module RubyMysqlTui
 
       new_state = execute_sql(state[:sql_input], state, client)
       [new_state.merge!(sql_input: ''), false]
+    end
+
+    def handle_sql_history_up(state)
+      history = state[:sql_history] || []
+      return [state, false] if history.empty?
+
+      index = state[:sql_history_index]
+      if index.nil?
+        state[:sql_temp_input] = state[:sql_input]
+        index = history.size - 1
+      else
+        index = [0, index - 1].max
+      end
+
+      state.merge!(sql_input: history[index], sql_history_index: index)
+      [state, false]
+    end
+
+    def handle_sql_history_down(state)
+      index = state[:sql_history_index]
+      return [state, false] if index.nil?
+
+      history = state[:sql_history] || []
+      index += 1
+
+      if index >= history.size
+        state.merge!(sql_input: state[:sql_temp_input] || '', sql_history_index: nil)
+      else
+        state.merge!(sql_input: history[index], sql_history_index: index)
+      end
+      [state, false]
     end
   end
 end
