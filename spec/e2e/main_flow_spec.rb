@@ -455,11 +455,11 @@ RSpec.describe 'E2E Table Creation' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:ask).and_return('new_e2e_table')
+    allow(prompt).to receive(:ask).and_return('new_e2e_table', '')
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
-    expect(client).to receive(:create_table).with('new_e2e_table')
+    expect(client).to receive(:create_table).with('new_e2e_table', [])
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
@@ -901,13 +901,13 @@ RSpec.describe 'E2E Table Creation - Error' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:ask).and_return('invalid_table')
+    allow(prompt).to receive(:ask).and_return('invalid_table', '')
     expect(prompt).to receive(:error).with(/エラーが発生しました: Table creation failed/)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['existing_table'])
     error = Mysql2::Error.new('Table creation failed')
-    expect(client).to receive(:create_table).with('invalid_table').and_raise(error)
+    expect(client).to receive(:create_table).with('invalid_table', []).and_raise(error)
 
     expect(RubyMysqlTui.logger).to receive(:error).with(/Table Creation Error: Table creation failed/)
 

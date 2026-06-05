@@ -12,7 +12,8 @@ module RubyMysqlTui
         name = prompt.ask('作成するテーブル名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        client.create_table(name.strip)
+        cols = prompt_for_columns(prompt)
+        client.create_table(name.strip, cols)
         state[:items] = client.list_tables(state[:selected_db])
         state
       rescue Mysql2::Error => e
@@ -37,6 +38,13 @@ module RubyMysqlTui
         state = Deletable.update_state_after_deletion(state, client.list_tables(state[:selected_db]))
         state[:status_message] = "Table '#{table_name}' deleted successfully"
         state
+      end
+
+      private_class_method def prompt_for_columns(prompt)
+        input = prompt.ask('追加するカラム名（カンマ区切り、任意）:')
+        return [] if input.nil?
+
+        input.split(',').map(&:strip).reject(&:empty?)
       end
     end
   end

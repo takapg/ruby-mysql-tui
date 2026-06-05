@@ -92,9 +92,12 @@ module RubyMysqlTui
       query("CREATE DATABASE `#{name.gsub('`', '``')}`")
     end
 
-    # テーブルを作成します（最小構成）。
-    def create_table(name)
-      query("CREATE TABLE `#{name.gsub('`', '``')}` (id INT PRIMARY KEY AUTO_INCREMENT)")
+    # テーブルを作成します。
+    def create_table(name, columns = [])
+      escaped_name = name.gsub('`', '``')
+      col_defs = ['id INT PRIMARY KEY AUTO_INCREMENT'] +
+                 columns.map { |col| "`#{col.gsub('`', '``')}` VARCHAR(255)" }
+      query("CREATE TABLE `#{escaped_name}` (#{col_defs.join(', ')})")
     end
 
     # データベースを削除します。
