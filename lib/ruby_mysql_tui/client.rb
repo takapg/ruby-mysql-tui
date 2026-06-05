@@ -57,9 +57,7 @@ module RubyMysqlTui
       escaped_table_name = table_name.gsub('`', '``')
       sql = "SELECT * FROM `#{escaped_table_name}`"
 
-      if sort_column
-        sql += " ORDER BY `#{sort_column.gsub('`', '``')}` #{sort_direction}"
-      end
+      sql += " ORDER BY `#{sort_column.gsub('`', '``')}` #{sort_direction}" if sort_column
 
       sql += " LIMIT #{limit} OFFSET #{offset}" if limit
 

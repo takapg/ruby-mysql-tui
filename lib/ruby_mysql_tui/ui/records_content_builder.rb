@@ -30,7 +30,7 @@ module RubyMysqlTui
 
       def build_records_text(table_name:, records:, width:, options: {})
         height = options[:height]
-        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ""
+        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
         header = ContentBuilder.truncate("Table: #{table_name}#{sort_info}", width)
         return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.none?
 
