@@ -18,9 +18,7 @@ module RubyMysqlTui
       state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
 
-      if state[:focus] == :left
-        return handle_filter_input(val, state) if ['/', "\e"].include?(val)
-      end
+      return handle_filter_input(val, state) if state[:focus] == :left && ['/', "\e"].include?(val)
 
       return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
       return handle_arrow_keys(val, state, client) if arrow_key?(val)

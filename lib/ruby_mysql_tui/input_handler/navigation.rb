@@ -36,14 +36,15 @@ module RubyMysqlTui
 
         db_name = items[state[:selected_index]]
         client.select_database(db_name)
-        state[:selected_db] = db_name
-        state[:view_mode] = :tables
-        state[:items] = client.list_tables(db_name)
-        state[:selected_index] = 0
-        state[:filter_query] = ''
-        state[:columns_offset] = 0
-        state[:sort_column] = nil
-        state[:sort_direction] = 'ASC'
+        apply_tables_view_state(state, db_name, client)
+      end
+
+      def apply_tables_view_state(state, db_name, client)
+        state.merge!(
+          selected_db: db_name, view_mode: :tables, items: client.list_tables(db_name),
+          selected_index: 0, filter_query: '', columns_offset: 0,
+          sort_column: nil, sort_direction: 'ASC'
+        )
       end
 
       def handle_tables_return(state, client)
@@ -65,16 +66,16 @@ module RubyMysqlTui
       def handle_back_navigation(state, client)
         return state if state[:view_mode] == :databases
 
-        state[:view_mode] = :databases
-        state[:items] = client.list_databases
-        state[:selected_index] = 0
-        state[:filter_query] = ''
-        state[:selected_db] = nil
-        state[:selected_table] = nil
-        state[:page_offset] = 0
-        state[:records_offset] = 0
-        state[:columns_offset] = 0
+        apply_databases_view_state(state, client)
         state
+      end
+
+      def apply_databases_view_state(state, client)
+        state.merge!(
+          view_mode: :databases, items: client.list_databases, selected_index: 0,
+          filter_query: '', selected_db: nil, selected_table: nil,
+          page_offset: 0, records_offset: 0, columns_offset: 0
+        )
       end
     end
   end
