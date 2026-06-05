@@ -196,35 +196,35 @@ RSpec.describe RubyMysqlTui::InputHandler do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::Navigation do
+RSpec.describe RubyMysqlTui::InputHandler::Navigation, '.handle_databases_return' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
-  describe '.handle_databases_return' do
-    it 'データベースからテーブル一覧へ遷移する際、filter_query をリセットすること' do
-      state = {
-        view_mode: :databases,
-        items: ['test_db'],
-        selected_index: 0,
-        filter_query: 'test'
-      }
-      allow(client).to receive(:select_database).with('test_db')
-      allow(client).to receive(:list_tables).with('test_db').and_return(['table1'])
+  it 'データベースからテーブル一覧へ遷移する際、filter_query をリセットすること' do
+    state = {
+      view_mode: :databases,
+      items: ['test_db'],
+      selected_index: 0,
+      filter_query: 'test'
+    }
+    allow(client).to receive(:select_database).with('test_db')
+    allow(client).to receive(:list_tables).with('test_db').and_return(['table1'])
 
-      RubyMysqlTui::InputHandler::Navigation.handle_databases_return(state, client)
-      expect(state[:filter_query]).to eq('')
-    end
+    RubyMysqlTui::InputHandler::Navigation.handle_databases_return(state, client)
+    expect(state[:filter_query]).to eq('')
   end
+end
 
-  describe '.handle_back_navigation' do
-    it 'データベース一覧に戻る際、filter_query をリセットすること' do
-      state = {
-        view_mode: :tables,
-        filter_query: 'some_filter'
-      }
-      allow(client).to receive(:list_databases).and_return(['db1', 'db2'])
+RSpec.describe RubyMysqlTui::InputHandler::Navigation, '.handle_back_navigation' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
 
-      RubyMysqlTui::InputHandler::Navigation.handle_back_navigation(state, client)
-      expect(state[:filter_query]).to eq('')
-    end
+  it 'データベース一覧に戻る際、filter_query をリセットすること' do
+    state = {
+      view_mode: :tables,
+      filter_query: 'some_filter'
+    }
+    allow(client).to receive(:list_databases).and_return(%w[db1 db2])
+
+    RubyMysqlTui::InputHandler::Navigation.handle_back_navigation(state, client)
+    expect(state[:filter_query]).to eq('')
   end
 end
