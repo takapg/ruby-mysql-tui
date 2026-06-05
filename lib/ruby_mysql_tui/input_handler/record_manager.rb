@@ -81,7 +81,6 @@ module RubyMysqlTui
         return if result.nil?
 
         column, value = result
-        return if value.nil?
 
         pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
         info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: value }
