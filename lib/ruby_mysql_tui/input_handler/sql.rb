@@ -25,11 +25,11 @@ module RubyMysqlTui
       return if sql.nil? || sql.strip.empty?
 
       history = state[:sql_history] || []
-      if history.empty? || history.last != sql
-        history << sql
-        state[:sql_history] = history
-        SqlHistoryManager.save_history(history)
-      end
+      return unless history.empty? || history.last != sql
+
+      history << sql
+      state[:sql_history] = history
+      SqlHistoryManager.save_history(history)
     end
 
     def query_mysql(sql, client)

@@ -53,6 +53,12 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.update_sql_history('   ', state)
       expect(state[:sql_history]).to eq([])
     end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.update_sql_history persistence' do
+    let(:state) { { sql_history: [] } }
 
     it 'saves history to file when a new SQL is added' do
       expect(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:save_history)
