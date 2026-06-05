@@ -78,6 +78,28 @@ module E2EFlowHelpers
     allow(prompt).to receive(:say)
   end
 
+  def detail_edit_events
+    [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'e', key: double('Key', name: :e)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
+
+  def detail_delete_events
+    [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'd', key: double('Key', name: :d)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+  end
+
   def all_records_events
     [
       double('Event', value: "\r", key: double('Key', name: :return)),
@@ -544,15 +566,7 @@ RSpec.describe 'E2E Record Detail Operations - Editing' do
 
   it 'allows editing a record from detail view' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)), # DB
-      double('Event', value: "\r", key: double('Key', name: :return)), # Table
-      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
-      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
-      double('Event', value: 'e', key: double('Key', name: :e)),       # Edit
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(reader).to receive(:read_keypress).and_return(*detail_edit_events)
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
@@ -579,15 +593,7 @@ RSpec.describe 'E2E Record Detail Operations - Deletion' do
 
   it 'allows deleting a record from detail view and returns to records view' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)), # DB
-      double('Event', value: "\r", key: double('Key', name: :return)), # Table
-      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
-      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
-      double('Event', value: 'd', key: double('Key', name: :d)),       # Delete
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(reader).to receive(:read_keypress).and_return(*detail_delete_events)
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
