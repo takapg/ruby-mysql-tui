@@ -3,6 +3,7 @@
 require_relative 'database_manager'
 require_relative 'table_manager'
 require_relative 'record_manager'
+require_relative 'record_sort_handler'
 require_relative 'navigation'
 
 module RubyMysqlTui
@@ -37,7 +38,7 @@ module RubyMysqlTui
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then handle_delete_action(state, client, prompt)
         when 'c' then RecordManager.handle_clone_record(state, client, prompt)
-        when 'o' then RecordManager.handle_sort_record(state, client, prompt)
+        when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
         else state
         end
       end
