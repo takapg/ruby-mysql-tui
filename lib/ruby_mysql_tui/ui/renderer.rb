@@ -46,8 +46,11 @@ module RubyMysqlTui
 
       def right_content(state)
         # ContentBuilder にはページ内での相対的なオフセットを渡す
-        relative_offset = (state[:records_offset] || 0) - (state[:page_offset] || 0)
-        ContentBuilder.build_right_text(state.merge(records_offset: relative_offset), @layout.right_w, @layout.main_h)
+        if state[:view_mode] == :records
+          relative_offset = (state[:records_offset] || 0) - (state[:page_offset] || 0)
+          state = state.merge(records_offset: relative_offset)
+        end
+        ContentBuilder.build_right_text(state, @layout.right_w, @layout.main_h)
       end
 
       def build_box(width, content, focused)

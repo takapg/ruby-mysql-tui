@@ -68,7 +68,7 @@ module RubyMysqlTui
         return truncate('No record selected', width) unless record
 
         rows = record.map { |k, v| "#{k}: #{v}" }
-        offset = state[:records_offset] || 0
+        offset = state[:detail_offset] || 0
         max_rows = height ? [0, height - 2].max : rows.size
 
         rows.drop(offset).take(max_rows).map do |row|

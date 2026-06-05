@@ -27,7 +27,7 @@ module RubyMysqlTui
         return if state[:records].empty?
 
         state[:view_mode] = :record_detail
-        state[:records_offset] = 0
+        state[:detail_offset] = 0
       end
 
       def handle_databases_return(state, client)
