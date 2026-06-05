@@ -62,7 +62,7 @@ module RubyMysqlTui
       end
 
       private_class_method def scroll_records(state, client, delta)
-        state = Pagination.update_records_offset(state, delta, client, current_layout)
+        Pagination.update_records_offset(state, delta, client, current_layout)
         state
       end
 
