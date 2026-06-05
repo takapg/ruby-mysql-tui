@@ -22,13 +22,16 @@ module RubyMysqlTui
           height: height,
           selected_index: state[:selected_record_index],
           offset: state[:records_offset] || 0,
-          columns_offset: state[:columns_offset] || 0
+          columns_offset: state[:columns_offset] || 0,
+          sort_column: state[:sort_column],
+          sort_direction: state[:sort_direction]
         }
       end
 
       def build_records_text(table_name:, records:, width:, options: {})
         height = options[:height]
-        header = ContentBuilder.truncate("Table: #{table_name}", width)
+        sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
+        header = ContentBuilder.truncate("Table: #{table_name}#{sort_info}", width)
         return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.none?
 
         max_rows = height ? [0, height - 4].max : nil

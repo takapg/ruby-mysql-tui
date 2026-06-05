@@ -40,17 +40,20 @@ module RubyMysqlTui
         state[:items] = client.list_tables(db_name)
         state[:selected_index] = 0
         state[:columns_offset] = 0
+        state[:sort_column] = nil
+        state[:sort_direction] = 'ASC'
       end
 
       def handle_tables_return(state, client)
         return if state[:items].empty?
 
         table_name = state[:items][state[:selected_index]]
-        state[:selected_table] = table_name
-        state[:view_mode] = :records
-        state[:page_offset] = 0
-        state[:records_offset] = 0
-        state[:columns_offset] = 0
+        reset_record_state(state, table_name, client)
+      end
+
+      def reset_record_state(state, table_name, client)
+        state.merge!(selected_table: table_name, view_mode: :records, page_offset: 0,
+                     records_offset: 0, columns_offset: 0, sort_column: nil, sort_direction: 'ASC')
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
       end

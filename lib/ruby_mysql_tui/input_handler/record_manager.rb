@@ -48,14 +48,12 @@ module RubyMysqlTui
       def self.handle_create_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
-        columns = client.list_columns(state[:selected_table])
-        structure = client.list_table_structure(state[:selected_table])
-        data = RecordPrompt.prompt_for_record_data(columns, prompt, {}, structure)
+        cols = client.list_columns(state[:selected_table])
+        struct = client.list_table_structure(state[:selected_table])
+        data = RecordPrompt.prompt_for_record_data(cols, prompt, {}, struct)
         return state if data.nil? || data.empty?
 
-        RecordRetryHandler.execute_insert_with_retry(
-          state, client, prompt, data, { columns: columns, structure: structure }
-        )
+        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, { columns: cols, structure: struct })
         state
       end
 
@@ -109,12 +107,15 @@ module RubyMysqlTui
       end
 
       def self.apply_all_records_mode(state, client)
+        opts = InputHandler.sort_options(state)
         if state[:all_records_mode]
-          state[:records] = client.list_records(state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT)
+          state[:records] = client.list_records(
+            state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT, **opts
+          )
           state[:page_offset] = 0
         else
           state[:page_offset] = state[:records_offset] || 0
-          state[:records] = client.list_records(state[:selected_table], state[:page_offset])
+          state[:records] = client.list_records(state[:selected_table], state[:page_offset], **opts)
         end
       end
     end
