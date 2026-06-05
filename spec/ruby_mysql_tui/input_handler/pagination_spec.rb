@@ -68,7 +68,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_prev_page' do
     end
   end
 
-  RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_page_if_needed guard' do
+  describe 'fetch_page_if_needed guard' do
     let(:client) { instance_double('RubyMysqlTui::Client') }
     let(:layout) { instance_double('RubyMysqlTui::UI::Layout', main_h: 10) }
     let(:state) { { sql_result_mode: true, records_offset: 15, records: [], page_offset: 0 } }
