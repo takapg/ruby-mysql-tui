@@ -163,13 +163,14 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(state[:items]).to eq(['t1'])
     end
 
-    it 'refresh_items でエラーが発生してもクラッシュせず、空のリストを返す' do
+    it 'refresh_items でエラーが発生してもクラッシュせず、現在のアイテムリストを維持する' do
       state[:selected_database] = 'db1'
+      state[:items] = ['t1']
       allow(client).to receive(:list_tables).with('db1').and_raise(StandardError.new('DB gone'))
       expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to refresh items: DB gone/)
 
       described_class.execute_sql('DROP DATABASE db1', state, client)
-      expect(state[:items]).to eq([])
+      expect(state[:items]).to eq(['t1'])
     end
   end
 end

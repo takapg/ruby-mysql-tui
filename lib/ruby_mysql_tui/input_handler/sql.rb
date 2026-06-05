@@ -34,7 +34,7 @@ module RubyMysqlTui
       end
     rescue StandardError => e
       RubyMysqlTui.logger.error("Failed to refresh items: #{e.message}")
-      []
+      state[:items]
     end
 
     def update_sql_history(sql, state)
