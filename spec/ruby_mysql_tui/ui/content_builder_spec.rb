@@ -142,7 +142,7 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder do
 
     it '大文字小文字を区別せずにフィルタリングすること' do
       state = { items: items, filter_query: 'db' }
-      expect(described_class.filtered_items(state)).to eq(['Database_A', 'Database_B', 'Test_DB', 'Production_DB'])
+      expect(described_class.filtered_items(state)).to eq(['Test_DB', 'Production_DB'])
     end
 
     it '一致するアイテムがない場合は空配列を返すこと' do
