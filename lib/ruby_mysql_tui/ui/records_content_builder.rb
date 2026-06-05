@@ -33,7 +33,11 @@ module RubyMysqlTui
       def build_records_text(table_name:, records:, width:, options: {})
         height = options[:height]
         sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
-        header_text = options[:sql_result_mode] ? "SQL Result: #{options[:last_executed_sql]}#{sort_info}" : "Table: #{table_name}#{sort_info}"
+        header_text = if options[:sql_result_mode]
+                       "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
+                     else
+                       "Table: #{table_name}#{sort_info}"
+                     end
         header = ContentBuilder.truncate(header_text, width)
         return "#{header}\n\n#{ContentBuilder.truncate('No records found', width)}" if records.nil? || records.none?
 
