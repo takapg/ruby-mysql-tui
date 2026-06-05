@@ -561,6 +561,9 @@ RSpec.describe 'E2E SQL History' do
     ]
     allow(reader).to receive(:read_keypress).and_return(*events)
 
+    # 初期化時のクエリ実行を避けるためモックを設定
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+
     # 2回のクエリ実行を期待
     expect(client).to receive(:query).with('SELECT 1').twice.and_return([{ '1' => 1 }])
     
