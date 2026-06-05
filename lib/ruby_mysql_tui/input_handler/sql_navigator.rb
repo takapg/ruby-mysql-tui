@@ -4,7 +4,9 @@ module RubyMysqlTui
   module InputHandler
     # SqlNavigator は SQL 履歴のナビゲーション（上下移動）を管理します。
     module SqlNavigator
+      # rubocop:disable Style/ModuleFunction
       extend self
+      # rubocop:enable Style/ModuleFunction
 
       def handle_sql_history_up(state)
         history = state[:sql_history] || []

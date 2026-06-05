@@ -133,7 +133,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
-  describe '.execute_sql' do
+  describe '.execute_sql (basic)' do
     let(:client) { double('Client', query: [], list_databases: ['db1'], list_tables: ['t1']) }
     let(:state) { { sql_history: [], sql_history_index: 1 } }
 
@@ -148,6 +148,13 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(client).to have_received(:list_databases)
       expect(state[:items]).to eq(['db1'])
     end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.execute_sql (refresh)' do
+    let(:client) { double('Client', query: [], list_databases: ['db1'], list_tables: ['t1']) }
+    let(:state) { { sql_history: [], sql_history_index: 1 } }
 
     it 'refreshes items when a database is selected' do
       state[:selected_database] = 'db1'

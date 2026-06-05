@@ -7,6 +7,7 @@ module RubyMysqlTui
   # InputHandler の SQL モードに関する処理を定義します。
   module InputHandler
     extend SqlNavigator
+
     module_function
 
     def execute_sql(sql, state, client)
@@ -91,6 +92,5 @@ module RubyMysqlTui
       new_state = execute_sql(state[:sql_input], state, client)
       [new_state.merge!(sql_input: ''), false]
     end
-
   end
 end
