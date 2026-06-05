@@ -152,7 +152,7 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
   describe '.load_history' do
     it 'reads history from the file' do
       history = ['SELECT 1', 'SELECT 2']
-      File.write(temp_file.path, history.join("\n") + "\n")
+      File.write(temp_file.path, "#{history.join("\n")}\n")
       expect(described_class.load_history).to eq(history)
     end
 
@@ -163,6 +163,14 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
       expect(described_class.load_history).to eq([])
     end
   end
+
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  let(:temp_file) { Tempfile.new('ruby_mysql_tui_history_test') }
+  before { stub_const('RubyMysqlTui::InputHandler::SqlHistoryManager::HISTORY_FILE', temp_file.path) }
+  after { temp_file.unlink }
 
   describe '.save_history' do
     it 'writes history to the file' do
