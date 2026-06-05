@@ -347,7 +347,7 @@ RSpec.describe 'E2E Record Creation - NULL value' do
     allow(client).to receive(:list_records).and_return([])
     allow(client).to receive(:list_columns).and_return(['nullable_col'])
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'nullable_col', 'Null' => 'YES' }])
-    
+
     expect(client).to receive(:insert_record).with('test_table', { 'nullable_col' => nil })
 
     RubyMysqlTui.run_main_loop(client)
