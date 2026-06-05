@@ -535,6 +535,43 @@ RSpec.describe 'E2E Record Cloning' do
   end
 end
 
+RSpec.describe 'E2E SQL History' do
+  include_context 'e2e setup'
+
+  it 'allows recalling and executing SQL from history' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    
+    # 1. SQLモードへ(s) -> 'SELECT 1'入力 -> 実行(\r)
+    # 2. 再度SQLモードへ(s) -> 上キー(\e[A) -> 実行(\r) -> 終了(q)
+    events = [
+      double('Event', value: 's', key: double('Key', name: :s)),
+      double('Event', value: 'S', key: double('Key', name: :unknown)),
+      double('Event', value: 'E', key: double('Key', name: :unknown)),
+      double('Event', value: 'L', key: double('Key', name: :unknown)),
+      double('Event', value: 'E', key: double('Key', name: :unknown)),
+      double('Event', value: 'C', key: double('Key', name: :unknown)),
+      double('Event', value: 'T', key: double('Key', name: :unknown)),
+      double('Event', value: ' ', key: double('Key', name: :unknown)),
+      double('Event', value: '1', key: double('Key', name: :unknown)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 's', key: double('Key', name: :s)),
+      double('Event', value: "\e[A", key: double('Key', name: :up)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    # 2回のクエリ実行を期待
+    expect(client).to receive(:query).with('SELECT 1').twice.and_return([{ '1' => 1 }])
+    
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    
+    # 履歴に保存されていることを検証
+    expect(states.last[:sql_history]).to include('SELECT 1')
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 

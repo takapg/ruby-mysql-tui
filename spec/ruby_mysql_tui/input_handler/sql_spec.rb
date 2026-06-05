@@ -25,4 +25,72 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(new_state[:sql_input]).to eq('SELECT *')
     end
   end
+
+  describe '.update_sql_history' do
+    let(:state) { { sql_history: [] } }
+
+    it 'adds SQL to history when empty' do
+      described_class.update_sql_history('SELECT 1', state)
+      expect(state[:sql_history]).to eq(['SELECT 1'])
+    end
+
+    it 'adds SQL to history when different from last' do
+      state[:sql_history] = ['SELECT 1']
+      described_class.update_sql_history('SELECT 2', state)
+      expect(state[:sql_history]).to eq(['SELECT 1', 'SELECT 2'])
+    end
+
+    it 'does not add duplicate SQL to history' do
+      state[:sql_history] = ['SELECT 1']
+      described_class.update_sql_history('SELECT 1', state)
+      expect(state[:sql_history]).to eq(['SELECT 1'])
+    end
+  end
+
+  describe '.handle_sql_history_up' do
+    let(:state) { { sql_history: ['SQL1', 'SQL2'], sql_input: 'current', sql_history_index: nil } }
+
+    it 'sets the latest history and saves current input' do
+      new_state, _ = described_class.handle_sql_history_up(state)
+      expect(new_state[:sql_input]).to eq('SQL2')
+      expect(new_state[:sql_history_index]).to eq(1)
+      expect(new_state[:sql_temp_input]).to eq('current')
+    end
+
+    it 'decrements index when already browsing history' do
+      state[:sql_history_index] = 1
+      new_state, _ = described_class.handle_sql_history_up(state)
+      expect(new_state[:sql_input]).to eq('SQL1')
+      expect(new_state[:sql_history_index]).to eq(0)
+    end
+
+    it 'does nothing when history is empty' do
+      state[:sql_history] = []
+      new_state, _ = described_class.handle_sql_history_up(state)
+      expect(new_state[:sql_input]).to eq('current')
+    end
+  end
+
+  describe '.handle_sql_history_down' do
+    let(:state) { { sql_history: ['SQL1', 'SQL2'], sql_input: 'SQL1', sql_history_index: 0, sql_temp_input: 'current' } }
+
+    it 'increments index' do
+      new_state, _ = described_class.handle_sql_history_down(state)
+      expect(new_state[:sql_input]).to eq('SQL2')
+      expect(new_state[:sql_history_index]).to eq(1)
+    end
+
+    it 'restores temp input when reaching the end of history' do
+      state[:sql_history_index] = 1
+      new_state, _ = described_class.handle_sql_history_down(state)
+      expect(new_state[:sql_input]).to eq('current')
+      expect(new_state[:sql_history_index]).to be_nil
+    end
+
+    it 'does nothing when index is nil' do
+      state[:sql_history_index] = nil
+      new_state, _ = described_class.handle_sql_history_down(state)
+      expect(new_state[:sql_input]).to eq('SQL1')
+    end
+  end
 end
