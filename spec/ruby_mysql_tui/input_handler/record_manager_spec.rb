@@ -1,5 +1,38 @@
 # frozen_string_literal: true
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_clone_record' do
+  include_context 'record manager setup'
+
+  it 'clones a record by excluding the primary key' do
+    Timeout.timeout(10) do
+      state[:selected_table] = 'users'
+      state[:records] = [{ 'id' => '1', 'name' => 'Alice' }]
+      state[:selected_record_index] = 0
+      allow(client).to receive(:primary_key_for).with('users').and_return('id')
+      allow(client).to receive(:list_columns).with('users').and_return(['id', 'name'])
+      allow(client).to receive(:list_table_structure).and_return([])
+
+      expect(RecordPrompt).to receive(:prompt_for_record_data)
+        .with(['id', 'name'], prompt, { 'name' => 'Alice' }, [])
+        .and_return({ 'id' => '2', 'name' => 'Alice Clone' })
+
+      expect(RecordRetryHandler).to receive(:execute_insert_with_retry)
+        .with(state, client, prompt, { 'id' => '2', 'name' => 'Alice Clone' }, { columns: ['id', 'name'], structure: [] })
+
+      described_class.handle_clone_record(state, client, prompt)
+    end
+  end
+
+  it 'returns state immediately if record is not found' do
+    Timeout.timeout(10) do
+      state[:records] = []
+      state[:selected_record_index] = 0
+      expect(client).not_to receive(:primary_key_for)
+      expect(described_class.handle_clone_record(state, client, prompt)).to eq(state)
+    end
+  end
+end
+
 require 'spec_helper'
 require 'timeout'
 require 'ruby_mysql_tui/input_handler/record_manager'

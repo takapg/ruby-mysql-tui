@@ -1,5 +1,38 @@
 # frozen_string_literal: true
 
+RSpec.describe 'E2E Record Clone' do
+  include_context 'e2e setup'
+
+  it 'clones a record when c is pressed' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'c', key: double('Key', name: :c)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('2', 'Alice')
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(client).to receive(:list_columns).and_return(['id', 'name'])
+    allow(client).to receive(:list_table_structure).and_return([])
+
+    expect(client).to receive(:insert_record).with('test_table', { 'id' => '2', 'name' => 'Alice' })
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 require 'spec_helper'
 require_relative 'e2e_helper'
 require 'ruby_mysql_tui'

@@ -14,7 +14,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c' then handle_record_action(val, state, client)
         end
       end
 
@@ -36,6 +36,7 @@ module RubyMysqlTui
         when 'n' then handle_new_record_action(state, client, prompt)
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then handle_delete_action(state, client, prompt)
+        when 'c' then RecordManager.handle_clone_record(state, client, prompt)
         else state
         end
       end

@@ -49,6 +49,30 @@ module RubyMysqlTui
         state
       end
 
+      def self.handle_clone_record(state, client, prompt)
+        return state unless can_manage_record?(state)
+
+        record = state[:records][state[:selected_record_index]]
+        return state unless record
+
+        prepare_clone_and_insert(state, client, prompt, record)
+        state
+      end
+
+      def self.prepare_clone_and_insert(state, client, prompt, record)
+        pk_column = client.primary_key_for(state[:selected_table])
+        columns = client.list_columns(state[:selected_table])
+        structure = client.list_table_structure(state[:selected_table])
+        default_data = record.reject { |k, _| k == pk_column }
+
+        data = RecordPrompt.prompt_for_record_data(columns, prompt, default_data, structure)
+        return if data.nil? || data.empty?
+
+        RecordRetryHandler.execute_insert_with_retry(
+          state, client, prompt, data, { columns: columns, structure: structure }
+        )
+      end
+
       def self.can_manage_record?(state)
         state[:focus] == :right && state[:view_mode] == :records && state[:records]
       end
