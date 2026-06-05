@@ -40,6 +40,8 @@ module RubyMysqlTui
         state[:items] = client.list_tables(db_name)
         state[:selected_index] = 0
         state[:columns_offset] = 0
+        state[:sort_column] = nil
+        state[:sort_direction] = 'ASC'
       end
 
       def handle_tables_return(state, client)
@@ -51,6 +53,8 @@ module RubyMysqlTui
         state[:page_offset] = 0
         state[:records_offset] = 0
         state[:columns_offset] = 0
+        state[:sort_column] = nil
+        state[:sort_direction] = 'ASC'
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
       end

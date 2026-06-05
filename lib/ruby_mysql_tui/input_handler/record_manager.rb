@@ -110,12 +110,41 @@ module RubyMysqlTui
 
       def self.apply_all_records_mode(state, client)
         if state[:all_records_mode]
-          state[:records] = client.list_records(state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT)
+          state[:records] = client.list_records(
+            state[:selected_table], 0,
+            limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT,
+            sort_column: state[:sort_column], sort_direction: state[:sort_direction]
+          )
           state[:page_offset] = 0
         else
           state[:page_offset] = state[:records_offset] || 0
-          state[:records] = client.list_records(state[:selected_table], state[:page_offset])
+          state[:records] = client.list_records(
+            state[:selected_table], state[:page_offset],
+            sort_column: state[:sort_column], sort_direction: state[:sort_direction]
+          )
         end
+      end
+
+      def self.handle_sort_record(state, client, prompt)
+        return state unless can_manage_record?(state)
+
+        cols = client.list_columns(state[:selected_table])
+        col = prompt.select('ソートするカラムを選択してください:', cols)
+        return state if col.nil?
+
+        dir = prompt.select('ソート方向を選択してください:', %w[ASC DESC])
+        update_sort_state(state, client, col, dir)
+      end
+
+      def self.update_sort_state(state, client, col, dir)
+        state[:sort_column] = col
+        state[:sort_direction] = dir
+        state[:page_offset] = 0
+        state[:records_offset] = 0
+        state[:records] = client.list_records(
+          state[:selected_table], 0, sort_column: col, sort_direction: dir
+        )
+        state
       end
     end
   end
