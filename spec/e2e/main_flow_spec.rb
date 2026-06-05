@@ -503,7 +503,7 @@ RSpec.describe 'E2E Record Cloning' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
     allow(client).to receive(:primary_key_for).and_return('id')
-    allow(client).to receive(:list_columns).and_return(['id', 'name'])
+    allow(client).to receive(:list_columns).and_return(%w[id name])
     allow(client).to receive(:list_table_structure).and_return([])
 
     expect(client).to receive(:insert_record).with('test_table', { 'id' => '2', 'name' => 'Alice-Cloned' })

@@ -246,9 +246,8 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
 
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
-    expect { renderer.render(client, state) }.to output(
-      /\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| \[d\] Delete \| \[c\] Clone \| \[a\] All Records/
-    ).to_stdout
+    regex = /\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| \[d\] Delete \| \[c\] Clone \| \[a\] All Records/
+    expect { renderer.render(client, state) }.to output(regex).to_stdout
   end
 
   it 'displays ALL RECORDS MODE prefix and changes [a] label when all_records_mode is true' do
