@@ -22,6 +22,7 @@ module RubyMysqlTui
 
       def handle_record_navigation(val, state)
         return state unless state[:view_mode] == :record_detail
+
         records = state[:records] || []
         return state if records.empty?
 
