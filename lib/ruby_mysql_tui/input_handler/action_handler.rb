@@ -59,7 +59,7 @@ module RubyMysqlTui
       end
 
       def handle_rename_action(state, client, prompt)
-        if state[:view_mode] == :tables
+        if state[:focus] == :left && state[:view_mode] == :tables
           TableManager.handle_rename_table(state, client, prompt)
         else
           state
