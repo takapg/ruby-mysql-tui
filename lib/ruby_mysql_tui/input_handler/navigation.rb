@@ -31,29 +31,33 @@ module RubyMysqlTui
       end
 
       def handle_databases_return(state, client)
-        return if state[:items].empty?
+        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        return if items.empty?
 
-        db_name = state[:items][state[:selected_index]]
+        db_name = items[state[:selected_index]]
         client.select_database(db_name)
         state[:selected_db] = db_name
         state[:view_mode] = :tables
         state[:items] = client.list_tables(db_name)
         state[:selected_index] = 0
+        state[:filter_query] = ''
         state[:columns_offset] = 0
         state[:sort_column] = nil
         state[:sort_direction] = 'ASC'
       end
 
       def handle_tables_return(state, client)
-        return if state[:items].empty?
+        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        return if items.empty?
 
-        table_name = state[:items][state[:selected_index]]
+        table_name = items[state[:selected_index]]
         reset_record_state(state, table_name, client)
       end
 
       def reset_record_state(state, table_name, client)
         state.merge!(selected_table: table_name, view_mode: :records, page_offset: 0,
-                     records_offset: 0, columns_offset: 0, sort_column: nil, sort_direction: 'ASC')
+                     records_offset: 0, columns_offset: 0, sort_column: nil, sort_direction: 'ASC',
+                     filter_query: '')
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
       end
@@ -64,6 +68,7 @@ module RubyMysqlTui
         state[:view_mode] = :databases
         state[:items] = client.list_databases
         state[:selected_index] = 0
+        state[:filter_query] = ''
         state[:selected_db] = nil
         state[:selected_table] = nil
         state[:page_offset] = 0

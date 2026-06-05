@@ -18,11 +18,35 @@ module RubyMysqlTui
       state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
 
+      if state[:focus] == :left
+        return handle_filter_input(val, state) if ['/', "\e"].include?(val)
+      end
+
       return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
       return handle_arrow_keys(val, state, client) if arrow_key?(val)
 
       ActionHandler.handle_action_key(val, state, client) ||
         handle_key_input(extract_key_name(event), state, client)
+    end
+
+    def self.filtered_items(state)
+      items = state[:items] || []
+      query = state[:filter_query]
+      return items if query.nil? || query.empty?
+
+      items.select { |item| item.downcase.include?(query.downcase) }
+    end
+
+    private_class_method def handle_filter_input(val, state)
+      if val == '/'
+        prompt = TTY::Prompt.new
+        query = prompt.ask('フィルターキーワードを入力:')
+        state.merge(filter_query: query || '', selected_index: 0)
+      elsif val == "\e" && state[:filter_query] && !state[:filter_query].empty?
+        state.merge(filter_query: '', selected_index: 0)
+      else
+        state
+      end
     end
 
     private_class_method def detail_back_pressed?(val, state)

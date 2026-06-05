@@ -41,7 +41,8 @@ module RubyMysqlTui
       end
 
       def left_content(state)
-        ContentBuilder.build_list_text(state[:items], state[:selected_index], @layout.left_w, @layout.main_h)
+        items = RubyMysqlTui::InputHandler.filtered_items(state)
+        ContentBuilder.build_list_text(items, state[:selected_index], @layout.left_w, @layout.main_h)
       end
 
       def right_content(state)
@@ -89,7 +90,9 @@ module RubyMysqlTui
       end
 
       def footer_mode_text(state)
-        state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
+        text = state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
+        text += "[Filter: #{state[:filter_query]}] " if state[:filter_query] && !state[:filter_query].empty?
+        text
       end
 
       def build_footer_guides(state)
