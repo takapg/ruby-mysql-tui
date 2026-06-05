@@ -72,7 +72,7 @@ module RubyMysqlTui
       end
 
       def self.can_manage_record?(state)
-        state[:focus] == :right && [:records, :record_detail].include?(state[:view_mode]) && state[:records]
+        state[:focus] == :right && [:records, :record_detail].include?(state[:view_mode]) && !state[:records].nil?
       end
 
       def self.edit_and_update(state, client, record, pk_column, prompt)
