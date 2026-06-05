@@ -27,9 +27,9 @@ module RubyMysqlTui
 
       def handle_scroll(state, client, delta)
         if state[:focus] == :left
-          handle_left_scroll(state, delta)
+          state = handle_left_scroll(state, delta)
         elsif state[:focus] == :right
-          handle_right_scroll(state, client, delta)
+          state = handle_right_scroll(state, client, delta)
         end
         state
       end
@@ -46,33 +46,37 @@ module RubyMysqlTui
 
       private_class_method def handle_left_scroll(state, delta)
         update_selected_index(state, delta) unless state[:items].empty?
+        state
       end
 
       private_class_method def handle_right_scroll(state, client, delta)
-        return unless state[:records]
+        return state unless state[:records]
 
         case state[:view_mode]
         when :records
-          scroll_records(state, client, delta) if state[:selected_table]
-        when :table_structure then scroll_structure(state, delta)
-        when :record_detail then scroll_detail(state, delta)
+          state = scroll_records(state, client, delta) if state[:selected_table]
+        when :table_structure then state = scroll_structure(state, delta)
+        when :record_detail then state = scroll_detail(state, delta)
         end
         state
       end
 
       private_class_method def scroll_records(state, client, delta)
-        Pagination.update_records_offset(state, delta, client, current_layout)
+        state = Pagination.update_records_offset(state, delta, client, current_layout)
+        state
       end
 
       private_class_method def scroll_structure(state, delta)
         state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
+        state
       end
 
       private_class_method def scroll_detail(state, delta)
         record = state[:records][state[:selected_record_index]]
-        return unless record
+        return state unless record
 
         state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, record.keys.size)
+        state
       end
     end
   end
