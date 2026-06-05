@@ -3,7 +3,7 @@
 require 'spec_helper'
 require_relative '../../../lib/ruby_mysql_tui/input_handler/table_manager'
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (success)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { items: %w[t1 t2], selected_index: 0, selected_db: 'test_db' } }
@@ -25,6 +25,12 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table' 
     result = described_class.handle_create_table(state, client, prompt)
     expect(result[:items]).to eq(%w[t1 t2 new_table])
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (edge cases)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { items: %w[t1 t2], selected_index: 0, selected_db: 'test_db' } }
 
   it 'returns state unchanged when name is empty' do
     allow(prompt).to receive(:ask).and_return('  ')

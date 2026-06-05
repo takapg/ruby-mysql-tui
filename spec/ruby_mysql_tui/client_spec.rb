@@ -297,7 +297,7 @@ RSpec.describe RubyMysqlTui::Client, '#create_table' do
 
   it 'creates a table with custom columns' do
     table_name = 'test_table'
-    columns = ['name', 'email']
+    columns = %w[name email]
     sql = "CREATE TABLE `#{table_name}` (id INT PRIMARY KEY AUTO_INCREMENT, `name` VARCHAR(255), `email` VARCHAR(255))"
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name, columns)

@@ -43,6 +43,7 @@ module RubyMysqlTui
       private_class_method def prompt_for_columns(prompt)
         input = prompt.ask('追加するカラム名（カンマ区切り、任意）:')
         return [] if input.nil?
+
         input.split(',').map(&:strip).reject(&:empty?)
       end
     end

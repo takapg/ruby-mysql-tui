@@ -95,7 +95,7 @@ module RubyMysqlTui
     # テーブルを作成します。
     def create_table(name, columns = [])
       escaped_name = name.gsub('`', '``')
-      col_defs = ["id INT PRIMARY KEY AUTO_INCREMENT"]
+      col_defs = ['id INT PRIMARY KEY AUTO_INCREMENT']
       columns.each { |col| col_defs << "`#{col.gsub('`', '``')}` VARCHAR(255)" }
       query("CREATE TABLE `#{escaped_name}` (#{col_defs.join(', ')})")
     end
