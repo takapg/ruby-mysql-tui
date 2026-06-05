@@ -22,14 +22,12 @@ module E2EHelper
 
   def self.with_mysql_retry(context)
     5.times do |i|
-      begin
-        client = create_client
-        return yield client
-      rescue Mysql2::Error => e
-        handle_mysql_retry(e, i + 1, context)
-      ensure
-        client&.close
-      end
+      client = create_client
+      return yield client
+    rescue Mysql2::Error => e
+      handle_mysql_retry(e, i + 1, context)
+    ensure
+      client&.close
     end
   end
 
