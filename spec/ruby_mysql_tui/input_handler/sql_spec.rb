@@ -47,6 +47,12 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.update_sql_history('SELECT 1', state)
       expect(state[:sql_history]).to eq(['SELECT 1'])
     end
+
+    it 'does not add empty or blank SQL to history' do
+      described_class.update_sql_history('', state)
+      described_class.update_sql_history('   ', state)
+      expect(state[:sql_history]).to eq([])
+    end
   end
 end
 

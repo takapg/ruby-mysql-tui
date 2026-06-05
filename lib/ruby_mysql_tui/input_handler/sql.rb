@@ -20,6 +20,8 @@ module RubyMysqlTui
     end
 
     def update_sql_history(sql, state)
+      return if sql.nil? || sql.strip.empty?
+
       history = state[:sql_history] || []
       history << sql if history.empty? || history.last != sql
       state[:sql_history] = history
