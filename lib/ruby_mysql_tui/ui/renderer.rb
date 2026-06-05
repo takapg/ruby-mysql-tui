@@ -99,6 +99,7 @@ module RubyMysqlTui
         guides = ['[q] Quit', '[Tab] Switch Focus']
         if state[:focus] == :left
           guides += ['[b] Back', '[↑/↓] Move', '[Enter] Select']
+          guides << '[r] Rename' if state[:view_mode] == :tables
         elsif state[:focus] == :right
           guides += build_right_pane_guides(state)
         end

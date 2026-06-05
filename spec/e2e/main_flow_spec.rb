@@ -661,6 +661,33 @@ RSpec.describe 'E2E SQL Result Scrolling' do
   end
 end
 
+RSpec.describe 'E2E Table Rename' do
+  include_context 'e2e setup'
+
+  it 'renames a table when r is pressed in table view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: 'r', key: double('Key', name: :r)),       # Rename
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('renamed_table')
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['old_table'])
+    expect(client).to receive(:rename_table).with('old_table', 'renamed_table')
+    expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_return(['renamed_table'])
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Table 'old_table' renamed to 'renamed_table' successfully" }).to be true
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 

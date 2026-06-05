@@ -349,3 +349,15 @@ RSpec.describe RubyMysqlTui::Client, '#update_record' do
     client.update_record(table_with_tick, pk_col, pk_val, col_with_tick, new_val)
   end
 end
+
+RSpec.describe RubyMysqlTui::Client, '#rename_table' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes RENAME TABLE and escapes backticks' do
+    old_name = 'old`table'
+    new_name = 'new`table'
+    expect(mock_mysql_client).to receive(:query).with('RENAME TABLE `old``table` TO `new``table`')
+    client.rename_table(old_name, new_name)
+  end
+end
