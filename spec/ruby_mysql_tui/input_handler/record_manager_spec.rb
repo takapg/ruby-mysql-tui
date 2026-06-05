@@ -21,7 +21,8 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_clone_record 
       # PK 'id' は除外され、name と email がデフォルト値として渡されることを検証
       expect(prompt).to receive(:ask).with(/id/, anything).and_return('2')
       expect(prompt).to receive(:ask).with(/name/, hash_including(default: 'Alice')).and_return('Bob')
-      expect(prompt).to receive(:ask).with(/email/, hash_including(default: 'alice@example.com'))
+      expect(prompt).to receive(:ask)
+        .with(/email/, hash_including(default: 'alice@example.com'))
         .and_return('bob@example.com')
 
       expect(client).to receive(:insert_record).with(
