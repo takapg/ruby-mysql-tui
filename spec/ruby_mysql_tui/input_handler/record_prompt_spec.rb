@@ -193,6 +193,14 @@ end
 RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data type' do
   let(:prompt) { instance_double('TTY::Prompt') }
 
+  it 'returns nil for nullable columns when input is empty' do
+    columns = %w[email]
+    structure = [{ 'Field' => 'email', 'Null' => 'YES' }]
+    expect(prompt).to receive(:ask).and_return('')
+    result = described_class.prompt_for_record_data(columns, prompt, {}, structure)
+    expect(result['email']).to be_nil
+  end
+
   it 'applies type validation for numeric columns' do
     columns = %w[age]
     structure = [{ 'Field' => 'age', 'Type' => 'int(11)', 'Null' => 'NO' }]

@@ -15,12 +15,13 @@ module RubyMysqlTui
 
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
-          val = prompt.ask("値を入力してください (#{col}):", default: default_data[col]) do |question|
+          hint = required_column?(col, structure) ? "" : " (Enter for NULL)"
+          val = prompt.ask("値を入力してください (#{col})#{hint}:", default: default_data[col]) do |question|
             apply_validations(question, col, structure)
           end
           return nil if val.nil?
 
-          data[col] = val
+          data[col] = process_input_value(val, col, structure)
         end
       end
 
@@ -31,10 +32,11 @@ module RubyMysqlTui
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
         return nil if column.nil?
 
-        value = prompt.ask("新しい値を入力してください (#{column}):", default: record[column]) do |question|
+        hint = required_column?(column, structure) ? "" : " (Enter for NULL)"
+        value = prompt.ask("新しい値を入力してください (#{column})#{hint}:", default: record[column]) do |question|
           apply_validations(question, column, structure)
         end
-        [column, value]
+        [column, process_input_value(value, column, structure)]
       end
 
       def get_editable_columns(record, prompt, pk_column, structure = [])
@@ -73,7 +75,12 @@ module RubyMysqlTui
         warn_no_editable_cols(prompt)
         nil
       end
-      private_class_method :handle_missing_pk, :handle_no_editable_cols
+
+      def process_input_value(value, column, structure)
+        return nil if value.to_s.strip.empty? && !required_column?(column, structure)
+        value
+      end
+      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value
 
       def apply_validations(question, column, structure)
         is_required = required_column?(column, structure)

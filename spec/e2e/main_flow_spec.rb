@@ -322,6 +322,39 @@ RSpec.describe 'E2E Record Edit - NOT NULL Validation' do
   end
 end
 
+RSpec.describe 'E2E Record Creation - NULL value' do
+  include_context 'e2e setup'
+
+  it 'inserts NULL when empty input is provided for nullable column' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    # Nullableなカラムに対して空文字を返す
+    allow(prompt).to receive(:ask).and_return('')
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([])
+    allow(client).to receive(:list_columns).and_return(['nullable_col'])
+    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'nullable_col', 'Null' => 'YES' }])
+    
+    expect(client).to receive(:insert_record).with('test_table', { 'nullable_col' => nil })
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :records }).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Creation - Type Validation' do
   include_context 'e2e setup'
 
