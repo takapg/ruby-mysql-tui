@@ -164,24 +164,26 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     let(:client) { double('Client', connection: connection) }
 
     it 'returns results when client.query returns data' do
-      allow(client).to receive(:query).and_return([{'id' => 1}])
-      expect(described_class.query_mysql('SELECT 1', client)).to eq([{'id' => 1}])
+      allow(client).to receive(:query).and_return([{ 'id' => 1 }])
+      expect(described_class.query_mysql('SELECT 1', client)).to eq([{ 'id' => 1 }])
     end
 
     it 'returns affected rows message when client.query returns nil' do
       allow(client).to receive(:query).and_return(nil)
-      expect(described_class.query_mysql('UPDATE users SET name="Bob"', client)).to eq([{'Result' => 'Query OK, 1 rows affected'}])
+      expect(described_class.query_mysql('UPDATE users SET name="Bob"', client))
+        .to eq([{ 'Result' => 'Query OK, 1 rows affected' }])
     end
 
     it 'includes last_id in message when present' do
       allow(client).to receive(:query).and_return(nil)
       allow(connection).to receive(:last_id).and_return(100)
-      expect(described_class.query_mysql('INSERT INTO users...', client)).to eq([{'Result' => 'Query OK, 1 rows affected (last id: 100)'}])
+      expect(described_class.query_mysql('INSERT INTO users...', client))
+        .to eq([{ 'Result' => 'Query OK, 1 rows affected (last id: 100)' }])
     end
 
     it 'returns error message when an exception occurs' do
       allow(client).to receive(:query).and_raise(StandardError.new('SQL Error'))
-      expect(described_class.query_mysql('INVALID SQL', client)).to eq([{'Error' => 'SQL Error'}])
+      expect(described_class.query_mysql('INVALID SQL', client)).to eq([{ 'Error' => 'SQL Error' }])
     end
   end
 end
