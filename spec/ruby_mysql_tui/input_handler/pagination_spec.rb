@@ -15,7 +15,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_next_page success'
     allow(client).to receive(:list_records).and_return(mock_result)
 
     expect do
-      described_class.fetch_next_page(state, client, 0, 0)
+      described_class.fetch_next_page(state, client, page_offset: 0, size: 0)
     end.not_to raise_error
 
     expect(state[:records]).to eq([{ 'id' => 1 }])
@@ -34,7 +34,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_next_page empty' d
 
     allow(client).to receive(:list_records).and_return(mock_result)
 
-    described_class.fetch_next_page(state, client, 0, 10)
+    described_class.fetch_next_page(state, client, page_offset: 0, size: 10)
     expect(state[:records_offset]).to eq(9)
   end
 end
