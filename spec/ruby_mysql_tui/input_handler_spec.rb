@@ -72,6 +72,61 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (next)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'increments selected_record_index and resets detail_offset when "]" is pressed' do
+    state = {
+      view_mode: :record_detail,
+      selected_record_index: 0,
+      records: [{}, {}, {}],
+      detail_offset: 5
+    }
+    event = double('Event', value: ']', key: double('Key'))
+
+    new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+    expect(new_state[:selected_record_index]).to eq(1)
+    expect(new_state[:detail_offset]).to eq(0)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (prev)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'decrements selected_record_index and resets detail_offset when "[" is pressed' do
+    state = {
+      view_mode: :record_detail,
+      selected_record_index: 1,
+      records: [{}, {}, {}],
+      detail_offset: 5
+    }
+    event = double('Event', value: '[', key: double('Key'))
+
+    new_state = RubyMysqlTui::InputHandler.handle_input(event, state, client)
+    expect(new_state[:selected_record_index]).to eq(0)
+    expect(new_state[:detail_offset]).to eq(0)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - record detail navigation (clamp)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+
+  it 'clamps selected_record_index within the range of records' do
+    state = {
+      view_mode: :record_detail,
+      selected_record_index: 2,
+      records: [{}, {}, {}],
+      detail_offset: 0
+    }
+    event_next = double('Event', value: ']', key: double('Key'))
+    expect(RubyMysqlTui::InputHandler.handle_input(event_next, state, client)[:selected_record_index]).to eq(2)
+
+    state[:selected_record_index] = 0
+    event_prev = double('Event', value: '[', key: double('Key'))
+    expect(RubyMysqlTui::InputHandler.handle_input(event_prev, state, client)[:selected_record_index]).to eq(0)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - column scroll' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
