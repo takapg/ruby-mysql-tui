@@ -22,7 +22,9 @@ module RubyMysqlTui
         records: results,
         view_mode: :records,
         sql_mode: false,
-        sql_history_index: nil
+        sql_history_index: nil,
+        sql_result_mode: true,
+        last_executed_sql: sql
       )
     end
 

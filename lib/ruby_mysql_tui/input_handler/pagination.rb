@@ -12,7 +12,7 @@ module RubyMysqlTui
       end
 
       def fetch_page_if_needed(state, client, layout)
-        return if state[:all_records_mode]
+        return if state[:all_records_mode] || state[:sql_result_mode]
 
         if needs_next_page?(state, layout)
           fetch_next_page(state, client, page_offset: state[:page_offset] || 0, size: (state[:records] || []).size)
