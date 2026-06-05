@@ -118,7 +118,6 @@ module RubyMysqlTui
           state[:records] = client.list_records(state[:selected_table], state[:page_offset], **opts)
         end
       end
-
     end
   end
 end
