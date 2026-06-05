@@ -678,9 +678,8 @@ RSpec.describe 'E2E Table Rename' do
     allow(prompt).to receive(:ask).and_return('renamed_table')
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['old_table'])
+    expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_return(['old_table'], ['renamed_table'])
     expect(client).to receive(:rename_table).with('old_table', 'renamed_table')
-    expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_return(['renamed_table'])
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
