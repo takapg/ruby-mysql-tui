@@ -142,3 +142,22 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  describe '.load_history' do
+    it 'returns an empty array and logs error when File.readlines fails' do
+      allow(File).to receive(:exist?).and_return(true)
+      allow(File).to receive(:readlines).and_raise(StandardError.new('Read error'))
+      expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to load SQL history: Read error/)
+      expect(described_class.load_history).to eq([])
+    end
+  end
+
+  describe '.save_history' do
+    it 'logs error when File.open fails' do
+      allow(File).to receive(:open).and_raise(StandardError.new('Write error'))
+      expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to save SQL history: Write error/)
+      expect { described_class.save_history(['SQL1']) }.not_to raise_error
+    end
+  end
+end

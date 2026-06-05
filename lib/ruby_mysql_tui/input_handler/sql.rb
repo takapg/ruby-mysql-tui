@@ -25,10 +25,9 @@ module RubyMysqlTui
       return if sql.nil? || sql.strip.empty?
 
       history = state[:sql_history] || []
-      return unless history.empty? || history.last != sql
+      return if history.last == sql
 
       history << sql
-      state[:sql_history] = history
       SqlHistoryManager.save_history(history)
     end
 
