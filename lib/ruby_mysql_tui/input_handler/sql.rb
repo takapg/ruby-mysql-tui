@@ -68,9 +68,7 @@ module RubyMysqlTui
       history = state[:sql_history] || []
       return [state, false] if history.empty?
 
-      if state[:sql_history_index].nil?
-        state[:sql_temp_input] = state[:sql_input]
-      end
+      state[:sql_temp_input] = state[:sql_input] if state[:sql_history_index].nil?
 
       index = calculate_up_index(state, history)
       state[:sql_input] = history[index]

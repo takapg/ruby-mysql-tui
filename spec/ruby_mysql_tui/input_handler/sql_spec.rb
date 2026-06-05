@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'ruby_mysql_tui/input_handler/sql'
 
-RSpec.describe RubyMysqlTui::InputHandler do
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.handle_sql_text_input' do
     let(:state) { { sql_input: 'SELECT * ' } }
 
@@ -25,7 +25,9 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(new_state[:sql_input]).to eq('SELECT *')
     end
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.update_sql_history' do
     let(:state) { { sql_history: [] } }
 
@@ -46,12 +48,14 @@ RSpec.describe RubyMysqlTui::InputHandler do
       expect(state[:sql_history]).to eq(['SELECT 1'])
     end
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.handle_sql_history_up' do
-    let(:state) { { sql_history: ['SQL1', 'SQL2'], sql_input: 'current', sql_history_index: nil } }
+    let(:state) { { sql_history: %w[SQL1 SQL2], sql_input: 'current', sql_history_index: nil } }
 
     it 'sets the latest history and saves current input' do
-      new_state, _ = described_class.handle_sql_history_up(state)
+      new_state = described_class.handle_sql_history_up(state).first
       expect(new_state[:sql_input]).to eq('SQL2')
       expect(new_state[:sql_history_index]).to eq(1)
       expect(new_state[:sql_temp_input]).to eq('current')
@@ -59,14 +63,14 @@ RSpec.describe RubyMysqlTui::InputHandler do
 
     it 'decrements index when already browsing history' do
       state[:sql_history_index] = 1
-      new_state, _ = described_class.handle_sql_history_up(state)
+      new_state = described_class.handle_sql_history_up(state).first
       expect(new_state[:sql_input]).to eq('SQL1')
       expect(new_state[:sql_history_index]).to eq(0)
     end
 
     it 'does nothing when history is empty' do
       state[:sql_history] = []
-      new_state, _ = described_class.handle_sql_history_up(state)
+      new_state = described_class.handle_sql_history_up(state).first
       expect(new_state[:sql_input]).to eq('current')
     end
   end
