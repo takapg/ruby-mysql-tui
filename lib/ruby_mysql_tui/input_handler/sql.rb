@@ -13,12 +13,22 @@ module RubyMysqlTui
       update_sql_history(sql, state)
       results = query_mysql(sql, client)
 
+      state[:items] = refresh_items(state, client)
+
       state.merge!(
         records: results,
         view_mode: :records,
         sql_mode: false,
         sql_history_index: nil
       )
+    end
+
+    def refresh_items(state, client)
+      if state[:selected_database]
+        client.list_tables(state[:selected_database])
+      else
+        client.list_databases
+      end
     end
 
     def update_sql_history(sql, state)
@@ -32,7 +42,14 @@ module RubyMysqlTui
     end
 
     def query_mysql(sql, client)
-      client.query(sql)
+      results = client.query(sql)
+      return results if results
+
+      affected = client.connection.affected_rows
+      last_id = client.connection.last_id
+      message = "Query OK, #{affected} rows affected"
+      message += " (last id: #{last_id})" if last_id && last_id > 0
+      [{ 'Result' => message }]
     rescue StandardError => e
       [{ 'Error' => e.message }]
     end

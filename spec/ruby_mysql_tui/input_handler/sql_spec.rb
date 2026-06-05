@@ -134,12 +134,54 @@ end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.execute_sql' do
-    let(:client) { double('Client', query: []) }
+    let(:client) { double('Client', query: [], list_databases: ['db1'], list_tables: ['t1']) }
     let(:state) { { sql_history: [], sql_history_index: 1 } }
 
     it 'resets sql_history_index to nil after execution' do
       described_class.execute_sql('SELECT 1', state, client)
       expect(state[:sql_history_index]).to be_nil
+    end
+
+    it 'refreshes items when no database is selected' do
+      state[:selected_database] = nil
+      described_class.execute_sql('CREATE DATABASE db2', state, client)
+      expect(client).to have_received(:list_databases)
+      expect(state[:items]).to eq(['db1'])
+    end
+
+    it 'refreshes items when a database is selected' do
+      state[:selected_database] = 'db1'
+      described_class.execute_sql('CREATE TABLE t2 (id int)', state, client)
+      expect(client).to have_received(:list_tables).with('db1')
+      expect(state[:items]).to eq(['t1'])
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.query_mysql' do
+    let(:connection) { double('Connection', affected_rows: 1, last_id: 0) }
+    let(:client) { double('Client', connection: connection) }
+
+    it 'returns results when client.query returns data' do
+      allow(client).to receive(:query).and_return([{'id' => 1}])
+      expect(described_class.query_mysql('SELECT 1', client)).to eq([{'id' => 1}])
+    end
+
+    it 'returns affected rows message when client.query returns nil' do
+      allow(client).to receive(:query).and_return(nil)
+      expect(described_class.query_mysql('UPDATE users SET name="Bob"', client)).to eq([{'Result' => 'Query OK, 1 rows affected'}])
+    end
+
+    it 'includes last_id in message when present' do
+      allow(client).to receive(:query).and_return(nil)
+      allow(connection).to receive(:last_id).and_return(100)
+      expect(described_class.query_mysql('INSERT INTO users...', client)).to eq([{'Result' => 'Query OK, 1 rows affected (last id: 100)'}])
+    end
+
+    it 'returns error message when an exception occurs' do
+      allow(client).to receive(:query).and_raise(StandardError.new('SQL Error'))
+      expect(described_class.query_mysql('INVALID SQL', client)).to eq([{'Error' => 'SQL Error'}])
     end
   end
 end
