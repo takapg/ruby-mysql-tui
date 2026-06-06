@@ -45,7 +45,10 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
   it 'updates selected_record_index and records_offset when scrolling in :table_structure mode' do
-    state = { focus: :right, view_mode: :table_structure, records: Array.new(50) { |i| i }, records_offset: 0, selected_record_index: 0 }
+    state = {
+      focus: :right, view_mode: :table_structure,
+      records: Array.new(50) { |i| i }, records_offset: 0, selected_record_index: 0
+    }
 
     # 下方向へのスクロール (カーソルが移動し、オフセットは維持される)
     event_down = double('Event', value: "\e[B", key: double('Key'))

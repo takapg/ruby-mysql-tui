@@ -71,30 +71,40 @@ module RubyMysqlTui
       end
 
       def handle_drop_column(state, client, prompt)
-        table_name = state[:selected_table]
-        structure = state[:records]
-        selected_idx = state[:selected_record_index] || 0
-        column_info = structure[selected_idx]
+        column_info = fetch_selected_column(state)
         return state if column_info.nil?
 
         column_name = column_info['Field'] || column_info.values.first
-        is_pri = column_info['Key'] == 'PRI'
-
-        if is_pri
-          prompt.error("主キーカラム '#{column_name}' は削除できません。")
-          return state
-        end
+        return state if primary_key_error?(column_info, prompt, column_name)
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にカラム '#{column_name}' を削除しますか？ (y/N)")
 
+        perform_drop_column(state, client, column_name)
+      rescue Mysql2::Error => e
+        Deletable.handle_drop_error(prompt, e, state, 'Column')
+      end
+
+      private_class_method def fetch_selected_column(state)
+        structure = state[:records]
+        selected_idx = state[:selected_record_index] || 0
+        structure[selected_idx]
+      end
+
+      private_class_method def primary_key_error?(column_info, prompt, column_name)
+        return false unless column_info['Key'] == 'PRI'
+
+        prompt.error("主キーカラム '#{column_name}' は削除できません。")
+        true
+      end
+
+      private_class_method def perform_drop_column(state, client, column_name)
+        table_name = state[:selected_table]
         client.drop_column(table_name, column_name)
         state[:records] = client.list_table_structure(table_name)
         state[:selected_record_index] = 0
         state[:records_offset] = 0
         state[:status_message] = "Column '#{column_name}' deleted successfully"
         state
-      rescue Mysql2::Error => e
-        Deletable.handle_drop_error(prompt, e, state, 'Column')
       end
 
       private_class_method def execute_create_table(state, client, prompt, name)

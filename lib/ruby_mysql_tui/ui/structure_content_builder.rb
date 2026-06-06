@@ -9,16 +9,14 @@ module RubyMysqlTui
       module_function
 
       def build_view(state, width, height)
+        options = {
+          height: height,
+          offset: state[:records_offset] || 0,
+          columns_offset: state[:columns_offset] || 0
+        }
         build_text(
-          table_name: state[:selected_table],
-          structure: state[:records],
-          width: width,
-          selected_index: state[:selected_record_index],
-          options: {
-            height: height,
-            offset: state[:records_offset] || 0,
-            columns_offset: state[:columns_offset] || 0
-          }
+          table_name: state[:selected_table], structure: state[:records],
+          width: width, selected_index: state[:selected_record_index], options: options
         )
       end
 
@@ -32,11 +30,16 @@ module RubyMysqlTui
         end
 
         max_rows = height ? [0, height - 4].max : nil
-        table_output = create_table(structure, width, max_rows, offset, columns_offset, selected_index).to_s
+        table_output = create_table(structure, width, options.merge(max_rows: max_rows, selected_index: selected_index)).to_s
         "#{header}\n\n#{table_output}"
       end
 
-      def create_table(structure, width, max_rows = nil, offset = 0, columns_offset = 0, selected_index = nil)
+      def create_table(structure, width, options = {})
+        offset = options[:offset] || 0
+        columns_offset = options[:columns_offset] || 0
+        max_rows = options[:max_rows]
+        selected_index = options[:selected_index]
+
         actual_offset = ContentBuilder.calculate_actual_offset(structure, columns_offset)
         visible_columns = structure.first.keys.drop(actual_offset)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
@@ -48,11 +51,13 @@ module RubyMysqlTui
         )
       end
 
-      private_class_method def format_structure_rows(structure, actual_offset, col_width, selected_index = nil, offset = 0)
+      private_class_method def format_structure_rows(
+        structure, actual_offset, col_width, selected_index = nil, offset = 0
+      )
         structure.each_with_index.map do |row, idx|
           row.values.drop(actual_offset).map.with_index do |v, col_idx|
             text = ContentBuilder.truncate(v.to_s, col_width)
-            (col_idx == 0 && idx + offset == selected_index) ? "> #{text}" : text
+            col_idx.zero? && idx + offset == selected_index ? "> #{text}" : text
           end
         end
       end
