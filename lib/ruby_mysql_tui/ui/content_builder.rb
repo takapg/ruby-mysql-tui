@@ -90,7 +90,7 @@ module RubyMysqlTui
         max_rows = height ? [0, height - 2].max : rows.size
         rows.drop(offset).take(max_rows).map.with_index do |row, idx|
           actual_idx = offset + idx
-          prefix = actual_idx == selected_idx ? "> " : "  "
+          prefix = actual_idx == selected_idx ? '> ' : '  '
           truncate("#{prefix}#{row}", width)
         end.join("\n")
       end

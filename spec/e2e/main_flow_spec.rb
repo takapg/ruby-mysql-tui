@@ -889,15 +889,7 @@ RSpec.describe 'E2E Record Detail Direct Edit' do
 
   it 'allows direct editing of a field in detail view using Down and e keys' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)), # DB
-      double('Event', value: "\r", key: double('Key', name: :return)), # Table
-      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
-      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
-      double('Event', value: "\e[B", key: double('Key', name: :down)), # Select next field (name)
-      double('Event', value: 'e', key: double('Key', name: :e)),       # Edit
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
-    ]
+    events = detail_edit_events
     allow(reader).to receive(:read_keypress).and_return(*events)
 
     prompt = instance_double(TTY::Prompt)

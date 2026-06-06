@@ -78,21 +78,23 @@ module RubyMysqlTui
         record = state[:records][state[:selected_record_index]]
         return state unless record
 
-        # 選択インデックスを更新
         idx = (state[:selected_column_index] || 0) + delta
         state[:selected_column_index] = idx.clamp(0, [0, record.keys.size - 1].max)
+        adjust_detail_offset(state)
+        state
+      end
 
-        # 追従スクロール: 選択インデックスが画面外に出た場合に offset を調整
+      private_class_method def adjust_detail_offset(state)
         layout = current_layout
         max_rows = [0, layout.main_h - 2].max
         offset = state[:detail_offset] || 0
+        idx = state[:selected_column_index]
 
-        if state[:selected_column_index] < offset
-          state[:detail_offset] = state[:selected_column_index]
-        elsif state[:selected_column_index] >= offset + max_rows
-          state[:detail_offset] = state[:selected_column_index] - max_rows + 1
+        if idx < offset
+          state[:detail_offset] = idx
+        elsif idx >= offset + max_rows
+          state[:detail_offset] = idx - max_rows + 1
         end
-        state
       end
 
       private_class_method def can_scroll_columns?(state)
