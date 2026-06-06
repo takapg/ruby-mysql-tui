@@ -92,17 +92,20 @@ module RubyMysqlTui
 
     def open_external_editor(state)
       editor = ENV['EDITOR'] || 'vi'
+      edited_sql = edit_in_editor(editor, state[:sql_input])
+      state[:sql_input] = edited_sql if edited_sql
+      [state, false]
+    end
+
+    def edit_in_editor(editor, content)
       temp_file = Tempfile.new(['sql_input', '.sql'])
       begin
-        temp_file.write(state[:sql_input] || '')
+        temp_file.write(content || '')
         temp_file.close
-        if system("#{editor} #{temp_file.path}")
-          state[:sql_input] = File.read(temp_file.path)
-        end
+        File.read(temp_file.path) if system("#{editor} #{temp_file.path}")
       ensure
         temp_file.unlink
       end
-      [state, false]
     end
 
     def handle_sql_text_input(event, state)
