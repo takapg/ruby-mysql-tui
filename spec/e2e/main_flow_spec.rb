@@ -831,6 +831,33 @@ RSpec.describe 'E2E Table Truncation' do
   end
 end
 
+RSpec.describe 'E2E Record Detail Log Display' do
+  include_context 'e2e setup'
+
+  it 'displays the selected column value in the log area' do
+    allow(TTY::Screen).to receive(:width).and_return(100)
+    allow(TTY::Screen).to receive(:height).and_return(30)
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Next Column
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    records = [{ 'id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com' }]
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return(records)
+
+    expect { RubyMysqlTui.run_main_loop(client) }
+      .to output(/\[Value of 'id'\]: 1.*\[Value of 'name'\]: Alice/m).to_stdout
+  end
+end
+
 RSpec.describe 'E2E Record Detail Operations - Editing' do
   include_context 'e2e setup'
 

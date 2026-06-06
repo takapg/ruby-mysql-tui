@@ -5,6 +5,7 @@ require 'tty-table'
 require_relative 'layout'
 require_relative 'content_builder'
 require_relative 'footer_builder'
+require_relative 'log_content_builder'
 
 module RubyMysqlTui
   module UI
@@ -91,16 +92,9 @@ module RubyMysqlTui
       end
 
       def render_log(client, state)
-        if state[:sql_mode]
-          text = "SQL MODE: #{state[:sql_input]} (Esc to cancel)"
-        elsif state[:status_message]
-          text = "Status: #{state[:status_message]}"
-        else
-          sql = client.last_sql
-          text = sql ? "Last SQL: #{sql}" : 'No SQL executed'
-        end
-        truncated_text = ContentBuilder.truncate(text, @layout.width - 2)
-        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { truncated_text }
+        text, truncate = LogContentBuilder.build(client, state)
+        content = truncate ? ContentBuilder.truncate(text, @layout.width - 2) : text
+        puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { content }
       end
 
       def render_footer(state)
