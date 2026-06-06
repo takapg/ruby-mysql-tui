@@ -64,7 +64,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.warn_pk_not_editable'
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for int' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordValidator, '.type_validation_for int' do
   let(:structure) { [{ 'Field' => 'age', 'Type' => 'int(11)' }] }
 
   it 'returns integer validation' do
@@ -78,7 +78,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for i
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for decimal/float' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordValidator, '.type_validation_for decimal/float' do
   let(:structure) do
     [
       { 'Field' => 'price', 'Type' => 'decimal(10,2)' },
@@ -101,7 +101,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for d
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for date/datetime' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordValidator, '.type_validation_for date/datetime' do
   it 'returns date/datetime validation for date types' do
     date_structure = [
       { 'Field' => 'created_at', 'Type' => 'datetime' },
@@ -129,7 +129,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for d
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for non-numeric' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordValidator, '.type_validation_for non-numeric' do
   let(:structure) { [{ 'Field' => 'name', 'Type' => 'varchar(255)' }] }
 
   it 'returns nil for varchar type' do
@@ -141,7 +141,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.type_validation_for n
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.required_column?' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordValidator, '.required_column?' do
   let(:structure) do
     [
       { 'Field' => 'id', 'Null' => 'NO' },
@@ -190,7 +190,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data nullable' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data nullable string' do
   let(:prompt) { instance_double('TTY::Prompt') }
 
   it 'returns empty string for nullable string columns when input is empty' do
@@ -200,6 +200,10 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
     result = described_class.prompt_for_record_data(columns, prompt, {}, structure)
     expect(result['email']).to eq('')
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data nullable numeric' do
+  let(:prompt) { instance_double('TTY::Prompt') }
 
   it 'returns nil for nullable numeric columns when input is empty' do
     columns = %w[age]
@@ -208,8 +212,12 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
     result = described_class.prompt_for_record_data(columns, prompt, {}, structure)
     expect(result['age']).to be_nil
   end
+end
 
-  it 'returns nil for any nullable column when "NULL" is entered' do
+RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_data explicit NULL' do
+  let(:prompt) { instance_double('TTY::Prompt') }
+
+  it 'returns nil for any nullable column when "NULL" or "\\N" is entered' do
     columns = %w[email age]
     structure = [
       { 'Field' => 'email', 'Type' => 'varchar(255)', 'Null' => 'YES' },
