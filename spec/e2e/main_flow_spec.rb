@@ -831,6 +831,36 @@ RSpec.describe 'E2E Table Truncation' do
   end
 end
 
+RSpec.describe 'E2E Table Column Addition' do
+  include_context 'e2e setup'
+
+  let(:events) do
+    [
+      make_event("\r", :return), make_event("\r", :return), make_event("\t", :tab),
+      make_event('i', :i), make_event('n', :n), make_event('q', :q)
+    ]
+  end
+
+  it 'adds a column when n is pressed in table structure view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('new_col')
+    allow(prompt).to receive(:select).and_return('VARCHAR(255)')
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'id' }, { 'Field' => 'new_col' }])
+    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255)')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Column 'new_col' added to 'test_table' successfully" }).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Detail Log Display' do
   include_context 'e2e setup'
 

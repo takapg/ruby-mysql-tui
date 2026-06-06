@@ -379,6 +379,25 @@ RSpec.describe RubyMysqlTui::Client, '#truncate_table' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#add_column' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes ALTER TABLE ... ADD COLUMN and escapes backticks' do
+    table_name = 'user`s'
+    col_name = 'age`s'
+    type = 'INT'
+    sql = 'ALTER TABLE `user``s` ADD COLUMN `age``s` INT'
+    expect(mock_mysql_client).to receive(:query).with(sql)
+    client.add_column(table_name, col_name, type)
+  end
+
+  it 'raises ArgumentError for invalid column type' do
+    expect { client.add_column('t', 'c', 'INT; DROP TABLE users;') }
+      .to raise_error(ArgumentError, /Invalid column type/)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#query reconnection (success)' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
