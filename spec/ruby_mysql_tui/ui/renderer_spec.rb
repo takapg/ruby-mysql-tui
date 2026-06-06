@@ -330,9 +330,9 @@ end
 RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - structure' do
   include_context 'renderer setup'
 
-  it 'displays [i] Records and [↑/↓] Move when focus is :right and view_mode is :table_structure' do
+  it 'displays structure guides when focus is :right and view_mode is :table_structure' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :table_structure, selected_table: 'users' }
-    expect { renderer.render(client, state) }.to output(%r{\[i\] Records \| \[↑/↓\] Move}).to_stdout
+    expect { renderer.render(client, state) }.to output(%r{\[i\] Records \| \[n\] Add Col \| \[↑/↓\] Move \| \[←/→\] Scroll Cols}).to_stdout
   end
 end
 
