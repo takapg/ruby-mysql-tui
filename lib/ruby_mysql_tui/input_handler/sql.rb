@@ -48,6 +48,8 @@ module RubyMysqlTui
       return if sql.nil? || sql.strip.empty?
 
       history = state[:sql_history] || []
+      return if history.last == sql
+
       history.delete(sql)
       history << sql
 
