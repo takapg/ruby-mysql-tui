@@ -246,8 +246,11 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
 
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
-    regex = Regexp.new('\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[n\] New \| \[e\] Edit \| ' \
-                       '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records \| \[i\] Structure \| \[←/→\] Scroll Cols')
+    regex = Regexp.new(
+      '\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[n\] New \| \[e\] Edit \| ' \
+      '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records \| ' \
+      '\[i\] Structure \| \[←/→\] Scroll Cols'
+    )
     expect { renderer.render(client, state) }.to output(regex).to_stdout
   end
 

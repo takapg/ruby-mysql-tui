@@ -4,12 +4,28 @@ require 'tty-box'
 require 'tty-table'
 require_relative 'layout'
 require_relative 'content_builder'
+require_relative 'footer_builder'
 
 module RubyMysqlTui
   module UI
     # Renderer は Layout に基づいて TUI 画面を描画します。
     class Renderer
       CLEAR_SCREEN = "\e[2J\e[H"
+      HELP_TEXT = <<~HELP
+        --- 操作ヘルプ ---
+
+        [共通操作]
+        [Tab] フォーカス切り替え | [q] 終了 | [s] SQLモード | [?] ヘルプを閉じる
+
+        [左ペイン操作]
+        [/] フィルタ入力 | [Enter] 選択 | [n] 新規作成 | [d] 削除 | [r] 名前変更
+
+        [右ペイン操作]
+        [n] 新規挿入 | [e] 編集 | [d] 削除 | [c] クローン | [o] ソート
+        [i] 構造/レコード切替 | [←/→] カラムスクロール | [[/]] 前後レコード
+
+        [Esc] フィルタクリア / 詳細ビューから戻る
+      HELP
 
       def initialize(layout)
         @layout = layout
@@ -88,7 +104,7 @@ module RubyMysqlTui
       end
 
       def render_footer(state)
-        guide = "#{footer_mode_text(state)}#{build_footer_guides(state).join(' | ')}"
+        guide = "#{footer_mode_text(state)}#{UI::FooterBuilder.build_footer_guides(state).join(' | ')}"
         puts TTY::Box.frame(width: @layout.width, height: @layout.footer_h) { guide }
       end
 
@@ -98,60 +114,11 @@ module RubyMysqlTui
         text
       end
 
-      def build_footer_guides(state)
-        guides = ['[q] Quit', '[Tab] Switch Focus', '[?] Help']
-        if state[:focus] == :left
-          guides += ['[b] Back', '[↑/↓] Move', '[Enter] Select']
-          guides << '[r] Rename' if state[:view_mode] == :tables
-        elsif state[:focus] == :right
-          guides += build_right_pane_guides(state)
-        end
-        guides
-      end
-
-      def build_right_pane_guides(state)
-        case state[:view_mode]
-        when :records then records_guides(state)
-        when :table_structure then structure_guides
-        when :record_detail
-          ['[b/Esc] Back', '[↑/↓] Scroll', '[e] Edit',
-           '[d] Delete', '[c] Clone', '[[/]] Prev/Next Rec']
-        else []
-        end
-      end
-
-      def records_guides(state)
-        guides = ['[n] New', '[e] Edit', '[d] Delete', '[c] Clone', '[o] Sort']
-        guides << (state[:all_records_mode] ? '[a] Normal Mode' : '[a] All Records')
-        guides << '[i] Structure'
-        guides << '[←/→] Scroll Cols'
-        guides
-      end
-
-      def structure_guides
-        ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
-      end
-
       def render_help_modal
-        help_text = <<~HELP
-          --- 操作ヘルプ ---
-
-          [共通操作]
-          [Tab] フォーカス切り替え | [q] 終了 | [s] SQLモード | [?] ヘルプを閉じる
-
-          [左ペイン操作]
-          [/] フィルタ入力 | [Enter] 選択 | [n] 新規作成 | [d] 削除 | [r] 名前変更
-
-          [右ペイン操作]
-          [n] 新規挿入 | [e] 編集 | [d] 削除 | [c] クローン | [o] ソート
-          [i] 構造/レコード切替 | [←/→] カラムスクロール | [[/]] 前後レコード
-
-          [Esc] フィルタクリア / 詳細ビューから戻る
-        HELP
         puts TTY::Box.frame(
           width: @layout.width, height: @layout.main_h,
           style: { border: { fg: :cyan } }
-        ) { help_text }
+        ) { HELP_TEXT }
       end
     end
   end
