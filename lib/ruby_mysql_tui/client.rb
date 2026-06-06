@@ -25,11 +25,18 @@ module RubyMysqlTui
 
     # SQL クエリを実行し、結果を返します。
     # 実行した SQL はロガーに出力されます。
-    def query(sql)
+    # 接続切れ (errno 2006, 2013) の場合は1回のみ再接続を試みます。
+    def query(sql, retry_count = 0)
       @last_sql = sql
       RubyMysqlTui.logger.info("Executing SQL: #{sql}")
       @connection.query(sql)
     rescue Mysql2::Error => e
+      if retry_count == 0 && connection_lost?(e)
+        RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{e.errno})")
+        connect!
+        return query(sql, 1)
+      end
+
       RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
       raise e
     end
@@ -120,6 +127,10 @@ module RubyMysqlTui
     end
 
     private
+
+    def connection_lost?(error)
+      [2006, 2013].include?(error.errno)
+    end
 
     def build_column_definitions(columns)
       columns.map do |col|

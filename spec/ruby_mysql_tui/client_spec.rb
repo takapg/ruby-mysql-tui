@@ -367,3 +367,39 @@ RSpec.describe RubyMysqlTui::Client, '#rename_table' do
     client.rename_table(old_name, new_name)
   end
 end
+
+RSpec.describe RubyMysqlTui::Client, '#query reconnection' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:sql) { 'SELECT 1' }
+  let(:gone_away_error) { Mysql2::Error.new('MySQL server has gone away') }
+
+  before do
+    allow(gone_away_error).to receive(:errno).and_return(2006)
+  end
+
+  it 'reconnects and retries when connection is lost (errno 2006)' do
+    expect(mock_mysql_client).to receive(:query).with(sql).and_raise(gone_away_error).once
+    expect(client).to receive(:connect!).and_call_original
+    expect(mock_mysql_client).to receive(:query).with(sql).and_return([{ '1' => 1 }]).once
+
+    expect(client.query(sql)).to eq([{ '1' => 1 }])
+  end
+
+  it 'raises error if reconnection also fails' do
+    expect(mock_mysql_client).to receive(:query).with(sql).and_raise(gone_away_error).twice
+    expect(client).to receive(:connect!).and_call_original
+
+    expect { client.query(sql) }.to raise_error(Mysql2::Error)
+  end
+
+  it 'does not reconnect for other Mysql2::Errors' do
+    syntax_error = Mysql2::Error.new('Syntax error')
+    allow(syntax_error).to receive(:errno).and_return(1064)
+
+    expect(mock_mysql_client).to receive(:query).with(sql).and_raise(syntax_error).once
+    expect(client).not_to receive(:connect!)
+
+    expect { client.query(sql) }.to raise_error(Mysql2::Error)
+  end
+end
