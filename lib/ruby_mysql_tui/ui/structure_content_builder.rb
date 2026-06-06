@@ -48,17 +48,20 @@ module RubyMysqlTui
       private_class_method def calculate_table_params(structure, width, options)
         offset = options[:offset] || 0
         columns_offset = options[:columns_offset] || 0
-        max_rows = options[:max_rows]
 
         actual_offset = ContentBuilder.calculate_actual_offset(structure, columns_offset)
         visible_columns = structure.first.keys.drop(actual_offset)
-        col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
-        display_structure = structure.drop(offset).take(max_rows || structure.size)
 
         {
-          columns: visible_columns, col_width: col_width,
-          display_structure: display_structure, actual_offset: actual_offset
+          columns: visible_columns,
+          col_width: ContentBuilder.calculate_col_width(width, visible_columns.size),
+          display_structure: slice_structure(structure, offset, options[:max_rows]),
+          actual_offset: actual_offset
         }
+      end
+
+      private_class_method def slice_structure(structure, offset, max_rows)
+        structure.drop(offset).take(max_rows || structure.size)
       end
 
       private_class_method def format_structure_rows(
