@@ -15,7 +15,13 @@ module RubyMysqlTui
 
       def prompt_for_record_data(columns, prompt, default_data = {}, structure = [])
         columns.each_with_object({}) do |col, data|
-          hint = required_column?(col, structure) ? '' : ' (Enter for NULL)'
+          hint = if required_column?(col, structure)
+                   ''
+                 elsif string_type?(col, structure)
+                   ' (Enter for empty string, "NULL" for NULL)'
+                 else
+                   ' (Enter for NULL)'
+                 end
           val = prompt.ask("値を入力してください (#{col})#{hint}:", default: default_data[col]) do |question|
             apply_validations(question, col, structure)
           end
@@ -32,7 +38,13 @@ module RubyMysqlTui
         column = prompt.select('編集するカラムを選択してください:', editable_columns)
         return nil if column.nil?
 
-        hint = required_column?(column, structure) ? '' : ' (Enter for NULL)'
+        hint = if required_column?(column, structure)
+                 ''
+               elsif string_type?(column, structure)
+                 ' (Enter for empty string, "NULL" for NULL)'
+               else
+                 ' (Enter for NULL)'
+               end
         value = prompt.ask("新しい値を入力してください (#{column})#{hint}:", default: record[column]) do |question|
           apply_validations(question, column, structure)
         end
@@ -79,11 +91,16 @@ module RubyMysqlTui
       end
 
       def process_input_value(value, column, structure)
-        return nil if value.to_s.strip.empty? && !required_column?(column, structure)
+        return nil if value.to_s.upcase == 'NULL' || value.to_s == '\N'
+
+        if value.to_s.strip.empty?
+          return "" if string_type?(column, structure)
+          return nil unless required_column?(column, structure)
+        end
 
         value
       end
-      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value
+      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value, :string_type?
 
       def apply_validations(question, column, structure)
         is_required = required_column?(column, structure)
@@ -95,10 +112,19 @@ module RubyMysqlTui
 
         if (validation = type_validation_for(column, structure))
           regex, message = validation
-          # Nullableな場合は空文字を許容する
-          regex = Regexp.union(regex, /\A\s*\z/) unless is_required
+          unless is_required
+            # Nullableな場合は空文字、NULL、\N を許容する
+            regex = Regexp.union(regex, /\A\s*\z/, /\ANULL\z/i, /\A\\N\z/)
+          end
           question.validate(regex, message)
         end
+      end
+
+      def string_type?(column_name, structure)
+        col_info = structure.find { |c| c['Field'] == column_name }
+        type = col_info&.[]('Type')&.downcase
+        return false unless type
+        type.match?(/char|text/)
       end
 
       def required_column?(column_name, structure)
