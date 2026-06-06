@@ -122,7 +122,6 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record d
 
   it 'refuses to update when primary key is selected' do
     state[:selected_column_index] = 0 # 'id' column
-    expect(prompt).to receive(:ask).and_return('new_id')
     expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
     expect(client).not_to receive(:update_record)
 
