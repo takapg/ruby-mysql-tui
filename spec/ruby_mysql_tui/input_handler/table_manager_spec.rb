@@ -18,8 +18,16 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
   end
 
   it 'creates a table with custom columns when provided' do
-    allow(prompt).to receive(:ask).and_return('new_table', 'name, email')
-    expect(client).to receive(:create_table).with('new_table', %w[name email])
+    allow(prompt).to receive(:ask).and_return('new_table', 'name', 'email')
+    allow(prompt).to receive(:select).and_return('VARCHAR(255)', 'VARCHAR(255)')
+    allow(prompt).to receive(:yes?).and_return(true, false)
+    expect(client).to receive(:create_table).with(
+      'new_table',
+      [
+        { name: 'name', type: 'VARCHAR(255)' },
+        { name: 'email', type: 'VARCHAR(255)' }
+      ]
+    )
     expect(client).to receive(:list_tables).with('test_db').and_return(%w[t1 t2 new_table])
 
     result = described_class.handle_create_table(state, client, prompt)
@@ -39,7 +47,9 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
   end
 
   it 'handles Mysql2::Error' do
-    allow(prompt).to receive(:ask).and_return('new_table')
+    allow(prompt).to receive(:ask).and_return('new_table', 'col1')
+    allow(prompt).to receive(:select).and_return('INT')
+    allow(prompt).to receive(:yes?).and_return(false)
     allow(client).to receive(:create_table).and_raise(Mysql2::Error.new('Error'))
     expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
 

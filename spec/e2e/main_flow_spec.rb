@@ -530,11 +530,13 @@ RSpec.describe 'E2E Table Creation' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:ask).and_return('new_e2e_table', '')
+    allow(prompt).to receive(:ask).and_return('new_e2e_table', 'col1')
+    allow(prompt).to receive(:select).and_return('INT')
+    allow(prompt).to receive(:yes?).and_return(false)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
-    expect(client).to receive(:create_table).with('new_e2e_table', [])
+    expect(client).to receive(:create_table).with('new_e2e_table', [{ name: 'col1', type: 'INT' }])
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
