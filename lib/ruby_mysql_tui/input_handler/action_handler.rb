@@ -48,14 +48,26 @@ module RubyMysqlTui
       def handle_record_action(val, state, client)
         prompt = TTY::Prompt.new
         case val
+        when 'n', 'd', 'c' then handle_record_lifecycle_action(val, state, client, prompt)
+        when 'e', 'o', 'r', 't' then handle_record_utility_action(val, state, client, prompt)
+        else state
+        end
+      end
+
+      private_class_method def handle_record_lifecycle_action(val, state, client, prompt)
+        case val
         when 'n' then handle_new_record_action(state, client, prompt)
-        when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'd' then handle_delete_action(state, client, prompt)
         when 'c' then RecordManager.handle_clone_record(state, client, prompt)
+        end
+      end
+
+      private_class_method def handle_record_utility_action(val, state, client, prompt)
+        case val
+        when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
         when 'r' then handle_rename_action(state, client, prompt)
         when 't' then handle_truncate_action(state, client, prompt)
-        else state
         end
       end
 

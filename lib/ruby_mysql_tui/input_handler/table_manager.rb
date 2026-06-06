@@ -53,7 +53,7 @@ module RubyMysqlTui
           client.truncate_table(table_name)
           state[:status_message] = "Table '#{table_name}' truncated successfully"
         else
-          state[:status_message] = "Truncation cancelled"
+          state[:status_message] = 'Truncation cancelled'
         end
         state
       end
