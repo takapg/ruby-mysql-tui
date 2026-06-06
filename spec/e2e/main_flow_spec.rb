@@ -853,7 +853,8 @@ RSpec.describe 'E2E Record Detail Log Display' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return(records)
 
-    expect { RubyMysqlTui.run_main_loop(client) }.to output(/\[Value of 'id'\]: 1.*\[Value of 'name'\]: Alice/m).to_stdout
+    expect { RubyMysqlTui.run_main_loop(client) }
+      .to output(/\[Value of 'id'\]: 1.*\[Value of 'name'\]: Alice/m).to_stdout
   end
 end
 

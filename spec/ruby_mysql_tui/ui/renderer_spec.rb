@@ -138,7 +138,10 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
     expect { renderer.render(client, state) }.to output(/No SQL executed/).to_stdout
   end
+end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail' do
+  include_context 'renderer setup'
   context 'when view_mode is :record_detail' do
     it 'displays the value of the selected column' do
       state = {
@@ -163,7 +166,12 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
       }
       expect { renderer.render(client, state) }.to output(/\[Value of 'name'\]: NULL/).to_stdout
     end
+  end
+end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail edge cases' do
+  include_context 'renderer setup'
+  context 'when view_mode is :record_detail' do
     it 'does not truncate long values' do
       long_value = 'a' * 200
       state = {
