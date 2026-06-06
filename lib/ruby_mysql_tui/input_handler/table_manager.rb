@@ -50,11 +50,14 @@ module RubyMysqlTui
         return state if table_name.nil?
 
         if prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
-          client.truncate_table(table_name)
-          state[:status_message] = "Table '#{table_name}' truncated successfully"
+          execute_truncate_table(state, client, table_name)
         else
           state[:status_message] = 'Truncation cancelled'
+          state
         end
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Table Truncate Error: #{e.message}")
+        prompt.error("エラーが発生しました: #{e.message}")
         state
       end
 
@@ -81,6 +84,12 @@ module RubyMysqlTui
         client.drop_table(table_name)
         state = Deletable.update_state_after_deletion(state, client.list_tables(state[:selected_db]))
         state[:status_message] = "Table '#{table_name}' deleted successfully"
+        state
+      end
+
+      private_class_method def execute_truncate_table(state, client, table_name)
+        client.truncate_table(table_name)
+        state[:status_message] = "Table '#{table_name}' truncated successfully"
         state
       end
 
