@@ -28,6 +28,7 @@ module RubyMysqlTui
 
         state[:view_mode] = :record_detail
         state[:detail_offset] = 0
+        state[:selected_column_index] = 0
       end
 
       def handle_databases_return(state, client)

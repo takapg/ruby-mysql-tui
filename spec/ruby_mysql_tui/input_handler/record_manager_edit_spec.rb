@@ -101,6 +101,35 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record r
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record direct edit in detail view' do
+  include_context 'record manager setup'
+  before do
+    allow(client).to receive(:primary_key_for).with(table_name).and_return(pk_column)
+    allow(client).to receive(:list_table_structure).with(table_name).and_return([])
+    state[:view_mode] = :record_detail
+    state[:selected_column_index] = 1 # 'name' column
+  end
+
+  it 'updates the record directly without column selection' do
+    expect(prompt).not_to receive(:select)
+    expect(prompt).to receive(:ask).with(/新しい値を入力してください \(name\):/).and_return('DirectBob')
+    expect(client).to receive(:update_record).with(table_name, pk_column, 1, 'name', 'DirectBob')
+    expect(client).to receive(:list_records).with(table_name, 0).and_return([{ 'id' => 1, 'name' => 'DirectBob' }])
+
+    result_state = described_class.handle_edit_record(state, client, prompt)
+    expect(result_state[:records]).to eq([{ 'id' => 1, 'name' => 'DirectBob' }])
+  end
+
+  it 'refuses to update when primary key is selected' do
+    state[:selected_column_index] = 0 # 'id' column
+    expect(prompt).to receive(:ask).and_return('new_id')
+    expect(prompt).to receive(:say).with('主キーは編集できません', color: :red)
+    expect(client).not_to receive(:update_record)
+
+    described_class.handle_edit_record(state, client, prompt)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_edit_record failure' do
   include_context 'record manager setup'
   before do
