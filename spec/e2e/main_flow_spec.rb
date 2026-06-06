@@ -130,10 +130,11 @@ module E2EFlowHelpers
   def setup_filtering_mocks(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).and_return([
+    records = [
       { 'id' => 1, 'name' => 'Alice' },
       { 'id' => 2, 'name' => 'Bob' }
-    ])
+    ]
+    allow(client).to receive(:list_records).and_return(records)
   end
 end
 
