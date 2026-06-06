@@ -119,3 +119,32 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_table' do
     expect(result).to eq(state)
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_truncate_table' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { items: %w[t1 t2], selected_index: 0, selected_db: 'test_db' } }
+
+  it 'truncates a table when confirmed' do
+    allow(prompt).to receive(:yes?).and_return(true)
+    expect(client).to receive(:truncate_table).with('t1')
+
+    result = described_class.handle_truncate_table(state, client, prompt)
+    expect(result[:status_message]).to eq("Table 't1' truncated successfully")
+  end
+
+  it 'cancels truncation when not confirmed' do
+    allow(prompt).to receive(:yes?).and_return(false)
+    result = described_class.handle_truncate_table(state, client, prompt)
+    expect(result[:status_message]).to eq('Truncation cancelled')
+  end
+
+  it 'handles Mysql2::Error' do
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(client).to receive(:truncate_table).and_raise(Mysql2::Error.new('Error'))
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+
+    result = described_class.handle_truncate_table(state, client, prompt)
+    expect(result).to eq(state)
+  end
+end
