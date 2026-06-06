@@ -44,7 +44,9 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
   end
 
   it 'handles Mysql2::Error' do
-    allow(prompt).to receive(:ask).and_return('new_table')
+    allow(prompt).to receive(:ask).and_return('new_table', 'col1')
+    allow(prompt).to receive(:select).and_return('INT')
+    allow(prompt).to receive(:yes?).and_return(false)
     allow(client).to receive(:create_table).and_raise(Mysql2::Error.new('Error'))
     expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
 
