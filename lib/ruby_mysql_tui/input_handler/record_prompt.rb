@@ -95,7 +95,8 @@ module RubyMysqlTui
         end
       end
 
-      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value, :ask_for_value, :build_hint
+      private_class_method :handle_missing_pk, :handle_no_editable_cols,
+                           :process_input_value, :ask_for_value, :build_hint
     end
   end
 end

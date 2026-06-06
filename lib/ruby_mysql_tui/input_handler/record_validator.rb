@@ -21,14 +21,16 @@ module RubyMysqlTui
           question.validate(/\S+/, '入力してください')
         end
 
-        if (validation = type_validation_for(column, structure))
-          regex, message = validation
-          unless is_required
-            # Nullableな場合は空文字、NULL、\N を許容する
-            regex = Regexp.union(regex, /\A\s*\z/, /\ANULL\z/i, /\A\\N\z/)
-          end
-          question.validate(regex, message)
-        end
+        apply_type_validation(question, column, structure, is_required)
+      end
+
+      def apply_type_validation(question, column, structure, is_required)
+        validation = type_validation_for(column, structure)
+        return unless validation
+
+        regex, message = validation
+        regex = Regexp.union(regex, /\A\s*\z/, /\ANULL\z/i, /\A\\N\z/) unless is_required
+        question.validate(regex, message)
       end
 
       def string_type?(column_name, structure)
