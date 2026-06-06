@@ -20,7 +20,7 @@ module RubyMysqlTui
         )
       end
 
-      private_class_method def filter_records(state)
+      def filter_records(state)
         records = state[:records] || []
         query = state[:records_filter_query]
         return records if query.nil? || query.empty?
@@ -29,11 +29,13 @@ module RubyMysqlTui
           row.values.any? { |v| v.to_s.downcase.include?(query.downcase) }
         end
       end
+      private_class_method :filter_records
 
-      private_class_method def calculate_selected_index(state, records_size)
+      def calculate_selected_index(state, records_size)
         index = state[:selected_record_index] || 0
         index.clamp(0, [0, records_size - 1].max)
       end
+      private_class_method :calculate_selected_index
 
       def view_options(state, height)
         {
@@ -57,7 +59,7 @@ module RubyMysqlTui
         "#{header}\n\n#{table_output}"
       end
 
-      private_class_method def build_header(table_name, width, options)
+      def build_header(table_name, width, options)
         sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
         text = if options[:sql_result_mode]
                  "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
@@ -66,6 +68,7 @@ module RubyMysqlTui
                end
         ContentBuilder.truncate(text, width)
       end
+      private_class_method :build_header
 
       def create_records_table(records, width, max_rows, options = {})
         columns = records.first.keys
@@ -74,7 +77,7 @@ module RubyMysqlTui
         prepare_table_data(records, width, max_rows, options)
       end
 
-      private_class_method def prepare_table_data(records, width, max_rows, options)
+      def prepare_table_data(records, width, max_rows, options)
         actual_offset = ContentBuilder.calculate_actual_offset(records, options[:columns_offset])
         visible_columns = records.first.keys.drop(actual_offset)
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
@@ -85,24 +88,28 @@ module RubyMysqlTui
           rows: format_records_rows(display_records, col_width, options[:selected_index], actual_offset)
         )
       end
+      private_class_method :prepare_table_data
 
-      private_class_method def slice_records(records, max_rows, offset = 0)
+      def slice_records(records, max_rows, offset = 0)
         records.drop(offset).take(max_rows || records.size)
       end
+      private_class_method :slice_records
 
-      private_class_method def format_records_rows(records, col_width, selected_index = nil, actual_offset = 0)
+      def format_records_rows(records, col_width, selected_index = nil, actual_offset = 0)
         records.map.with_index do |row, idx|
           format_record_row(row, col_width, idx == selected_index, actual_offset)
         end
       end
+      private_class_method :format_records_rows
 
-      private_class_method def format_record_row(row, col_width, is_selected, actual_offset)
+      def format_record_row(row, col_width, is_selected, actual_offset)
         row.values.drop(actual_offset).map.with_index do |val, col_idx|
           val_str = val.nil? ? 'NULL' : val.to_s
           text = ContentBuilder.truncate(val_str, col_width)
           is_selected && col_idx.zero? ? "> #{text}" : text
         end
       end
+      private_class_method :format_record_row
     end
   end
 end

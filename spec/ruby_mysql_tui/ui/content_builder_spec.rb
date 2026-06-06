@@ -132,6 +132,14 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail NULL' do
     expect(output).to include('col1: NULL')
     expect(output).to include('col2: v2')
   end
+
+  it 'shows empty string when value is ""' do
+    record = { 'col1' => '', 'col2' => 'v2' }
+    state = { records: [record], selected_record_index: 0, detail_offset: 0 }
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).to include('col1: ')
+    expect(output).not_to include('col1: NULL')
+  end
 end
 
 RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items basic' do
@@ -246,5 +254,12 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - cl
     state = { records: records, selected_table: 'test' }
     output = described_class.build_view(state, width, height)
     expect(output).to include('NULL')
+  end
+
+  it 'shows empty string when record value is ""' do
+    records = [{ 'id' => 1, 'name' => '' }]
+    state = { records: records, selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).not_to include('NULL')
   end
 end
