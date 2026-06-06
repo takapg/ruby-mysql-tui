@@ -111,6 +111,10 @@ module RubyMysqlTui
       def footer_mode_text(state)
         text = state[:all_records_mode] ? '[ALL RECORDS MODE] ' : ''
         text += "[Filter: #{state[:filter_query]}] " if state[:filter_query] && !state[:filter_query].empty?
+
+        if state[:records_filter_query] && !state[:records_filter_query].empty?
+          text += "[Record Filter: #{state[:records_filter_query]}] "
+        end
         text
       end
 

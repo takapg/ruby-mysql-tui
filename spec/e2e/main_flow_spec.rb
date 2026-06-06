@@ -126,6 +126,16 @@ module E2EFlowHelpers
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
   end
+
+  def setup_filtering_mocks(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    records = [
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' }
+    ]
+    allow(client).to receive(:list_records).and_return(records)
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -686,6 +696,61 @@ RSpec.describe 'E2E Table Rename' do
     expect(states.any? do |s|
       s[:status_message] == "Table 'old_table' renamed to 'renamed_table' successfully"
     end).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Filtering - Apply' do
+  include_context 'e2e setup'
+
+  before { setup_filtering_mocks(client) }
+
+  it 'filters records using / key' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: '/', key: double('Key', name: :slash)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('Alice')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+
+    expect(states.any? { |s| s[:records_filter_query] == 'Alice' }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Filtering - Clear' do
+  include_context 'e2e setup'
+
+  before { setup_filtering_mocks(client) }
+
+  it 'clears filter using Esc key' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: "\t", key: double('Key', name: :tab)),
+      double('Event', value: '/', key: double('Key', name: :slash)),
+      double('Event', value: "\e", key: double('Key', name: :escape)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('Alice')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+
+    expect(states.last[:records_filter_query]).to eq('')
   end
 end
 

@@ -24,7 +24,7 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_special_keys(val, state)
-      return handle_filter_input(val, state) if state[:focus] == :left && ['/', "\e"].include?(val)
+      return handle_filter_input(val, state) if ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
 
       nil
@@ -39,14 +39,28 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_filter_input(val, state)
-      if val == '/'
-        prompt = TTY::Prompt.new
+      return handle_filter_start(state) if val == '/'
+      return handle_filter_clear(state) if val == "\e"
+
+      nil
+    end
+
+    private_class_method def handle_filter_start(state)
+      prompt = TTY::Prompt.new
+      if state[:focus] == :left
         query = prompt.ask('フィルターキーワードを入力:')
         state.merge(filter_query: query || '', selected_index: 0)
-      elsif val == "\e" && state[:filter_query] && !state[:filter_query].empty?
+      elsif state[:focus] == :right && state[:view_mode] == :records
+        query = prompt.ask('レコードフィルターキーワードを入力:')
+        state.merge(records_filter_query: query || '', selected_record_index: 0)
+      end
+    end
+
+    private_class_method def handle_filter_clear(state)
+      if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
         state.merge(filter_query: '', selected_index: 0)
-      else
-        state
+      elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
+        state.merge(records_filter_query: '', selected_record_index: 0)
       end
     end
 

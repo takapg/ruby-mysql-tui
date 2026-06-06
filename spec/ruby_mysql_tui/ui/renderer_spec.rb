@@ -248,7 +248,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
     regex = Regexp.new(
       '\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[n\] New \| \[e\] Edit \| ' \
-      '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records \| ' \
+      '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[/\] Filter \| \[a\] All Records \| ' \
       '\[i\] Structure \| \[←/→\] Scroll Cols'
     )
     expect { renderer.render(client, state) }.to output(regex).to_stdout
