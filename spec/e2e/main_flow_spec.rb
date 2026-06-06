@@ -834,16 +834,10 @@ end
 RSpec.describe 'E2E Table Column Addition' do
   include_context 'e2e setup'
 
-  let(:events) do
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'i', key: double('Key', name: :i)),
-      double('Event', value: 'n', key: double('Key', name: :n)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
+  let(:events) { [
+    make_event("\r", :return), make_event("\r", :return), make_event("\t", :tab),
+    make_event('i', :i), make_event('n', :n), make_event('q', :q)
+  ] }
 
   it 'adds a column when n is pressed in table structure view' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
