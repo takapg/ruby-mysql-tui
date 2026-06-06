@@ -31,20 +31,7 @@ module RubyMysqlTui
     def query(sql)
       @last_sql = sql
       RubyMysqlTui.logger.info("Executing SQL: #{sql}")
-      retried = false
-      begin
-        @connection.query(sql)
-      rescue Mysql2::Error => e
-        if !retried && connection_lost?(e)
-          RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{e.errno})")
-          connect!
-          retried = true
-          retry
-        end
-
-        RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
-        raise e
-      end
+      with_reconnection_retry { @connection.query(sql) }
     end
 
     # データベース一覧を取得します。
@@ -107,6 +94,29 @@ module RubyMysqlTui
 
     private
 
+
+    def with_reconnection_retry
+      retried = false
+      begin
+        yield
+      rescue Mysql2::Error => e
+        return log_and_raise_error(e) if retried || !connection_lost?(e)
+
+        handle_reconnection(e)
+        retried = true
+        retry
+      end
+    end
+
+    def handle_reconnection(error)
+      RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{error.errno})")
+      connect!
+    end
+
+    def log_and_raise_error(error)
+      RubyMysqlTui.logger.error("MySQL Query Error: #{error.message}")
+      raise error
+    end
 
     def connection_lost?(error)
       [2006, 2013].include?(error.errno)

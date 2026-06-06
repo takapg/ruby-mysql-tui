@@ -368,7 +368,7 @@ RSpec.describe RubyMysqlTui::Client, '#rename_table' do
   end
 end
 
-RSpec.describe RubyMysqlTui::Client, '#query reconnection' do
+RSpec.describe RubyMysqlTui::Client, '#query reconnection (success)' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }
   let(:sql) { 'SELECT 1' }
@@ -395,6 +395,17 @@ RSpec.describe RubyMysqlTui::Client, '#query reconnection' do
     expect(mock_mysql_client).to receive(:query).with(sql).and_return([{ '1' => 1 }]).once
 
     expect(client.query(sql)).to eq([{ '1' => 1 }])
+  end
+end
+
+RSpec.describe RubyMysqlTui::Client, '#query reconnection (failure)' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:sql) { 'SELECT 1' }
+  let(:gone_away_error) { Mysql2::Error.new('MySQL server has gone away') }
+
+  before do
+    allow(gone_away_error).to receive(:errno).and_return(2006)
   end
 
   it 'raises error if reconnection also fails' do
