@@ -7,7 +7,6 @@ module RubyMysqlTui
   module InputHandler
     # TableManager は テーブルの作成などの操作を提供します。
     module TableManager
-      COLUMN_TYPES = ['INT', 'VARCHAR(255)', 'TEXT', 'DATETIME', 'DATE'].freeze
 
       module_function
 
@@ -65,7 +64,7 @@ module RubyMysqlTui
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return state if col_name.nil? || col_name.strip.empty?
 
-        type = prompt.select('データ型を選択してください:', COLUMN_TYPES)
+        type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
         execute_add_column(state, client, table_name, col_name.strip, type)
       rescue Mysql2::Error => e
         handle_add_column_error(prompt, e)
