@@ -149,14 +149,15 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_truncate_table
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column (success/cancel)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'col1', 'Key' => '' }] } }
 
   it 'drops a column when confirmed' do
     allow(prompt).to receive(:yes?).and_return(true)
-    expect(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_drop_column).with(state, client, 'col1').and_return(state)
+    expect(RubyMysqlTui::InputHandler::TableExecutor)
+      .to receive(:execute_drop_column).with(state, client, 'col1').and_return(state)
 
     result = described_class.handle_drop_column(state, client, prompt)
     expect(result).to eq(state)
@@ -167,6 +168,12 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column' d
     result = described_class.handle_drop_column(state, client, prompt)
     expect(result[:status_message]).to eq('Deletion cancelled')
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column (errors)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'col1', 'Key' => '' }] } }
 
   it 'refuses to drop primary key' do
     state[:records] = [{ 'Field' => 'id', 'Key' => 'PRI' }]

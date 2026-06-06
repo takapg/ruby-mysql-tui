@@ -98,7 +98,6 @@ module RubyMysqlTui
         true
       end
 
-
       private_class_method def handle_create_error(prompt, error)
         RubyMysqlTui.logger.error("Table Creation Error: #{error.message}")
         prompt.error("エラーが発生しました: #{error.message}")
