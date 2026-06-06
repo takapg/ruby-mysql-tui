@@ -121,6 +121,27 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
   end
 end
 
+RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail NULL' do
+  let(:width) { 40 }
+  let(:height) { 5 }
+
+  it 'shows "NULL" when value is nil' do
+    record = { 'col1' => nil, 'col2' => 'v2' }
+    state = { records: [record], selected_record_index: 0, detail_offset: 0 }
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).to include('col1: NULL')
+    expect(output).to include('col2: v2')
+  end
+
+  it 'shows empty string when value is ""' do
+    record = { 'col1' => '', 'col2' => 'v2' }
+    state = { records: [record], selected_record_index: 0, detail_offset: 0 }
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).to include('col1: ')
+    expect(output).not_to include('col1: NULL')
+  end
+end
+
 RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items basic' do
   let(:items) { %w[Database_A Database_B Test_DB Production_DB] }
 
@@ -226,5 +247,24 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - cl
     }
     output = described_class.build_view(state, width, height)
     expect(output).to include('> 1 Alice')
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'NULL display' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+
+  it 'shows "NULL" when record value is nil' do
+    records = [{ 'id' => 1, 'name' => nil }]
+    state = { records: records, selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('NULL')
+  end
+
+  it 'shows empty string when record value is ""' do
+    records = [{ 'id' => 1, 'name' => '' }]
+    state = { records: records, selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).not_to include('NULL')
   end
 end
