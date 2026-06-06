@@ -2,11 +2,13 @@
 
 require 'mysql2'
 require_relative 'client/writer'
+require_relative 'client/schema_manager'
 
 module RubyMysqlTui
   # Client は MySQL 接続を管理し、クエリの実行を提供します。
   class Client
     include Writer
+    include SchemaManager
 
     MAX_RECORDS_LIMIT = 10_000
 
@@ -31,14 +33,7 @@ module RubyMysqlTui
       RubyMysqlTui.logger.info("Executing SQL: #{sql}")
       @connection.query(sql)
     rescue Mysql2::Error => e
-      if retry_count == 0 && connection_lost?(e)
-        RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{e.errno})")
-        connect!
-        return query(sql, 1)
-      end
-
-      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
-      raise e
+      handle_query_error(e, sql, retry_count)
     end
 
     # データベース一覧を取得します。
@@ -94,32 +89,6 @@ module RubyMysqlTui
       query("SHOW COLUMNS FROM `#{escaped_table_name}`")
     end
 
-    # データベースを作成します。
-    def create_database(name)
-      query("CREATE DATABASE `#{name.gsub('`', '``')}`")
-    end
-
-    # テーブルを作成します。
-    def create_table(name, columns = [])
-      escaped_name = name.gsub('`', '``')
-      col_defs = ['id INT PRIMARY KEY AUTO_INCREMENT'] + build_column_definitions(columns)
-      query("CREATE TABLE `#{escaped_name}` (#{col_defs.join(', ')})")
-    end
-
-    # データベースを削除します。
-    def drop_database(name)
-      query("DROP DATABASE `#{name.gsub('`', '``')}`")
-    end
-
-    # テーブルを削除します。
-    def drop_table(name)
-      query("DROP TABLE `#{name.gsub('`', '``')}`")
-    end
-
-    # テーブルの名前を変更します。
-    def rename_table(old_name, new_name)
-      query("RENAME TABLE `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`")
-    end
 
     # 接続を閉じます。
     def close
@@ -128,19 +97,19 @@ module RubyMysqlTui
 
     private
 
-    def connection_lost?(error)
-      [2006, 2013].include?(error.errno)
+    def handle_query_error(e, sql, retry_count)
+      if retry_count.zero? && connection_lost?(e)
+        RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{e.errno})")
+        connect!
+        return query(sql, 1)
+      end
+
+      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
+      raise e
     end
 
-    def build_column_definitions(columns)
-      columns.map do |col|
-        name = col.is_a?(Hash) ? col[:name] : col
-        type = col.is_a?(Hash) ? col[:type] : 'VARCHAR(255)'
-
-        raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s(),]+\z/)
-
-        "`#{name.gsub('`', '``')}` #{type}"
-      end
+    def connection_lost?(error)
+      [2006, 2013].include?(error.errno)
     end
 
     def connect!
