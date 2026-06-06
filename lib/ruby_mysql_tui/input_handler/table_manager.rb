@@ -6,19 +6,17 @@ module RubyMysqlTui
   module InputHandler
     # TableManager は テーブルの作成などの操作を提供します。
     module TableManager
+      COLUMN_TYPES = ['INT', 'VARCHAR(255)', 'TEXT', 'DATETIME', 'DATE'].freeze
+
       module_function
 
       def handle_create_table(state, client, prompt)
         name = prompt.ask('作成するテーブル名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        cols = prompt_for_columns(prompt)
-        client.create_table(name.strip, cols)
-        state[:items] = client.list_tables(state[:selected_db])
-        state
+        execute_create_table(state, client, prompt, name.strip)
       rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Table Creation Error: #{e.message}")
-        prompt.error("エラーが発生しました: #{e.message}")
+        handle_create_error(prompt, e)
         state
       end
 
@@ -47,6 +45,18 @@ module RubyMysqlTui
         state
       end
 
+      private_class_method def execute_create_table(state, client, prompt, name)
+        cols = collect_column_definitions(prompt)
+        client.create_table(name, cols)
+        state[:items] = client.list_tables(state[:selected_db])
+        state
+      end
+
+      private_class_method def handle_create_error(prompt, e)
+        RubyMysqlTui.logger.error("Table Creation Error: #{e.message}")
+        prompt.error("エラーが発生しました: #{e.message}")
+      end
+
       private_class_method def execute_rename_table(state, client, old_name, new_name)
         client.rename_table(old_name, new_name)
         state[:items] = client.list_tables(state[:selected_db])
@@ -61,11 +71,21 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def prompt_for_columns(prompt)
-        input = prompt.ask('追加するカラム名（カンマ区切り、任意）:')
-        return [] if input.nil?
+      private_class_method def collect_column_definitions(prompt)
+        columns = []
+        loop do
+          col = prompt_for_single_column(prompt)
+          break if col.nil?
+          columns << col
+          break unless prompt.yes?('さらにカラムを追加しますか？')
+        end
+        columns
+      end
 
-        input.split(',').map(&:strip).reject(&:empty?)
+      private_class_method def prompt_for_single_column(prompt)
+        name = prompt.ask('カラム名を入力してください:')
+        return nil if name.nil? || name.strip.empty?
+        { name: name.strip, type: prompt.select('データ型を選択してください:', COLUMN_TYPES) }
       end
     end
   end

@@ -95,8 +95,7 @@ module RubyMysqlTui
     # テーブルを作成します。
     def create_table(name, columns = [])
       escaped_name = name.gsub('`', '``')
-      col_defs = ['id INT PRIMARY KEY AUTO_INCREMENT'] +
-                 columns.map { |col| "`#{col.gsub('`', '``')}` VARCHAR(255)" }
+      col_defs = ['id INT PRIMARY KEY AUTO_INCREMENT'] + build_column_definitions(columns)
       query("CREATE TABLE `#{escaped_name}` (#{col_defs.join(', ')})")
     end
 
@@ -121,6 +120,14 @@ module RubyMysqlTui
     end
 
     private
+
+    def build_column_definitions(columns)
+      columns.map do |col|
+        name = col.is_a?(Hash) ? col[:name] : col
+        type = col.is_a?(Hash) ? col[:type] : 'VARCHAR(255)'
+        "`#{name.gsub('`', '``')}` #{type}"
+      end
+    end
 
     def connect!
       @connection = Mysql2::Client.new(@config)
