@@ -220,7 +220,7 @@ RSpec.describe 'E2E Record Edit - NULL value' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:select).and_return('nullable_col')
-    allow(prompt).to receive(:ask).and_return('') # 空入力
+    allow(prompt).to receive(:ask).and_return('NULL') # 明示的NULL入力
     allow(prompt).to receive(:say)
 
     states = track_states(client)
@@ -370,8 +370,8 @@ RSpec.describe 'E2E Record Creation - NULL value' do
 
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    # Nullableなカラムに対して空文字を返す
-    allow(prompt).to receive(:ask).and_return('')
+    # Nullableなカラムに対して明示的にNULLを入力
+    allow(prompt).to receive(:ask).and_return('NULL')
 
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
