@@ -138,6 +138,58 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
     expect { renderer.render(client, state) }.to output(/No SQL executed/).to_stdout
   end
+
+  context 'when view_mode is :record_detail' do
+    it 'displays the value of the selected column' do
+      state = {
+        focus: :left,
+        view_mode: :record_detail,
+        records: [{ 'id' => 1, 'name' => 'Alice', 'bio' => 'Software Engineer' }],
+        selected_record_index: 0,
+        selected_column_index: 1,
+        items: []
+      }
+      expect { renderer.render(client, state) }.to output(/\[Value of 'name'\]: Alice/).to_stdout
+    end
+
+    it 'displays "NULL" when the value is nil' do
+      state = {
+        focus: :left,
+        view_mode: :record_detail,
+        records: [{ 'id' => 1, 'name' => nil }],
+        selected_record_index: 0,
+        selected_column_index: 1,
+        items: []
+      }
+      expect { renderer.render(client, state) }.to output(/\[Value of 'name'\]: NULL/).to_stdout
+    end
+
+    it 'does not truncate long values' do
+      long_value = 'a' * 200
+      state = {
+        focus: :left,
+        view_mode: :record_detail,
+        records: [{ 'id' => 1, 'note' => long_value }],
+        selected_record_index: 0,
+        selected_column_index: 1,
+        items: []
+      }
+      output = capture_stdout { renderer.render(client, state) }
+      expect(output).to include(long_value)
+      expect(output).not_to include('...')
+    end
+
+    it 'displays "No record selected" when no record is available' do
+      state = {
+        focus: :left,
+        view_mode: :record_detail,
+        records: [],
+        selected_record_index: 0,
+        items: []
+      }
+      expect { renderer.render(client, state) }.to output(/No record selected/).to_stdout
+    end
+  end
 end
 
 RSpec.describe RubyMysqlTui::UI::Renderer, 'log truncation' do
