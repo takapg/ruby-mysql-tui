@@ -9,17 +9,8 @@ module RubyMysqlTui
       module_function
 
       def build_view(state, width, height)
-        records = state[:records] || []
-        query = state[:records_filter_query]
-
-        if query && !query.empty?
-          records = records.select do |row|
-            row.values.any? { |v| v.to_s.downcase.include?(query.downcase) }
-          end
-        end
-
-        selected_index = state[:selected_record_index] || 0
-        selected_index = selected_index.clamp(0, [0, records.size - 1].max)
+        records = filter_records(state)
+        selected_index = calculate_selected_index(state, records.size)
 
         build_records_text(
           table_name: state[:selected_table],
@@ -27,6 +18,21 @@ module RubyMysqlTui
           width: width,
           options: view_options(state, height).merge(selected_index: selected_index)
         )
+      end
+
+      private_class_method def filter_records(state)
+        records = state[:records] || []
+        query = state[:records_filter_query]
+        return records if query.nil? || query.empty?
+
+        records.select do |row|
+          row.values.any? { |v| v.to_s.downcase.include?(query.downcase) }
+        end
+      end
+
+      private_class_method def calculate_selected_index(state, records_size)
+        index = state[:selected_record_index] || 0
+        index.clamp(0, [0, records_size - 1].max)
       end
 
       def view_options(state, height)
