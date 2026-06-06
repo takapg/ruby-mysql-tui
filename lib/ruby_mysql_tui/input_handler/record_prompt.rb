@@ -100,7 +100,6 @@ module RubyMysqlTui
 
         value
       end
-      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value, :string_type?
 
       def apply_validations(question, column, structure)
         is_required = required_column?(column, structure)
@@ -139,6 +138,8 @@ module RubyMysqlTui
 
         TYPE_VALIDATIONS.find { |pattern, _| type.match?(pattern) }&.last
       end
+
+      private_class_method :handle_missing_pk, :handle_no_editable_cols, :process_input_value, :string_type?
     end
   end
 end
