@@ -125,6 +125,11 @@ module RubyMysqlTui
       columns.map do |col|
         name = col.is_a?(Hash) ? col[:name] : col
         type = col.is_a?(Hash) ? col[:type] : 'VARCHAR(255)'
+
+        unless type.to_s =~ /\A[a-zA-Z0-9\s\(\),]+\z/
+          raise ArgumentError, "Invalid column type: #{type}"
+        end
+
         "`#{name.gsub('`', '``')}` #{type}"
       end
     end
