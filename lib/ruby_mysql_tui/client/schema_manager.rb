@@ -30,7 +30,7 @@ module RubyMysqlTui
     end
 
     def add_column(table_name, column_name, type)
-      raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s()]+\z/)
+      raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s(),]+\z/)
 
       escaped_table = table_name.gsub('`', '``')
       escaped_col = column_name.gsub('`', '``')
