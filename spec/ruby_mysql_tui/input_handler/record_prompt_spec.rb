@@ -246,7 +246,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordPrompt, '.prompt_for_record_dat
 
     expect(prompt).to receive(:ask).with(/age/, any_args).and_yield(question).and_return('')
     expect(question).to receive(:validate).with(
-      Regexp.union(/\A-?\d+\z/, /\A\s*\z/),
+      Regexp.union(/\A-?\d+\z/, /\A\s*\z/, /\ANULL\z/i, /\A\\N\z/),
       '数値のみ入力してください'
     )
 
