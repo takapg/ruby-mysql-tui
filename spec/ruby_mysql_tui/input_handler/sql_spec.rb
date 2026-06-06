@@ -276,7 +276,9 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.process_sql_keypress(event, state, client)
     end
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.open_external_editor' do
     let(:state) { { sql_input: 'SELECT 1' } }
 
@@ -289,7 +291,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 
     it 'keeps sql_input when editor returns nil' do
       allow(described_class).to receive(:edit_in_editor).and_return(nil)
-      new_state, redraw = described_class.open_external_editor(state)
+      new_state, _redraw = described_class.open_external_editor(state)
       expect(new_state[:sql_input]).to eq('SELECT 1')
     end
 
@@ -305,7 +307,9 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.open_external_editor(state)
     end
   end
+end
 
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.edit_in_editor' do
     let(:editor) { 'vi' }
     let(:content) { 'SELECT 1' }
