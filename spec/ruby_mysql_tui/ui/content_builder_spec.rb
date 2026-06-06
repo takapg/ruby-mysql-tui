@@ -182,6 +182,12 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic' do
     expect(output).to include('Alice')
     expect(output).not_to include('Bob', 'Charlie')
   end
+
+  it '一致するレコードが 0 件の場合、「No records found」と表示すること' do
+    state = { records: records, records_filter_query: 'nonexistent', selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('No records found')
+  end
 end
 
 RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - column search' do

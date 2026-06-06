@@ -222,6 +222,7 @@ RSpec.describe RubyMysqlTui::InputHandler, 'right pane' do
     new_state = described_class.handle_input('/', state, client)
 
     expect(new_state[:records_filter_query]).to eq('record_query')
+    expect(new_state[:selected_record_index]).to eq(0)
   end
 
   it 'Esc キー (\e) が押され、records_filter_query が設定されているとき、フィルタをクリアすること' do
