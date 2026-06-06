@@ -103,6 +103,8 @@ module RubyMysqlTui
           DatabaseManager.handle_create_database(state, client, prompt)
         elsif state[:view_mode] == :tables
           TableManager.handle_create_table(state, client, prompt)
+        elsif state[:view_mode] == :table_structure
+          TableManager.handle_add_column(state, client, prompt)
         else
           RecordManager.handle_create_record(state, client, prompt)
         end

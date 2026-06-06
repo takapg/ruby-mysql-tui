@@ -57,6 +57,24 @@ module RubyMysqlTui
         state
       end
 
+      def handle_add_column(state, client, prompt)
+        table_name = state[:selected_table]
+        return state if table_name.nil?
+
+        col_name = prompt.ask('追加するカラム名を入力してください:')
+        return state if col_name.nil? || col_name.strip.empty?
+
+        type = prompt.select('データ型を選択してください:', COLUMN_TYPES)
+        client.add_column(table_name, col_name.strip, type)
+
+        state[:records] = client.list_table_structure(table_name)
+        state[:status_message] = "Column '#{col_name.strip}' added to '#{table_name}' successfully"
+        state
+      rescue Mysql2::Error => e
+        handle_add_column_error(prompt, e)
+        state
+      end
+
       private_class_method def execute_create_table(state, client, prompt, name)
         cols = collect_column_definitions(prompt)
         client.create_table(name, cols)
@@ -71,6 +89,11 @@ module RubyMysqlTui
 
       private_class_method def handle_truncate_error(prompt, error)
         RubyMysqlTui.logger.error("Table Truncate Error: #{error.message}")
+        prompt.error("エラーが発生しました: #{error.message}")
+      end
+
+      private_class_method def handle_add_column_error(prompt, error)
+        RubyMysqlTui.logger.error("Table Add Column Error: #{error.message}")
         prompt.error("エラーが発生しました: #{error.message}")
       end
 
