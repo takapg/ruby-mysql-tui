@@ -102,7 +102,7 @@ module RubyMysqlTui
       begin
         temp_file.write(content || '')
         temp_file.close
-        File.read(temp_file.path) if system("#{editor} #{temp_file.path}")
+        File.read(temp_file.path) if system(editor, temp_file.path)
       ensure
         temp_file.unlink
       end
