@@ -200,6 +200,6 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering' do
       selected_record_index: 2
     }
     output = described_class.build_view(state, width, height)
-    expect(output).to include('> Alice')
+    expect(output).to include('> 1 Alice')
   end
 end
