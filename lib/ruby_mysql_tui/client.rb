@@ -89,7 +89,6 @@ module RubyMysqlTui
       query("SHOW COLUMNS FROM `#{escaped_table_name}`")
     end
 
-
     # 接続を閉じます。
     def close
       @connection&.close
@@ -97,15 +96,15 @@ module RubyMysqlTui
 
     private
 
-    def handle_query_error(e, sql, retry_count)
-      if retry_count.zero? && connection_lost?(e)
-        RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{e.errno})")
+    def handle_query_error(error, sql, retry_count)
+      if retry_count.zero? && connection_lost?(error)
+        RubyMysqlTui.logger.warn("MySQL connection lost. Attempting to reconnect... (Error: #{error.errno})")
         connect!
         return query(sql, 1)
       end
 
-      RubyMysqlTui.logger.error("MySQL Query Error: #{e.message}")
-      raise e
+      RubyMysqlTui.logger.error("MySQL Query Error: #{error.message}")
+      raise error
     end
 
     def connection_lost?(error)
