@@ -126,6 +126,15 @@ module E2EFlowHelpers
     allow(prompt).to receive(:ask).and_return('duplicate_id', 'valid_id')
     allow(prompt).to receive(:say)
   end
+
+  def setup_filtering_mocks(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' }
+    ])
+  end
 end
 
 RSpec.shared_context 'e2e setup' do
@@ -692,16 +701,7 @@ end
 RSpec.describe 'E2E Record Filtering - Apply' do
   include_context 'e2e setup'
 
-  before do
-    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).and_return(
-      [
-        { 'id' => 1, 'name' => 'Alice' },
-        { 'id' => 2, 'name' => 'Bob' }
-      ]
-    )
-  end
+  before { setup_filtering_mocks(client) }
 
   it 'filters records using / key' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
@@ -728,16 +728,7 @@ end
 RSpec.describe 'E2E Record Filtering - Clear' do
   include_context 'e2e setup'
 
-  before do
-    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_records).and_return(
-      [
-        { 'id' => 1, 'name' => 'Alice' },
-        { 'id' => 2, 'name' => 'Bob' }
-      ]
-    )
-  end
+  before { setup_filtering_mocks(client) }
 
   it 'clears filter using Esc key' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
