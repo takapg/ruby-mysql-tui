@@ -10,6 +10,8 @@ module RubyMysqlTui
 
     module_function
 
+    MAX_HISTORY_SIZE = 100
+
     def execute_sql(sql, state, client)
       return state if sql.nil? || sql.strip.empty?
 
@@ -48,8 +50,12 @@ module RubyMysqlTui
       history = state[:sql_history] || []
       return if history.last == sql
 
+      history.delete(sql)
       history << sql
-      SqlHistoryManager.save_history(history)
+
+      updated_history = history.last(MAX_HISTORY_SIZE)
+      state[:sql_history] = updated_history
+      SqlHistoryManager.save_history(updated_history)
     end
 
     def query_mysql(sql, client)
