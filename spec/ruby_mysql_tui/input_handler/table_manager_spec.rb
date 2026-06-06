@@ -156,8 +156,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column' d
 
   it 'drops a column when confirmed' do
     allow(prompt).to receive(:yes?).and_return(true)
-    expect(client).to receive(:drop_column).with('test_table', 'col1')
-    expect(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_drop_column).and_return(state)
+    expect(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_drop_column).with(state, client, 'col1').and_return(state)
 
     result = described_class.handle_drop_column(state, client, prompt)
     expect(result).to eq(state)
