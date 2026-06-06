@@ -230,7 +230,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - basic' do
   it 'displays left-pane guides when focus is :left' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
     expect { renderer.render(client, state) }.to output(
-      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[b\] Back \| \[↑/↓\] Move \| \[Enter\] Select}
+      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[b\] Back \| \[↑/↓\] Move \| \[Enter\] Select}
     ).to_stdout
   end
 
@@ -246,8 +246,11 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
 
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
-    regex = Regexp.new('\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| ' \
-                       '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records')
+    regex = Regexp.new(
+      '\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[n\] New \| \[e\] Edit \| ' \
+      '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records \| ' \
+      '\[i\] Structure \| \[←/→\] Scroll Cols'
+    )
     expect { renderer.render(client, state) }.to output(regex).to_stdout
   end
 
@@ -266,6 +269,16 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - structure' do
   it 'displays [i] Records and [↑/↓] Move when focus is :right and view_mode is :table_structure' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :table_structure, selected_table: 'users' }
     expect { renderer.render(client, state) }.to output(%r{\[i\] Records \| \[↑/↓\] Move}).to_stdout
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::Renderer, 'help modal' do
+  include_context 'renderer setup'
+
+  it 'displays help modal when show_help is true' do
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, show_help: true }
+    expect { renderer.render(client, state) }.to output(/--- 操作ヘルプ ---/).to_stdout
+    expect { renderer.render(client, state) }.to output(/\[共通操作\]/).to_stdout
   end
 end
 

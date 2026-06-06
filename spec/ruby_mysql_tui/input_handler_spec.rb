@@ -163,6 +163,24 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - column scroll' do
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - help' do
+  let(:client) { double('Client') }
+  let(:state) { { focus: :left, items: %w[db1 db2], filter_query: '', selected_index: 0 } }
+
+  it 'sets show_help to true when "?" is pressed' do
+    event = double('Event', value: '?', key: double('Key'))
+    new_state = described_class.handle_input(event, state, client)
+    expect(new_state[:show_help]).to be true
+  end
+
+  it 'sets show_help to false when any key is pressed while show_help is true' do
+    state_with_help = state.merge(show_help: true)
+    event = double('Event', value: 'a', key: double('Key'))
+    new_state = described_class.handle_input(event, state_with_help, client)
+    expect(new_state[:show_help]).to be false
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler do
   let(:client) { double('Client') }
   let(:state) { { focus: :left, items: %w[db1 db2], filter_query: '', selected_index: 0 } }
