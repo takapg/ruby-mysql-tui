@@ -184,16 +184,9 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced' do
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - column search' do
   let(:width) { 100 }
   let(:height) { 20 }
-  let(:records) do
-    [
-      { 'id' => 1, 'name' => 'Alice' },
-      { 'id' => 2, 'name' => 'Bob' },
-      { 'id' => 3, 'name' => 'Charlie' }
-    ]
-  end
 
   it 'いずれかのカラムにキーワードが含まれていれば表示すること' do
     records_with_id = [
@@ -204,6 +197,18 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced' do
     output = described_class.build_view(state, width, height)
     expect(output).to include('Bob')
     expect(output).not_to include('Alice')
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - clamp' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+  let(:records) do
+    [
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' },
+      { 'id' => 3, 'name' => 'Charlie' }
+    ]
   end
 
   it 'フィルタリング後に selected_record_index が範囲外にならないよう clamp されること' do

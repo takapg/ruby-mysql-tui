@@ -689,7 +689,7 @@ RSpec.describe 'E2E Table Rename' do
   end
 end
 
-RSpec.describe 'E2E Record Filtering' do
+RSpec.describe 'E2E Record Filtering - Apply' do
   include_context 'e2e setup'
 
   before do
@@ -722,6 +722,21 @@ RSpec.describe 'E2E Record Filtering' do
     RubyMysqlTui.run_main_loop(client)
 
     expect(states.any? { |s| s[:records_filter_query] == 'Alice' }).to be true
+  end
+end
+
+RSpec.describe 'E2E Record Filtering - Clear' do
+  include_context 'e2e setup'
+
+  before do
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return(
+      [
+        { 'id' => 1, 'name' => 'Alice' },
+        { 'id' => 2, 'name' => 'Bob' }
+      ]
+    )
   end
 
   it 'clears filter using Esc key' do
