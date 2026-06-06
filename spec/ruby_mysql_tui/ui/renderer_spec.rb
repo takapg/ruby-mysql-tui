@@ -169,7 +169,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail edge cases' do
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail long values' do
   include_context 'renderer setup'
   context 'when view_mode is :record_detail' do
     it 'does not truncate long values' do
@@ -185,7 +185,12 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail edge cas
       output = capture_stdout { renderer.render(client, state) }
       expect(output).to include(long_value)
     end
+  end
+end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'log display - record detail no record' do
+  include_context 'renderer setup'
+  context 'when view_mode is :record_detail' do
     it 'displays "No record selected" when no record is available' do
       state = {
         focus: :left,
