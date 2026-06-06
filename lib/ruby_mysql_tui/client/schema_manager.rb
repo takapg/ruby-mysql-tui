@@ -21,6 +21,10 @@ module RubyMysqlTui
       query("DROP TABLE `#{name.gsub('`', '``')}`")
     end
 
+    def truncate_table(name)
+      query("TRUNCATE TABLE `#{name.gsub('`', '``')}`")
+    end
+
     def rename_table(old_name, new_name)
       query("RENAME TABLE `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`")
     end

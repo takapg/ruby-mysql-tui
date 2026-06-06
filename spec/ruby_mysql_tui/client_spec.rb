@@ -368,6 +368,17 @@ RSpec.describe RubyMysqlTui::Client, '#rename_table' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#truncate_table' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes TRUNCATE TABLE and escapes backticks' do
+    table_name = 'my`table'
+    expect(mock_mysql_client).to receive(:query).with('TRUNCATE TABLE `my``table`')
+    client.truncate_table(table_name)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#query reconnection (success)' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

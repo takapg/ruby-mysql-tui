@@ -802,6 +802,34 @@ RSpec.describe 'E2E Table Deletion' do
   end
 end
 
+RSpec.describe 'E2E Table Truncation' do
+  include_context 'e2e setup'
+
+  it 'truncates a table when t is pressed in table view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: 't', key: double('Key', name: :t)),       # Truncate
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    allow(client).to receive(:list_databases).at_least(:once).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    expect(client).to receive(:truncate_table).with('test_table')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? do |s|
+      s[:status_message] == "Table 'test_table' truncated successfully"
+    end).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Detail Operations - Editing' do
   include_context 'e2e setup'
 
