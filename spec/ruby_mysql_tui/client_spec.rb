@@ -316,6 +316,12 @@ RSpec.describe RubyMysqlTui::Client, '#create_table (custom columns)' do
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name, columns)
   end
+
+  it 'raises ArgumentError when an invalid column type is provided' do
+    table_name = 'test_table'
+    columns = [{ name: 'name', type: 'VARCHAR(255); DROP TABLE users;' }]
+    expect { client.create_table(table_name, columns) }.to raise_error(ArgumentError, /Invalid column type/)
+  end
 end
 
 RSpec.describe RubyMysqlTui::Client, '#update_record' do
