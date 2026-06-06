@@ -43,7 +43,7 @@ module RubyMysqlTui
       def apply_tables_view_state(state, db_name, client)
         state.merge!(
           selected_db: db_name, view_mode: :tables, items: client.list_tables(db_name),
-          selected_index: 0, filter_query: '', columns_offset: 0,
+          selected_index: 0, filter_query: '', records_filter_query: '', columns_offset: 0,
           sort_column: nil, sort_direction: 'ASC', sql_result_mode: false
         )
       end
@@ -60,7 +60,7 @@ module RubyMysqlTui
       def reset_record_state(state, table_name, client)
         state.merge!(selected_table: table_name, view_mode: :records, page_offset: 0,
                      records_offset: 0, columns_offset: 0, sort_column: nil, sort_direction: 'ASC',
-                     filter_query: '', sql_result_mode: false)
+                     filter_query: '', records_filter_query: '', sql_result_mode: false)
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
       end
@@ -75,7 +75,7 @@ module RubyMysqlTui
       def apply_databases_view_state(state, client)
         state.merge!(
           view_mode: :databases, items: client.list_databases, selected_index: 0,
-          filter_query: '', selected_db: nil, selected_table: nil,
+          filter_query: '', records_filter_query: '', selected_db: nil, selected_table: nil,
           page_offset: 0, records_offset: 0, columns_offset: 0, sql_result_mode: false
         )
       end

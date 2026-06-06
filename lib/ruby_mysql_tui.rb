@@ -86,7 +86,7 @@ module RubyMysqlTui
       items: client.list_databases, sql_mode: false, sql_input: '',
       records_offset: 0, page_offset: 0, all_records_mode: false,
       columns_offset: 0, sql_history: InputHandler::SqlHistoryManager.load_history,
-      sql_history_index: nil, sql_temp_input: '', filter_query: '', show_help: false
+      sql_history_index: nil, sql_temp_input: '', filter_query: '', records_filter_query: '', show_help: false
     }
   end
 
