@@ -43,16 +43,24 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(state[:sql_history]).to eq(['SELECT 1', 'SELECT 2'])
     end
 
-    it 'does not add duplicate SQL to history' do
-      state[:sql_history] = ['SELECT 1']
+    it 'moves existing SQL to the end of history' do
+      state[:sql_history] = ['SELECT 1', 'SELECT 2']
       described_class.update_sql_history('SELECT 1', state)
-      expect(state[:sql_history]).to eq(['SELECT 1'])
+      expect(state[:sql_history]).to eq(['SELECT 2', 'SELECT 1'])
     end
 
     it 'does not add empty or blank SQL to history' do
       described_class.update_sql_history('', state)
       described_class.update_sql_history('   ', state)
       expect(state[:sql_history]).to eq([])
+    end
+
+    it 'limits history to MAX_HISTORY_SIZE' do
+      state[:sql_history] = (1..100).map { |i| "SELECT #{i}" }
+      described_class.update_sql_history('SELECT 101', state)
+      expect(state[:sql_history].size).to eq(100)
+      expect(state[:sql_history].first).to eq('SELECT 2')
+      expect(state[:sql_history].last).to eq('SELECT 101')
     end
   end
 end
