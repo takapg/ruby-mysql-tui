@@ -110,6 +110,11 @@ module RubyMysqlTui
       query("DROP TABLE `#{name.gsub('`', '``')}`")
     end
 
+    # テーブルの名前を変更します。
+    def rename_table(old_name, new_name)
+      query("RENAME TABLE `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`")
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close

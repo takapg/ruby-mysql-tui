@@ -33,6 +33,27 @@ module RubyMysqlTui
         Deletable.handle_drop_error(prompt, e, state, 'Table')
       end
 
+      def handle_rename_table(state, client, prompt)
+        table_name = state[:items][state[:selected_index]]
+        return state if table_name.nil?
+
+        new_name = prompt.ask("テーブル '#{table_name}' の新しい名前を入力してください:")
+        return state if new_name.nil? || new_name.strip.empty?
+
+        execute_rename_table(state, client, table_name, new_name.strip)
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Table Rename Error: #{e.message}")
+        prompt.error("エラーが発生しました: #{e.message}")
+        state
+      end
+
+      private_class_method def execute_rename_table(state, client, old_name, new_name)
+        client.rename_table(old_name, new_name)
+        state[:items] = client.list_tables(state[:selected_db])
+        state[:status_message] = "Table '#{old_name}' renamed to '#{new_name}' successfully"
+        state
+      end
+
       private_class_method def execute_drop_table(state, client, table_name)
         client.drop_table(table_name)
         state = Deletable.update_state_after_deletion(state, client.list_tables(state[:selected_db]))
