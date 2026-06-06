@@ -45,6 +45,19 @@ module RubyMysqlTui
         state
       end
 
+      def handle_truncate_table(state, client, prompt)
+        table_name = state[:items][state[:selected_index]]
+        return state if table_name.nil?
+
+        if prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
+          client.truncate_table(table_name)
+          state[:status_message] = "Table '#{table_name}' truncated successfully"
+        else
+          state[:status_message] = "Truncation cancelled"
+        end
+        state
+      end
+
       private_class_method def execute_create_table(state, client, prompt, name)
         cols = collect_column_definitions(prompt)
         client.create_table(name, cols)

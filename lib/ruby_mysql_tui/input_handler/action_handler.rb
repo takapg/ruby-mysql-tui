@@ -15,7 +15,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd', 'c', 'o', 'r' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c', 'o', 'r', 't' then handle_record_action(val, state, client)
         when '[', ']' then handle_record_navigation(val, state)
         end
       end
@@ -54,6 +54,7 @@ module RubyMysqlTui
         when 'c' then RecordManager.handle_clone_record(state, client, prompt)
         when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
         when 'r' then handle_rename_action(state, client, prompt)
+        when 't' then handle_truncate_action(state, client, prompt)
         else state
         end
       end
@@ -61,6 +62,14 @@ module RubyMysqlTui
       def handle_rename_action(state, client, prompt)
         if state[:focus] == :left && state[:view_mode] == :tables
           TableManager.handle_rename_table(state, client, prompt)
+        else
+          state
+        end
+      end
+
+      def handle_truncate_action(state, client, prompt)
+        if state[:focus] == :left && state[:view_mode] == :tables
+          TableManager.handle_truncate_table(state, client, prompt)
         else
           state
         end
