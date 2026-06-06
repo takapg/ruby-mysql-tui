@@ -80,7 +80,7 @@ module RubyMysqlTui
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にカラム '#{column_name}' を削除しますか？ (y/N)")
 
-        TableExecutor.execute_drop_column(state, client, column_name)
+        TableExecutor.execute_drop_column(state, client, state[:selected_table], column_name)
       rescue Mysql2::Error => e
         Deletable.handle_drop_error(prompt, e, state, 'Column')
       end

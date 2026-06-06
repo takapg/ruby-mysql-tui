@@ -40,8 +40,7 @@ module RubyMysqlTui
         state
       end
 
-      def execute_drop_column(state, client, column_name)
-        table_name = state[:selected_table]
+      def execute_drop_column(state, client, table_name, column_name)
         client.drop_column(table_name, column_name)
         state[:records] = client.list_table_structure(table_name)
         state[:selected_record_index] = 0
