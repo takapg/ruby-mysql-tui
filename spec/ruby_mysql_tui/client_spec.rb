@@ -386,6 +386,17 @@ RSpec.describe RubyMysqlTui::Client, '#query reconnection' do
     expect(client.query(sql)).to eq([{ '1' => 1 }])
   end
 
+  it 'reconnects and retries when connection is lost (errno 2013)' do
+    lost_connection_error = Mysql2::Error.new('Lost connection to MySQL server during query')
+    allow(lost_connection_error).to receive(:errno).and_return(2013)
+
+    expect(mock_mysql_client).to receive(:query).with(sql).and_raise(lost_connection_error).once
+    expect(client).to receive(:connect!).and_call_original
+    expect(mock_mysql_client).to receive(:query).with(sql).and_return([{ '1' => 1 }]).once
+
+    expect(client.query(sql)).to eq([{ '1' => 1 }])
+  end
+
   it 'raises error if reconnection also fails' do
     expect(mock_mysql_client).to receive(:query).with(sql).and_raise(gone_away_error).twice
     expect(client).to receive(:connect!).and_call_original
