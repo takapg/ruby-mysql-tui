@@ -26,6 +26,7 @@ module RubyMysqlTui
     private_class_method def handle_special_keys(val, state)
       return handle_filter_input(val, state) if state[:focus] == :left && ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
+
       nil
     end
 
