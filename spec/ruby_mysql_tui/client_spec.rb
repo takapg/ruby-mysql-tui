@@ -393,7 +393,8 @@ RSpec.describe RubyMysqlTui::Client, '#add_column' do
   end
 
   it 'raises ArgumentError for invalid column type' do
-    expect { client.add_column('t', 'c', 'INT; DROP TABLE users;') }.to raise_error(ArgumentError, /Invalid column type/)
+    expect { client.add_column('t', 'c', 'INT; DROP TABLE users;') }
+      .to raise_error(ArgumentError, /Invalid column type/)
   end
 end
 

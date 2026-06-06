@@ -99,14 +99,11 @@ module RubyMysqlTui
       end
 
       def handle_new_record_action(state, client, prompt)
-        if state[:view_mode] == :databases
-          DatabaseManager.handle_create_database(state, client, prompt)
-        elsif state[:view_mode] == :tables
-          TableManager.handle_create_table(state, client, prompt)
-        elsif state[:view_mode] == :table_structure
-          TableManager.handle_add_column(state, client, prompt)
-        else
-          RecordManager.handle_create_record(state, client, prompt)
+        case state[:view_mode]
+        when :databases then DatabaseManager.handle_create_database(state, client, prompt)
+        when :tables then TableManager.handle_create_table(state, client, prompt)
+        when :table_structure then TableManager.handle_add_column(state, client, prompt)
+        else RecordManager.handle_create_record(state, client, prompt)
         end
       end
     end

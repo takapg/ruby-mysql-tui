@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'deletable'
+require_relative 'table_prompt_helper'
 
 module RubyMysqlTui
   module InputHandler
@@ -65,18 +66,14 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', COLUMN_TYPES)
-        client.add_column(table_name, col_name.strip, type)
-
-        state[:records] = client.list_table_structure(table_name)
-        state[:status_message] = "Column '#{col_name.strip}' added to '#{table_name}' successfully"
-        state
+        execute_add_column(state, client, table_name, col_name.strip, type)
       rescue Mysql2::Error => e
         handle_add_column_error(prompt, e)
         state
       end
 
       private_class_method def execute_create_table(state, client, prompt, name)
-        cols = collect_column_definitions(prompt)
+        cols = TablePromptHelper.collect_column_definitions(prompt)
         client.create_table(name, cols)
         state[:items] = client.list_tables(state[:selected_db])
         state
@@ -122,23 +119,11 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def collect_column_definitions(prompt)
-        columns = []
-        loop do
-          col = prompt_for_single_column(prompt)
-          break if col.nil?
-
-          columns << col
-          break unless prompt.yes?('さらにカラムを追加しますか？')
-        end
-        columns
-      end
-
-      private_class_method def prompt_for_single_column(prompt)
-        name = prompt.ask('カラム名を入力してください:')
-        return nil if name.nil? || name.strip.empty?
-
-        { name: name.strip, type: prompt.select('データ型を選択してください:', COLUMN_TYPES) }
+      private_class_method def execute_add_column(state, client, table_name, col_name, type)
+        client.add_column(table_name, col_name, type)
+        state[:records] = client.list_table_structure(table_name)
+        state[:status_message] = "Column '#{col_name}' added to '#{table_name}' successfully"
+        state
       end
     end
   end
