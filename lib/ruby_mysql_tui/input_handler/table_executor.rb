@@ -39,6 +39,16 @@ module RubyMysqlTui
         state[:status_message] = "Column '#{col_name}' added to '#{table_name}' successfully"
         state
       end
+
+      def execute_drop_column(state, client, column_name)
+        table_name = state[:selected_table]
+        client.drop_column(table_name, column_name)
+        state[:records] = client.list_table_structure(table_name)
+        state[:selected_record_index] = 0
+        state[:records_offset] = 0
+        state[:status_message] = "Column '#{column_name}' deleted successfully"
+        state
+      end
     end
   end
 end

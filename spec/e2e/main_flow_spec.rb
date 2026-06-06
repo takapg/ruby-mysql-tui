@@ -831,6 +831,36 @@ RSpec.describe 'E2E Table Truncation' do
   end
 end
 
+RSpec.describe 'E2E Table Column Deletion' do
+  include_context 'e2e setup'
+
+  it 'deletes a column when d is pressed in table structure view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: 'i', key: double('Key', name: :i)),       # Structure View
+      double('Event', value: 'd', key: double('Key', name: :d)),       # Drop Col
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:yes?).and_return(true)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'col1', 'Key' => '' }])
+    expect(client).to receive(:drop_column).with('test_table', 'col1')
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:status_message] == "Column 'col1' deleted successfully" }).to be true
+  end
+end
+
 RSpec.describe 'E2E Table Column Addition' do
   include_context 'e2e setup'
 

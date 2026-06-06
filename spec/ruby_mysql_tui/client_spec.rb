@@ -379,6 +379,18 @@ RSpec.describe RubyMysqlTui::Client, '#truncate_table' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#drop_column' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+
+  it 'executes ALTER TABLE ... DROP COLUMN and escapes backticks' do
+    table_name = 'user`s'
+    col_name = 'age`s'
+    expect(mock_mysql_client).to receive(:query).with('ALTER TABLE `user``s` DROP COLUMN `age``s`')
+    client.drop_column(table_name, col_name)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#add_column' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

@@ -67,6 +67,15 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
     event_up = double('Event', value: "\e[A", key: double('Key'))
     state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
     expect(state[:selected_record_index]).to eq(30)
+
+    # 境界値チェック: 0未満にならないこと
+    50.times { state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client) }
+    expect(state[:selected_record_index]).to eq(0)
+
+    # 境界値チェック: 最大値を超えないこと
+    event_down = double('Event', value: "\e[B", key: double('Key'))
+    100.times { state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client) }
+    expect(state[:selected_record_index]).to eq(49)
   end
 end
 

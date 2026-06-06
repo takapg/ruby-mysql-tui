@@ -80,7 +80,7 @@ module RubyMysqlTui
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にカラム '#{column_name}' を削除しますか？ (y/N)")
 
-        perform_drop_column(state, client, column_name)
+        TableExecutor.execute_drop_column(state, client, column_name)
       rescue Mysql2::Error => e
         Deletable.handle_drop_error(prompt, e, state, 'Column')
       end
@@ -98,15 +98,6 @@ module RubyMysqlTui
         true
       end
 
-      private_class_method def perform_drop_column(state, client, column_name)
-        table_name = state[:selected_table]
-        client.drop_column(table_name, column_name)
-        state[:records] = client.list_table_structure(table_name)
-        state[:selected_record_index] = 0
-        state[:records_offset] = 0
-        state[:status_message] = "Column '#{column_name}' deleted successfully"
-        state
-      end
 
       private_class_method def handle_create_error(prompt, error)
         RubyMysqlTui.logger.error("Table Creation Error: #{error.message}")

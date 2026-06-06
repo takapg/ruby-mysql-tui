@@ -149,6 +149,43 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_truncate_table
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'col1', 'Key' => '' }] } }
+
+  it 'drops a column when confirmed' do
+    allow(prompt).to receive(:yes?).and_return(true)
+    expect(client).to receive(:drop_column).with('test_table', 'col1')
+    expect(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_drop_column).and_return(state)
+
+    result = described_class.handle_drop_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'cancels deletion when not confirmed' do
+    allow(prompt).to receive(:yes?).and_return(false)
+    result = described_class.handle_drop_column(state, client, prompt)
+    expect(result[:status_message]).to eq('Deletion cancelled')
+  end
+
+  it 'refuses to drop primary key' do
+    state[:records] = [{ 'Field' => 'id', 'Key' => 'PRI' }]
+    expect(prompt).to receive(:error).with(/主キーカラム 'id' は削除できません/)
+    result = described_class.handle_drop_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'handles Mysql2::Error' do
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(client).to receive(:drop_column).and_raise(Mysql2::Error.new('Error'))
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+
+    result = described_class.handle_drop_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
