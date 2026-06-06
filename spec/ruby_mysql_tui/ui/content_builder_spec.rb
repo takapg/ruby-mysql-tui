@@ -248,6 +248,11 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - cl
     output = described_class.build_view(state, width, height)
     expect(output).to include('> 1 Alice')
   end
+end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'NULL display' do
+  let(:width) { 100 }
+  let(:height) { 20 }
 
   it 'shows "NULL" when record value is nil' do
     records = [{ 'id' => 1, 'name' => nil }]
