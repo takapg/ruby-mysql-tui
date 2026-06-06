@@ -835,6 +835,8 @@ RSpec.describe 'E2E Record Detail Log Display' do
   include_context 'e2e setup'
 
   it 'displays the selected column value in the log area' do
+    allow(TTY::Screen).to receive(:width).and_return(100)
+    allow(TTY::Screen).to receive(:height).and_return(30)
     allow(TTY::Reader).to receive(:new).and_return(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)), # DB

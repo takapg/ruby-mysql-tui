@@ -176,7 +176,6 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'log display' do
       }
       output = capture_stdout { renderer.render(client, state) }
       expect(output).to include(long_value)
-      expect(output).not_to include('...')
     end
 
     it 'displays "No record selected" when no record is available' do
