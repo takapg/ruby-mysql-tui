@@ -75,13 +75,17 @@ module RubyMysqlTui
         record = state[:records][state[:selected_record_index]]
         return truncate('No record selected', width) unless record
 
-        rows = record.map { |k, v| "#{k}: #{v.nil? ? 'NULL' : v}" }
-        offset = state[:detail_offset] || 0
-        max_rows = height ? [0, height - 2].max : rows.size
+        rows = format_detail_rows(record)
+        render_detail_rows(rows, state[:detail_offset] || 0, height, width)
+      end
 
-        rows.drop(offset).take(max_rows).map do |row|
-          truncate(row, width)
-        end.join("\n")
+      private_class_method def format_detail_rows(record)
+        record.map { |k, v| "#{k}: #{v.nil? ? 'NULL' : v}" }
+      end
+
+      private_class_method def render_detail_rows(rows, offset, height, width)
+        max_rows = height ? [0, height - 2].max : rows.size
+        rows.drop(offset).take(max_rows).map { |row| truncate(row, width) }.join("\n")
       end
 
       def calculate_col_width(width, columns_count)

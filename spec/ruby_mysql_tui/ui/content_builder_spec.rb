@@ -119,6 +119,11 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
     expect(output).to include('col4: v4')
     expect(output).to include('col5: v5')
   end
+end
+
+RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail NULL' do
+  let(:width) { 40 }
+  let(:height) { 5 }
 
   it 'shows "NULL" when value is nil' do
     record = { 'col1' => nil, 'col2' => 'v2' }
