@@ -31,15 +31,22 @@ module RubyMysqlTui
 
       def self.handle_edit_record(state, client, prompt)
         return state unless can_manage_record?(state)
+
         record = state[:records][state[:selected_record_index]]
         pk_column = client.primary_key_for(state[:selected_table])
         return state unless record
 
-        return (RecordPrompt.warn_pk_missing(prompt); state) if pk_column.nil?
+        if pk_column.nil?
+          RecordPrompt.warn_pk_missing(prompt)
+          return state
+        end
 
-        state[:view_mode] == :record_detail ?
-          direct_edit(state, client, record, pk_column, prompt) :
+        if state[:view_mode] == :record_detail
+          direct_edit(state, client, record, pk_column, prompt)
+        else
           edit_and_update(state, client, record, pk_column, prompt)
+        end
+
         state
       end
 
@@ -47,13 +54,16 @@ module RubyMysqlTui
         col_idx = state[:selected_column_index] || 0
         column = record.keys[col_idx]
         return if column.nil?
+
         structure = client.list_table_structure(state[:selected_table])
         value = prompt.ask("新しい値を入力してください (#{column}):")
         return if value.nil?
+
         pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
         info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: value }
         perform_update(state, client, prompt, info)
       end
+
       def self.handle_create_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
