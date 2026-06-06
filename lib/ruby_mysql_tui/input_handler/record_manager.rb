@@ -51,9 +51,10 @@ module RubyMysqlTui
 
         return RecordPrompt.warn_pk_not_editable(prompt) if pk_cols.include?(column)
 
-        prompt_and_update_direct(state, client, prompt, {
+        context = {
           record: record, pk_column: pk_column, pk_cols: pk_cols, column: column
-        })
+        }
+        prompt_and_update_direct(state, client, prompt, context)
       end
 
       def self.prompt_and_update_direct(state, client, prompt, context)
