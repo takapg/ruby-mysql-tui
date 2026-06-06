@@ -51,14 +51,22 @@ module RubyMysqlTui
 
         return RecordPrompt.warn_pk_not_editable(prompt) if pk_cols.include?(column)
 
-        prompt_and_update_direct(state, client, record, pk_column, pk_cols, column, prompt)
+        prompt_and_update_direct(state, client, prompt, {
+          record: record, pk_column: pk_column, pk_cols: pk_cols, column: column
+        })
       end
 
-      def self.prompt_and_update_direct(state, client, record, pk_column, pk_cols, column, prompt)
-        value = prompt.ask("新しい値を入力してください (#{column}):")
+      def self.prompt_and_update_direct(state, client, prompt, context)
+        value = prompt.ask("新しい値を入力してください (#{context[:column]}):")
         return if value.nil?
 
-        info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: value }
+        info = {
+          pk_col: context[:pk_column],
+          pk_val: context[:record][context[:pk_column]],
+          pk_cols: context[:pk_cols],
+          col: context[:column],
+          val: value
+        }
         perform_update(state, client, prompt, info)
       end
 
