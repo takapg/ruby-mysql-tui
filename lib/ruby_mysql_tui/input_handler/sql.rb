@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'tempfile'
 require_relative 'sql_history_manager'
 require_relative 'sql_navigator'
 
@@ -84,8 +85,24 @@ module RubyMysqlTui
       when :return then handle_sql_return(state, client)
       when :up then handle_sql_history_up(state)
       when :down then handle_sql_history_down(state)
+      when :ctrl_e then open_external_editor(state)
       else handle_sql_text_input(event, state)
       end
+    end
+
+    def open_external_editor(state)
+      editor = ENV['EDITOR'] || 'vi'
+      temp_file = Tempfile.new(['sql_input', '.sql'])
+      begin
+        temp_file.write(state[:sql_input] || '')
+        temp_file.close
+        if system("#{editor} #{temp_file.path}")
+          state[:sql_input] = File.read(temp_file.path)
+        end
+      ensure
+        temp_file.unlink
+      end
+      [state, false]
     end
 
     def handle_sql_text_input(event, state)
