@@ -36,6 +36,7 @@ module E2EEventHelpers
       make_event("\r", :return),
       make_event("\t", :tab),
       make_event("\r", :return),
+      make_event("\e[B", :down), # 編集可能なフィールドに移動
       make_event('e', :e),
       make_event('q', :q)
     ]
@@ -973,9 +974,9 @@ RSpec.describe 'E2E Record Detail Scrolling' do
 
     RubyMysqlTui.run_main_loop(client)
 
-    offsets = states.filter_map { |s| s[:detail_offset] }
-    expect(offsets).to include(0, 1, 2)
-    expect(offsets.last).to eq(2)
+    indices = states.filter_map { |s| s[:selected_column_index] }
+    expect(indices).to include(0, 1, 2)
+    expect(indices.last).to eq(2)
   end
 end
 
