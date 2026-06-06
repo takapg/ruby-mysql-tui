@@ -5,6 +5,7 @@ require 'tty-table'
 require_relative 'layout'
 require_relative 'content_builder'
 require_relative 'footer_builder'
+require_relative 'log_content_builder'
 
 module RubyMysqlTui
   module UI
@@ -91,25 +92,7 @@ module RubyMysqlTui
       end
 
       def render_log(client, state)
-        truncate = true
-        if state[:sql_mode]
-          text = "SQL MODE: #{state[:sql_input]} (Esc to cancel)"
-        elsif state[:status_message]
-          text = "Status: #{state[:status_message]}"
-        elsif state[:view_mode] == :record_detail
-          record = state[:records][state[:selected_record_index]]
-          if record
-            column_name = record.keys[state[:selected_column_index]]
-            column_value = record[column_name]
-            text = "[Value of '#{column_name}']: #{column_value.nil? ? 'NULL' : column_value}"
-            truncate = false
-          else
-            text = 'No record selected'
-          end
-        else
-          sql = client.last_sql
-          text = sql ? "Last SQL: #{sql}" : 'No SQL executed'
-        end
+        text, truncate = LogContentBuilder.build(client, state)
         content = truncate ? ContentBuilder.truncate(text, @layout.width - 2) : text
         puts TTY::Box.frame(width: @layout.width, height: @layout.log_h) { content }
       end
