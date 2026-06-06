@@ -47,10 +47,16 @@ module RubyMysqlTui
         return if column.nil?
 
         structure = client.list_table_structure(state[:selected_table])
+        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
+
+        if pk_cols.include?(column)
+          RecordPrompt.warn_pk_not_editable(prompt)
+          return
+        end
+
         value = prompt.ask("新しい値を入力してください (#{column}):")
         return if value.nil?
 
-        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
         info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: value }
         perform_update(state, client, prompt, info)
       end
