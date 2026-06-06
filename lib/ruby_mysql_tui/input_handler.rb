@@ -107,15 +107,20 @@ module RubyMysqlTui
     def handle_view_mode_toggle(state, client)
       return state unless state[:focus] == :right && state[:selected_table]
 
-      if state[:view_mode] == :records
-        state[:view_mode] = :table_structure
-        state[:records] = client.list_table_structure(state[:selected_table])
-        state[:selected_record_index] = 0
-        state[:records_offset] = 0
-      elsif state[:view_mode] == :table_structure
-        state[:view_mode] = :records
-        state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
-      end
+      state[:view_mode] == :records ? toggle_to_structure(state, client) : toggle_to_records(state, client)
+    end
+
+    private_class_method def toggle_to_structure(state, client)
+      state[:view_mode] = :table_structure
+      state[:records] = client.list_table_structure(state[:selected_table])
+      state[:selected_record_index] = 0
+      state[:records_offset] = 0
+      state
+    end
+
+    private_class_method def toggle_to_records(state, client)
+      state[:view_mode] = :records
+      state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
       state
     end
 

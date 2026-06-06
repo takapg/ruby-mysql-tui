@@ -2,6 +2,7 @@
 
 require_relative 'deletable'
 require_relative 'table_prompt_helper'
+require_relative 'table_executor'
 
 module RubyMysqlTui
   module InputHandler
@@ -13,7 +14,7 @@ module RubyMysqlTui
         name = prompt.ask('作成するテーブル名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        execute_create_table(state, client, prompt, name.strip)
+        TableExecutor.execute_create_table(state, client, prompt, name.strip)
       rescue Mysql2::Error => e
         handle_create_error(prompt, e)
         state
@@ -25,7 +26,7 @@ module RubyMysqlTui
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
 
-        execute_drop_table(state, client, table_name)
+        TableExecutor.execute_drop_table(state, client, table_name)
       rescue Mysql2::Error => e
         Deletable.handle_drop_error(prompt, e, state, 'Table')
       end
@@ -37,7 +38,7 @@ module RubyMysqlTui
         new_name = prompt.ask("テーブル '#{table_name}' の新しい名前を入力してください:")
         return state if new_name.nil? || new_name.strip.empty?
 
-        execute_rename_table(state, client, table_name, new_name.strip)
+        TableExecutor.execute_rename_table(state, client, table_name, new_name.strip)
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Table Rename Error: #{e.message}")
         prompt.error("エラーが発生しました: #{e.message}")
@@ -50,7 +51,7 @@ module RubyMysqlTui
 
         return cancel_truncation(state) unless prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
 
-        execute_truncate_table(state, client, table_name)
+        TableExecutor.execute_truncate_table(state, client, table_name)
       rescue Mysql2::Error => e
         handle_truncate_error(prompt, e)
         state
@@ -64,7 +65,7 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        execute_add_column(state, client, table_name, col_name.strip, type)
+        TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type)
       rescue Mysql2::Error => e
         handle_add_column_error(prompt, e)
         state
@@ -107,13 +108,6 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def execute_create_table(state, client, prompt, name)
-        cols = TablePromptHelper.collect_column_definitions(prompt)
-        client.create_table(name, cols)
-        state[:items] = client.list_tables(state[:selected_db])
-        state
-      end
-
       private_class_method def handle_create_error(prompt, error)
         RubyMysqlTui.logger.error("Table Creation Error: #{error.message}")
         prompt.error("エラーが発生しました: #{error.message}")
@@ -134,32 +128,6 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def execute_rename_table(state, client, old_name, new_name)
-        client.rename_table(old_name, new_name)
-        state[:items] = client.list_tables(state[:selected_db])
-        state[:status_message] = "Table '#{old_name}' renamed to '#{new_name}' successfully"
-        state
-      end
-
-      private_class_method def execute_drop_table(state, client, table_name)
-        client.drop_table(table_name)
-        state = Deletable.update_state_after_deletion(state, client.list_tables(state[:selected_db]))
-        state[:status_message] = "Table '#{table_name}' deleted successfully"
-        state
-      end
-
-      private_class_method def execute_truncate_table(state, client, table_name)
-        client.truncate_table(table_name)
-        state[:status_message] = "Table '#{table_name}' truncated successfully"
-        state
-      end
-
-      private_class_method def execute_add_column(state, client, table_name, col_name, type)
-        client.add_column(table_name, col_name, type)
-        state[:records] = client.list_table_structure(table_name)
-        state[:status_message] = "Column '#{col_name}' added to '#{table_name}' successfully"
-        state
-      end
     end
   end
 end
