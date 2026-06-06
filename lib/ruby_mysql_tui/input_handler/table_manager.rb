@@ -52,9 +52,9 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def handle_create_error(prompt, e)
-        RubyMysqlTui.logger.error("Table Creation Error: #{e.message}")
-        prompt.error("エラーが発生しました: #{e.message}")
+      private_class_method def handle_create_error(prompt, error)
+        RubyMysqlTui.logger.error("Table Creation Error: #{error.message}")
+        prompt.error("エラーが発生しました: #{error.message}")
       end
 
       private_class_method def execute_rename_table(state, client, old_name, new_name)
@@ -76,6 +76,7 @@ module RubyMysqlTui
         loop do
           col = prompt_for_single_column(prompt)
           break if col.nil?
+
           columns << col
           break unless prompt.yes?('さらにカラムを追加しますか？')
         end
@@ -85,6 +86,7 @@ module RubyMysqlTui
       private_class_method def prompt_for_single_column(prompt)
         name = prompt.ask('カラム名を入力してください:')
         return nil if name.nil? || name.strip.empty?
+
         { name: name.strip, type: prompt.select('データ型を選択してください:', COLUMN_TYPES) }
       end
     end

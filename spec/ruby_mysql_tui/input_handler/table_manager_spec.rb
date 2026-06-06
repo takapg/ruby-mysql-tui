@@ -21,10 +21,13 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
     allow(prompt).to receive(:ask).and_return('new_table', 'name', 'email')
     allow(prompt).to receive(:select).and_return('VARCHAR(255)', 'VARCHAR(255)')
     allow(prompt).to receive(:yes?).and_return(true, false)
-    expect(client).to receive(:create_table).with('new_table', [
-      { name: 'name', type: 'VARCHAR(255)' },
-      { name: 'email', type: 'VARCHAR(255)' }
-    ])
+    expect(client).to receive(:create_table).with(
+      'new_table',
+      [
+        { name: 'name', type: 'VARCHAR(255)' },
+        { name: 'email', type: 'VARCHAR(255)' }
+      ]
+    )
     expect(client).to receive(:list_tables).with('test_db').and_return(%w[t1 t2 new_table])
 
     result = described_class.handle_create_table(state, client, prompt)
