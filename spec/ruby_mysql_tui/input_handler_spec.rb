@@ -181,56 +181,54 @@ RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - help' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler do
+RSpec.describe RubyMysqlTui::InputHandler, 'left pane' do
   let(:client) { double('Client') }
   let(:state) { { focus: :left, items: %w[db1 db2], filter_query: '', selected_index: 0 } }
 
-  describe '.handle_input' do
-    context '左ペインにフォーカスがあるとき' do
-      it '/ キーが押されたとき、プロンプトを表示し filter_query を更新すること' do
-        prompt = instance_double(TTY::Prompt)
-        allow(TTY::Prompt).to receive(:new).and_return(prompt)
-        allow(prompt).to receive(:ask).and_return('test_query')
+  it '/ キーが押されたとき、プロンプトを表示し filter_query を更新すること' do
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('test_query')
 
-        new_state = described_class.handle_input('/', state, client)
+    new_state = described_class.handle_input('/', state, client)
 
-        expect(new_state[:filter_query]).to eq('test_query')
-        expect(new_state[:selected_index]).to eq(0)
-      end
+    expect(new_state[:filter_query]).to eq('test_query')
+    expect(new_state[:selected_index]).to eq(0)
+  end
 
-      it 'Esc キー (\e) が押され、filter_query が設定されているとき、フィルタをクリアすること' do
-        state_with_filter = state.merge(filter_query: 'some_query', selected_index: 2)
-        new_state = described_class.handle_input("\e", state_with_filter, client)
+  it 'Esc キー (\e) が押され、filter_query が設定されているとき、フィルタをクリアすること' do
+    state_with_filter = state.merge(filter_query: 'some_query', selected_index: 2)
+    new_state = described_class.handle_input("\e", state_with_filter, client)
 
-        expect(new_state[:filter_query]).to eq('')
-        expect(new_state[:selected_index]).to eq(0)
-      end
+    expect(new_state[:filter_query]).to eq('')
+    expect(new_state[:selected_index]).to eq(0)
+  end
 
-      it 'Esc キー (\e) が押されたが、filter_query が空のときは状態を変更しないこと' do
-        new_state = described_class.handle_input("\e", state, client)
-        expect(new_state).to eq(state)
-      end
-    end
+  it 'Esc キー (\e) が押されたが、filter_query が空のときは状態を変更しないこと' do
+    new_state = described_class.handle_input("\e", state, client)
+    expect(new_state).to eq(state)
+  end
+end
 
-    context '右ペインにフォーカスがあるとき' do
-      it '/ キーが押されたとき、プロンプトを表示し records_filter_query を更新すること' do
-        state = { focus: :right, view_mode: :records, records: [], records_filter_query: '' }
-        prompt = instance_double(TTY::Prompt)
-        allow(TTY::Prompt).to receive(:new).and_return(prompt)
-        allow(prompt).to receive(:ask).and_return('record_query')
+RSpec.describe RubyMysqlTui::InputHandler, 'right pane' do
+  let(:client) { double('Client') }
 
-        new_state = described_class.handle_input('/', state, client)
+  it '/ キーが押されたとき、プロンプトを表示し records_filter_query を更新すること' do
+    state = { focus: :right, view_mode: :records, records: [], records_filter_query: '' }
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('record_query')
 
-        expect(new_state[:records_filter_query]).to eq('record_query')
-      end
+    new_state = described_class.handle_input('/', state, client)
 
-      it 'Esc キー (\e) が押され、records_filter_query が設定されているとき、フィルタをクリアすること' do
-        state = { focus: :right, view_mode: :records, records: [], records_filter_query: 'some_query' }
-        new_state = described_class.handle_input("\e", state, client)
+    expect(new_state[:records_filter_query]).to eq('record_query')
+  end
 
-        expect(new_state[:records_filter_query]).to eq('')
-      end
-    end
+  it 'Esc キー (\e) が押され、records_filter_query が設定されているとき、フィルタをクリアすること' do
+    state = { focus: :right, view_mode: :records, records: [], records_filter_query: 'some_query' }
+    new_state = described_class.handle_input("\e", state, client)
+
+    expect(new_state[:records_filter_query]).to eq('')
   end
 end
 

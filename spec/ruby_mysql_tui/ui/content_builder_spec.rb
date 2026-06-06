@@ -159,14 +159,16 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items edge cases' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering' do
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic' do
   let(:width) { 100 }
   let(:height) { 20 }
-  let(:records) { [
-    { 'id' => 1, 'name' => 'Alice' },
-    { 'id' => 2, 'name' => 'Bob' },
-    { 'id' => 3, 'name' => 'Charlie' }
-  ] }
+  let(:records) do
+    [
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' },
+      { 'id' => 3, 'name' => 'Charlie' }
+    ]
+  end
 
   it 'filter_query が空のときは全件表示すること' do
     state = { records: records, records_filter_query: '', selected_table: 'test' }
@@ -179,6 +181,18 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering' do
     output = described_class.build_view(state, width, height)
     expect(output).to include('Alice')
     expect(output).not_to include('Bob', 'Charlie')
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+  let(:records) do
+    [
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' },
+      { 'id' => 3, 'name' => 'Charlie' }
+    ]
   end
 
   it 'いずれかのカラムにキーワードが含まれていれば表示すること' do
