@@ -286,7 +286,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       allow(described_class).to receive(:edit_in_editor).and_return('SELECT 2')
       new_state, redraw = described_class.open_external_editor(state)
       expect(new_state[:sql_input]).to eq('SELECT 2')
-      expect(redraw).to be false
+      expect(redraw).to be true
     end
 
     it 'keeps sql_input when editor returns nil' do

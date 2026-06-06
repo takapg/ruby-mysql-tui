@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'tempfile'
+require 'shellwords'
 require_relative 'sql_history_manager'
 require_relative 'sql_navigator'
 
@@ -94,7 +95,7 @@ module RubyMysqlTui
       editor = ENV['EDITOR'] || 'vi'
       edited_sql = edit_in_editor(editor, state[:sql_input])
       state[:sql_input] = edited_sql if edited_sql
-      [state, false]
+      [state, true]
     end
 
     def edit_in_editor(editor, content)
@@ -102,7 +103,7 @@ module RubyMysqlTui
       begin
         temp_file.write(content || '')
         temp_file.close
-        File.read(temp_file.path) if system(editor, temp_file.path)
+        File.read(temp_file.path) if system(*Shellwords.split(editor), temp_file.path)
       ensure
         temp_file.unlink
       end
