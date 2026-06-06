@@ -34,10 +34,13 @@ module RubyMysqlTui
       end
 
       def render_main(state)
-        left = build_box(@layout.left_w, left_content(state), state[:focus] == :left)
-        right = build_box(@layout.right_w, right_content(state), state[:focus] == :right)
-
-        render_side_by_side(left, right)
+        if state[:show_help]
+          render_help_modal
+        else
+          left = build_box(@layout.left_w, left_content(state), state[:focus] == :left)
+          right = build_box(@layout.right_w, right_content(state), state[:focus] == :right)
+          render_side_by_side(left, right)
+        end
       end
 
       def left_content(state)
@@ -96,7 +99,7 @@ module RubyMysqlTui
       end
 
       def build_footer_guides(state)
-        guides = ['[q] Quit', '[Tab] Switch Focus']
+        guides = ['[q] Quit', '[Tab] Switch Focus', '[?] Help']
         if state[:focus] == :left
           guides += ['[b] Back', '[↑/↓] Move', '[Enter] Select']
           guides << '[r] Rename' if state[:view_mode] == :tables
@@ -127,6 +130,28 @@ module RubyMysqlTui
 
       def structure_guides
         ['[i] Records', '[↑/↓] Move', '[←/→] Scroll Cols']
+      end
+
+      def render_help_modal
+        help_text = <<~HELP
+          --- 操作ヘルプ ---
+
+          [共通操作]
+          [Tab] フォーカス切り替え | [q] 終了 | [s] SQLモード | [?] ヘルプを閉じる
+
+          [左ペイン操作]
+          [/] フィルタ入力 | [Enter] 選択 | [n] 新規作成 | [d] 削除 | [r] 名前変更
+
+          [右ペイン操作]
+          [n] 新規挿入 | [e] 編集 | [d] 削除 | [c] クローン | [o] ソート
+          [i] 構造/レコード切替 | [←/→] カラムスクロール | [[/]] 前後レコード
+
+          [Esc] フィルタクリア / 詳細ビューから戻る
+        HELP
+        puts TTY::Box.frame(
+          width: @layout.width, height: @layout.main_h,
+          style: { border: { fg: :cyan } }
+        ) { help_text }
       end
     end
   end

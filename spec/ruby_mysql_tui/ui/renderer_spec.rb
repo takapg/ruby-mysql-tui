@@ -269,6 +269,16 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - structure' do
   end
 end
 
+RSpec.describe RubyMysqlTui::UI::Renderer, 'help modal' do
+  include_context 'renderer setup'
+
+  it 'displays help modal when show_help is true' do
+    state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, show_help: true }
+    expect { renderer.render(client, state) }.to output(/--- 操作ヘルプ ---/).to_stdout
+    expect { renderer.render(client, state) }.to output(/\[共通操作\]/).to_stdout
+  end
+end
+
 RSpec.describe RubyMysqlTui::UI::Renderer, 'content structure - slicing' do
   include_context 'renderer setup'
 

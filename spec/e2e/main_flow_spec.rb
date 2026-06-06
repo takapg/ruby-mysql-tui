@@ -689,6 +689,26 @@ RSpec.describe 'E2E Table Rename' do
   end
 end
 
+RSpec.describe 'E2E Help Modal' do
+  include_context 'e2e setup'
+
+  it 'opens help modal with ? and closes it with Esc' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: '?', key: double('Key', name: :question)),
+      double('Event', value: "\e", key: double('Key', name: :escape)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+
+    expect(states.any? { |s| s[:show_help] == true }).to be true
+    expect(states.last[:show_help]).to be false
+  end
+end
+
 RSpec.describe 'E2E Table Deletion' do
   include_context 'e2e setup'
 

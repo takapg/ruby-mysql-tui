@@ -15,10 +15,12 @@ module RubyMysqlTui
     module_function
 
     def handle_input(event, state, client)
-      state[:status_message] = nil
       val = event.respond_to?(:value) ? event.value : event
+      return state.merge(show_help: false) if state[:show_help]
 
+      state[:status_message] = nil
       return handle_filter_input(val, state) if state[:focus] == :left && ['/', "\e"].include?(val)
+      return state.merge(show_help: true) if val == '?'
 
       return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
       return handle_arrow_keys(val, state, client) if arrow_key?(val)
