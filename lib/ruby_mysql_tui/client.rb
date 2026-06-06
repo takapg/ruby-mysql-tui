@@ -94,7 +94,6 @@ module RubyMysqlTui
 
     private
 
-
     def with_reconnection_retry
       retried = false
       begin
