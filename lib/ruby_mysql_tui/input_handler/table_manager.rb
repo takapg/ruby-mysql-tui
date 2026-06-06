@@ -49,15 +49,11 @@ module RubyMysqlTui
         table_name = state[:items][state[:selected_index]]
         return state if table_name.nil?
 
-        if prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
-          execute_truncate_table(state, client, table_name)
-        else
-          state[:status_message] = 'Truncation cancelled'
-          state
-        end
+        return cancel_truncation(state) unless prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
+
+        execute_truncate_table(state, client, table_name)
       rescue Mysql2::Error => e
-        RubyMysqlTui.logger.error("Table Truncate Error: #{e.message}")
-        prompt.error("エラーが発生しました: #{e.message}")
+        handle_truncate_error(prompt, e)
         state
       end
 
@@ -71,6 +67,16 @@ module RubyMysqlTui
       private_class_method def handle_create_error(prompt, error)
         RubyMysqlTui.logger.error("Table Creation Error: #{error.message}")
         prompt.error("エラーが発生しました: #{error.message}")
+      end
+
+      private_class_method def handle_truncate_error(prompt, error)
+        RubyMysqlTui.logger.error("Table Truncate Error: #{error.message}")
+        prompt.error("エラーが発生しました: #{error.message}")
+      end
+
+      private_class_method def cancel_truncation(state)
+        state[:status_message] = 'Truncation cancelled'
+        state
       end
 
       private_class_method def execute_rename_table(state, client, old_name, new_name)
