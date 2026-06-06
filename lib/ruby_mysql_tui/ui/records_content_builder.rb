@@ -98,7 +98,8 @@ module RubyMysqlTui
 
       private_class_method def format_record_row(row, col_width, is_selected, actual_offset)
         row.values.drop(actual_offset).map.with_index do |val, col_idx|
-          text = ContentBuilder.truncate(val.to_s, col_width)
+          val_str = val.nil? ? 'NULL' : val.to_s
+          text = ContentBuilder.truncate(val_str, col_width)
           is_selected && col_idx.zero? ? "> #{text}" : text
         end
       end

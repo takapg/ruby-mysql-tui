@@ -119,6 +119,14 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
     expect(output).to include('col4: v4')
     expect(output).to include('col5: v5')
   end
+
+  it 'shows "NULL" when value is nil' do
+    record = { 'col1' => nil, 'col2' => 'v2' }
+    state = { records: [record], selected_record_index: 0, detail_offset: 0 }
+    output = described_class.build_record_detail_text(state, width, height)
+    expect(output).to include('col1: NULL')
+    expect(output).to include('col2: v2')
+  end
 end
 
 RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items basic' do
@@ -226,5 +234,12 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering advanced - cl
     }
     output = described_class.build_view(state, width, height)
     expect(output).to include('> 1 Alice')
+  end
+
+  it 'shows "NULL" when record value is nil' do
+    records = [{ 'id' => 1, 'name' => nil }]
+    state = { records: records, selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('NULL')
   end
 end
