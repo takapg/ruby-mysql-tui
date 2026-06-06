@@ -38,7 +38,10 @@ module RubyMysqlTui
 
         TTY::Table.new(
           header: ContentBuilder.format_header(params[:columns], params[:col_width]),
-          rows: format_structure_rows(params[:display_structure], params[:actual_offset], params[:col_width], options[:selected_index], options[:offset] || 0)
+          rows: format_structure_rows(
+            params[:display_structure], params[:actual_offset], params[:col_width],
+            options[:selected_index], options[:offset] || 0
+          )
         )
       end
 
@@ -52,7 +55,10 @@ module RubyMysqlTui
         col_width = ContentBuilder.calculate_col_width(width, visible_columns.size)
         display_structure = structure.drop(offset).take(max_rows || structure.size)
 
-        { columns: visible_columns, col_width: col_width, display_structure: display_structure, actual_offset: actual_offset }
+        {
+          columns: visible_columns, col_width: col_width,
+          display_structure: display_structure, actual_offset: actual_offset
+        }
       end
 
       private_class_method def format_structure_rows(

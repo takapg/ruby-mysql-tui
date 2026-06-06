@@ -127,7 +127,6 @@ module RubyMysqlTui
         state[:status_message] = 'Truncation cancelled'
         state
       end
-
     end
   end
 end
