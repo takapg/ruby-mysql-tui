@@ -36,6 +36,7 @@ module E2EEventHelpers
       make_event("\r", :return),
       make_event("\t", :tab),
       make_event("\r", :return),
+      make_event("\e[B", :down), # 編集可能なフィールドに移動
       make_event('e', :e),
       make_event('q', :q)
     ]
@@ -883,6 +884,33 @@ RSpec.describe 'E2E Record Detail Operations - Deletion' do
   end
 end
 
+RSpec.describe 'E2E Record Detail Direct Edit' do
+  include_context 'e2e setup'
+
+  it 'allows direct editing of a field in detail view using Down and e keys' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = detail_edit_events
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('DirectlyEditedName')
+    allow(prompt).to receive(:say)
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([{ 'id' => 1, 'name' => 'Alice' }])
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(client).to receive(:list_table_structure).and_return([])
+
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'name', 'DirectlyEditedName')
+
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :record_detail }).to be true
+  end
+end
+
 RSpec.describe 'E2E Record Detail Navigation' do
   include_context 'e2e setup'
 
@@ -938,9 +966,9 @@ RSpec.describe 'E2E Record Detail Scrolling' do
 
     RubyMysqlTui.run_main_loop(client)
 
-    offsets = states.filter_map { |s| s[:detail_offset] }
-    expect(offsets).to include(0, 1, 2)
-    expect(offsets.last).to eq(2)
+    indices = states.filter_map { |s| s[:selected_column_index] }
+    expect(indices).to include(0, 1, 2)
+    expect(indices.last).to eq(2)
   end
 end
 

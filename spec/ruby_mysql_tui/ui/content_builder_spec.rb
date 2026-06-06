@@ -103,21 +103,23 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, 'record detail scrolling' do
   let(:record) { { 'col1' => 'v1', 'col2' => 'v2', 'col3' => 'v3', 'col4' => 'v4', 'col5' => 'v5' } }
   let(:state) { { records: [record], selected_record_index: 0, detail_offset: 0 } }
 
-  it 'shows first few columns when offset is 0' do
+  it 'shows first few columns and cursor when offset is 0' do
+    state[:selected_column_index] = 0
     output = described_class.build_record_detail_text(state, width, height)
-    expect(output).to include('col1: v1')
-    expect(output).to include('col2: v2')
-    expect(output).to include('col3: v3')
+    expect(output).to include('> col1: v1')
+    expect(output).to include('  col2: v2')
+    expect(output).to include('  col3: v3')
     expect(output).not_to include('col4: v4')
   end
 
-  it 'shows shifted columns when offset is 2' do
+  it 'shows shifted columns and cursor when offset is 2' do
     state[:detail_offset] = 2
+    state[:selected_column_index] = 3
     output = described_class.build_record_detail_text(state, width, height)
     expect(output).not_to include('col1: v1')
-    expect(output).to include('col3: v3')
-    expect(output).to include('col4: v4')
-    expect(output).to include('col5: v5')
+    expect(output).to include('  col3: v3')
+    expect(output).to include('> col4: v4')
+    expect(output).to include('  col5: v5')
   end
 end
 

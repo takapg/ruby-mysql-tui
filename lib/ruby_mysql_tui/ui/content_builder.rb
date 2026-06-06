@@ -78,7 +78,7 @@ module RubyMysqlTui
         return truncate('No record selected', width) unless record
 
         rows = format_detail_rows(record)
-        render_detail_rows(rows, state[:detail_offset] || 0, height, width)
+        render_detail_rows(rows, state[:detail_offset] || 0, height, width, state[:selected_column_index] || 0)
       end
 
       def format_detail_rows(record)
@@ -86,9 +86,13 @@ module RubyMysqlTui
       end
       private_class_method :format_detail_rows
 
-      def render_detail_rows(rows, offset, height, width)
+      def render_detail_rows(rows, offset, height, width, selected_idx)
         max_rows = height ? [0, height - 2].max : rows.size
-        rows.drop(offset).take(max_rows).map { |row| truncate(row, width) }.join("\n")
+        rows.drop(offset).take(max_rows).map.with_index do |row, idx|
+          actual_idx = offset + idx
+          prefix = actual_idx == selected_idx ? '> ' : '  '
+          truncate("#{prefix}#{row}", width)
+        end.join("\n")
       end
       private_class_method :render_detail_rows
 

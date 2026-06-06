@@ -3,37 +3,21 @@
 require_relative 'record_executor'
 require_relative 'record_prompt'
 require_relative 'record_retry_handler'
+require_relative 'record_clone_manager'
+require_relative 'record_toggle_manager'
 
 module RubyMysqlTui
   module InputHandler
     # RecordManager は レコードの削除などの操作を提供します。
     module RecordManager
       def self.handle_clone_record(state, client, prompt)
-        return state unless can_manage_record?(state)
-
-        record = state[:records][state[:selected_record_index]]
-        return state unless record
-
-        data, info = gather_clone_data(state, client, prompt, record)
-        return state if data.nil? || data.empty?
-
-        RecordRetryHandler.execute_insert_with_retry(state, client, prompt, data, info)
-        state
-      end
-
-      def self.gather_clone_data(state, client, prompt, record)
-        pk_col = client.primary_key_for(state[:selected_table])
-        cols = client.list_columns(state[:selected_table])
-        struct = client.list_table_structure(state[:selected_table])
-        data = RecordPrompt.prompt_for_record_data(cols, prompt, record.reject { |k, _| k == pk_col }, struct)
-        [data, { columns: cols, structure: struct }]
+        RecordCloneManager.handle_clone_record(state, client, prompt)
       end
 
       def self.handle_edit_record(state, client, prompt)
         return state unless can_manage_record?(state)
 
-        record = state[:records][state[:selected_record_index]]
-        pk_column = client.primary_key_for(state[:selected_table])
+        record, pk_column = fetch_edit_context(state, client)
         return state unless record
 
         if pk_column.nil?
@@ -41,8 +25,50 @@ module RubyMysqlTui
           return state
         end
 
-        edit_and_update(state, client, record, pk_column, prompt)
+        execute_edit_action(state, client, record, pk_column, prompt)
         state
+      end
+
+      def self.fetch_edit_context(state, client)
+        [state[:records][state[:selected_record_index]], client.primary_key_for(state[:selected_table])]
+      end
+
+      def self.execute_edit_action(state, client, record, pk_column, prompt)
+        if state[:view_mode] == :record_detail
+          direct_edit(state, client, record, pk_column, prompt)
+        else
+          edit_and_update(state, client, record, pk_column, prompt)
+        end
+      end
+
+      def self.direct_edit(state, client, record, pk_column, prompt)
+        col_idx = state[:selected_column_index] || 0
+        column = record.keys[col_idx]
+        return if column.nil?
+
+        structure = client.list_table_structure(state[:selected_table])
+        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
+
+        return RecordPrompt.warn_pk_not_editable(prompt) if pk_cols.include?(column)
+
+        context = {
+          record: record, pk_column: pk_column, pk_cols: pk_cols, column: column
+        }
+        prompt_and_update_direct(state, client, prompt, context)
+      end
+
+      def self.prompt_and_update_direct(state, client, prompt, context)
+        value = prompt.ask("新しい値を入力してください (#{context[:column]}):")
+        return if value.nil?
+
+        info = {
+          pk_col: context[:pk_column],
+          pk_val: context[:record][context[:pk_column]],
+          pk_cols: context[:pk_cols],
+          col: context[:column],
+          val: value
+        }
+        perform_update(state, client, prompt, info)
       end
 
       def self.handle_create_record(state, client, prompt)
@@ -97,28 +123,7 @@ module RubyMysqlTui
       end
 
       def self.handle_all_records_toggle(state, client)
-        return state unless can_toggle_all_records?(state)
-
-        state[:all_records_mode] = !state[:all_records_mode]
-        apply_all_records_mode(state, client)
-        state
-      end
-
-      def self.can_toggle_all_records?(state)
-        state[:focus] == :right && state[:view_mode] == :records && state[:selected_table]
-      end
-
-      def self.apply_all_records_mode(state, client)
-        opts = InputHandler.sort_options(state)
-        if state[:all_records_mode]
-          state[:records] = client.list_records(
-            state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT, **opts
-          )
-          state[:page_offset] = 0
-        else
-          state[:page_offset] = state[:records_offset] || 0
-          state[:records] = client.list_records(state[:selected_table], state[:page_offset], **opts)
-        end
+        RecordToggleManager.handle_all_records_toggle(state, client)
       end
     end
   end
