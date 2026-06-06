@@ -110,6 +110,8 @@ module RubyMysqlTui
       if state[:view_mode] == :records
         state[:view_mode] = :table_structure
         state[:records] = client.list_table_structure(state[:selected_table])
+        state[:selected_record_index] = 0
+        state[:records_offset] = 0
       elsif state[:view_mode] == :table_structure
         state[:view_mode] = :records
         state[:records] = client.list_records(state[:selected_table], state[:records_offset] || 0)
