@@ -211,6 +211,26 @@ RSpec.describe RubyMysqlTui::InputHandler do
         expect(new_state).to eq(state)
       end
     end
+
+    context '右ペインにフォーカスがあるとき' do
+      it '/ キーが押されたとき、プロンプトを表示し records_filter_query を更新すること' do
+        state = { focus: :right, view_mode: :records, records: [], records_filter_query: '' }
+        prompt = instance_double(TTY::Prompt)
+        allow(TTY::Prompt).to receive(:new).and_return(prompt)
+        allow(prompt).to receive(:ask).and_return('record_query')
+
+        new_state = described_class.handle_input('/', state, client)
+
+        expect(new_state[:records_filter_query]).to eq('record_query')
+      end
+
+      it 'Esc キー (\e) が押され、records_filter_query が設定されているとき、フィルタをクリアすること' do
+        state = { focus: :right, view_mode: :records, records: [], records_filter_query: 'some_query' }
+        new_state = described_class.handle_input("\e", state, client)
+
+        expect(new_state[:records_filter_query]).to eq('')
+      end
+    end
   end
 end
 

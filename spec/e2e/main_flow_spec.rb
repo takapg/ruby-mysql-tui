@@ -689,6 +689,40 @@ RSpec.describe 'E2E Table Rename' do
   end
 end
 
+RSpec.describe 'E2E Record Filtering' do
+  include_context 'e2e setup'
+
+  it 'filters records using / key and clears filter using Esc key' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: '/', key: double('Key', name: :slash)),   # Filter
+      double('Event', value: "\e", key: double('Key', name: :escape)), # Clear
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('Alice')
+
+    states = track_states(client)
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return([
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' }
+    ])
+
+    RubyMysqlTui.run_main_loop(client)
+
+    expect(states.any? { |s| s[:records_filter_query] == 'Alice' }).to be true
+    expect(states.last[:records_filter_query]).to eq('')
+  end
+end
+
 RSpec.describe 'E2E Help Modal' do
   include_context 'e2e setup'
 

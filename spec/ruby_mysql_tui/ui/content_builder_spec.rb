@@ -158,3 +158,48 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items edge cases' do
     expect(described_class.filtered_items(state)).to eq([])
   end
 end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+  let(:records) { [
+    { 'id' => 1, 'name' => 'Alice' },
+    { 'id' => 2, 'name' => 'Bob' },
+    { 'id' => 3, 'name' => 'Charlie' }
+  ] }
+
+  it 'filter_query が空のときは全件表示すること' do
+    state = { records: records, records_filter_query: '', selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Alice', 'Bob', 'Charlie')
+  end
+
+  it 'キーワードに一致するレコードのみを表示すること (大文字小文字区別なし)' do
+    state = { records: records, records_filter_query: 'al', selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Alice')
+    expect(output).not_to include('Bob', 'Charlie')
+  end
+
+  it 'いずれかのカラムにキーワードが含まれていれば表示すること' do
+    records_with_id = [
+      { 'id' => '101', 'name' => 'Alice' },
+      { 'id' => '102', 'name' => 'Bob' }
+    ]
+    state = { records: records_with_id, records_filter_query: '102', selected_table: 'test' }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Bob')
+    expect(output).not_to include('Alice')
+  end
+
+  it 'フィルタリング後に selected_record_index が範囲外にならないよう clamp されること' do
+    state = {
+      records: records,
+      records_filter_query: 'Alice',
+      selected_table: 'test',
+      selected_record_index: 2
+    }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('> Alice')
+  end
+end
