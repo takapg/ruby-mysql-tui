@@ -230,7 +230,7 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - basic' do
   it 'displays left-pane guides when focus is :left' do
     state = { focus: :left, items: [], selected_index: 0, view_mode: :databases, selected_db: nil }
     expect { renderer.render(client, state) }.to output(
-      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[b\] Back \| \[↑/↓\] Move \| \[Enter\] Select}
+      %r{\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[b\] Back \| \[↑/↓\] Move \| \[Enter\] Select}
     ).to_stdout
   end
 
@@ -246,8 +246,8 @@ RSpec.describe RubyMysqlTui::UI::Renderer, 'footer guide - records' do
 
   it 'displays record-action guides when focus is :right and view_mode is :records' do
     state = { focus: :right, items: [], selected_index: 0, view_mode: :records, selected_table: 'users' }
-    regex = Regexp.new('\[q\] Quit \| \[Tab\] Switch Focus \| \[n\] New \| \[e\] Edit \| ' \
-                       '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records')
+    regex = Regexp.new('\[q\] Quit \| \[Tab\] Switch Focus \| \[\?\] Help \| \[n\] New \| \[e\] Edit \| ' \
+                       '\[d\] Delete \| \[c\] Clone \| \[o\] Sort \| \[a\] All Records \| \[i\] Structure \| \[←/→\] Scroll Cols')
     expect { renderer.render(client, state) }.to output(regex).to_stdout
   end
 
