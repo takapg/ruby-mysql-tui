@@ -264,3 +264,67 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.process_sql_keypress' do
+    let(:state) { { sql_input: 'SELECT 1' } }
+    let(:client) { double('Client') }
+
+    it 'calls open_external_editor when :ctrl_e is pressed' do
+      event = double('Event', key: double('Key', name: :ctrl_e), value: nil)
+      expect(described_class).to receive(:open_external_editor).and_return([{ sql_input: 'SELECT 2' }, false])
+      described_class.process_sql_keypress(event, state, client)
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.open_external_editor' do
+    let(:state) { { sql_input: 'SELECT 1' } }
+
+    it 'updates sql_input when editor returns content' do
+      allow(described_class).to receive(:edit_in_editor).and_return('SELECT 2')
+      new_state, redraw = described_class.open_external_editor(state)
+      expect(new_state[:sql_input]).to eq('SELECT 2')
+      expect(redraw).to be true
+    end
+
+    it 'keeps sql_input when editor returns nil' do
+      allow(described_class).to receive(:edit_in_editor).and_return(nil)
+      new_state, _redraw = described_class.open_external_editor(state)
+      expect(new_state[:sql_input]).to eq('SELECT 1')
+    end
+
+    it 'uses ENV["EDITOR"] if set' do
+      allow(ENV).to receive(:[]).with('EDITOR').and_return('code')
+      expect(described_class).to receive(:edit_in_editor).with('code', 'SELECT 1').and_return('SELECT 2')
+      described_class.open_external_editor(state)
+    end
+
+    it 'defaults to vi if ENV["EDITOR"] is not set' do
+      allow(ENV).to receive(:[]).with('EDITOR').and_return(nil)
+      expect(described_class).to receive(:edit_in_editor).with('vi', 'SELECT 1').and_return('SELECT 2')
+      described_class.open_external_editor(state)
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.edit_in_editor' do
+    let(:editor) { 'vi' }
+    let(:content) { 'SELECT 1' }
+
+    it 'calls system with separate arguments to prevent injection' do
+      expect(described_class).to receive(:system).with(editor, kind_of(String)).and_return(true)
+      allow(File).to receive(:read).and_return('SELECT 2')
+      result = described_class.edit_in_editor(editor, content)
+      expect(result).to eq('SELECT 2')
+    end
+
+    it 'returns nil if system returns false' do
+      expect(described_class).to receive(:system).with(editor, kind_of(String)).and_return(false)
+      result = described_class.edit_in_editor(editor, content)
+      expect(result).to be_nil
+    end
+  end
+end
