@@ -126,7 +126,6 @@ module RubyMysqlTui
         true
       end
 
-
       private_class_method def cancel_truncation(state)
         state[:status_message] = 'Truncation cancelled'
         state
