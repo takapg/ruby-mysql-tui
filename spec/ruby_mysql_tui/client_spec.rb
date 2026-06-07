@@ -317,6 +317,11 @@ RSpec.describe RubyMysqlTui::Client, '#create_table (custom columns)' do
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.create_table(table_name, columns)
   end
+end
+
+RSpec.describe RubyMysqlTui::Client, '#create_table (custom columns edge cases)' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
 
   it 'escapes backticks in custom column names' do
     table_name = 'test_table'
