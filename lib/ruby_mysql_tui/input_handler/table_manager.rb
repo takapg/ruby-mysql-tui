@@ -100,6 +100,18 @@ module RubyMysqlTui
         Deletable.handle_drop_error(prompt, e, state, 'Column')
       end
 
+      def handle_modify_column(state, client, prompt)
+        column_info = fetch_selected_column(state)
+        return state if column_info.nil?
+
+        old_name = column_info['Field']
+        type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
+        TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type)
+      rescue Mysql2::Error => e
+        handle_modify_column_error(prompt, e)
+        state
+      end
+
       private_class_method def fetch_selected_column(state)
         structure = state[:records]
         selected_idx = state[:selected_record_index] || 0
@@ -125,6 +137,11 @@ module RubyMysqlTui
 
       private_class_method def handle_add_column_error(prompt, error)
         RubyMysqlTui.logger.error("Table Add Column Error: #{error.message}")
+        prompt.error("エラーが発生しました: #{error.message}")
+      end
+
+      private_class_method def handle_modify_column_error(prompt, error)
+        RubyMysqlTui.logger.error("Column Modify Error: #{error.message}")
         prompt.error("エラーが発生しました: #{error.message}")
       end
 

@@ -50,7 +50,7 @@ module RubyMysqlTui
         prompt = TTY::Prompt.new
         case val
         when 'n', 'd', 'c' then handle_record_lifecycle_action(val, state, client, prompt)
-        when 'e', 'o', 'r', 't', 'v' then handle_record_utility_action(val, state, client, prompt)
+        when 'e', 'o', 'r', 't', 'v', 'm' then handle_record_utility_action(val, state, client, prompt)
         else state
         end
       end
@@ -70,6 +70,7 @@ module RubyMysqlTui
         when 'r' then handle_rename_action(state, client, prompt)
         when 't' then handle_truncate_action(state, client, prompt)
         when 'v' then handle_view_value_action(state)
+        when 'm' then handle_modify_action(state, client, prompt)
         end
       end
 
@@ -86,6 +87,14 @@ module RubyMysqlTui
       def handle_truncate_action(state, client, prompt)
         if state[:focus] == :left && state[:view_mode] == :tables
           TableManager.handle_truncate_table(state, client, prompt)
+        else
+          state
+        end
+      end
+
+      def handle_modify_action(state, client, prompt)
+        if state[:focus] == :right && state[:view_mode] == :table_structure
+          TableManager.handle_modify_column(state, client, prompt)
         else
           state
         end
