@@ -13,19 +13,25 @@ module RubyMysqlTui
       def handle_external_edit(state, client, prompt)
         return state unless can_edit?(state)
 
-        record, pk_column = RecordManager.fetch_edit_context(state, client)
-        column = get_selected_column(state, record)
-        return state unless record && column
+        context = build_edit_context(state, client, prompt)
+        return state unless context
 
-        structure = client.list_table_structure(state[:selected_table])
-        return state unless RecordValidator.long_text_type?(column, structure)
-
-        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
-        return state if pk_column_not_editable?(column, pk_cols, prompt)
-
-        context = { record: record, column: column, pk_column: pk_column, pk_cols: pk_cols }
         execute_edit(state, client, prompt, context)
         state
+      end
+
+      def build_edit_context(state, client, prompt)
+        record, pk_column = RecordManager.fetch_edit_context(state, client)
+        column = get_selected_column(state, record)
+        return nil unless record && column
+
+        structure = client.list_table_structure(state[:selected_table])
+        return nil unless RecordValidator.long_text_type?(column, structure)
+
+        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
+        return nil if pk_column_not_editable?(column, pk_cols, prompt)
+
+        { record: record, column: column, pk_column: pk_column, pk_cols: pk_cols }
       end
 
       def can_edit?(state)
