@@ -5,13 +5,12 @@ module RubyMysqlTui
   module ConnectionManager
     def self.establish_connection
       config = nil
-      loop do
-        begin
-          return try_connect(config)
-        rescue Mysql2::Error => e
-          config = handle_connection_failure(e)
-          return nil unless config
-        end
+      begin
+        return try_connect(config)
+      rescue Mysql2::Error => e
+        config = handle_connection_failure(e)
+        return nil unless config
+        retry
       end
     end
 
