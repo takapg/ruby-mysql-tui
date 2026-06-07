@@ -551,7 +551,7 @@ RSpec.describe 'E2E Table Creation' do
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
-    expect(client).to receive(:create_table).with('new_e2e_table', [{ name: 'col1', type: 'INT' }])
+    expect(client).to receive(:create_table).with('new_e2e_table', [{ name: 'col1', type: 'INT', null: false }])
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
@@ -893,6 +893,7 @@ RSpec.describe 'E2E Table Column Addition' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('new_col')
     allow(prompt).to receive(:select).and_return('VARCHAR(255)')
+    allow(prompt).to receive(:yes?).and_return(true)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
@@ -955,6 +956,7 @@ RSpec.describe 'E2E Table Column Modify' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:select).and_return('BIGINT')
+    allow(prompt).to receive(:yes?).and_return(true)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
