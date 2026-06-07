@@ -12,6 +12,10 @@ module RubyMysqlTui
     extend SqlEditor
     extend SqlExecutor
 
+    class << self
+      public :query_mysql, :open_external_editor, :edit_in_editor
+    end
+
     MAX_HISTORY_SIZE = 100
 
     def execute_sql(sql, state, client)
