@@ -54,7 +54,7 @@ module RubyMysqlTui
 
     # 指定したテーブルのレコード一覧を取得します。
     def list_records(table_name, offset = 0, **options)
-      limit = options[:limit] || RubyMysqlTui::PAGE_SIZE
+      limit = options.fetch(:limit, RubyMysqlTui::PAGE_SIZE)
       sql = build_list_records_sql(table_name, offset, limit, options)
       query(sql)
     end
