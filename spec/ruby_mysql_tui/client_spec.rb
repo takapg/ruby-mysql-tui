@@ -309,6 +309,15 @@ RSpec.describe RubyMysqlTui::Client, '#create_table (custom columns)' do
     client.create_table(table_name, columns)
   end
 
+  it 'creates a table with NOT NULL columns' do
+    table_name = 'test_table'
+    columns = [{ name: 'name', type: 'VARCHAR(255)', null: false }, { name: 'email', type: 'VARCHAR(255)', null: true }]
+    sql = "CREATE TABLE `#{table_name}` " \
+          '(id INT PRIMARY KEY AUTO_INCREMENT, `name` VARCHAR(255) NOT NULL, `email` VARCHAR(255) NULL)'
+    expect(mock_mysql_client).to receive(:query).with(sql)
+    client.create_table(table_name, columns)
+  end
+
   it 'escapes backticks in custom column names' do
     table_name = 'test_table'
     columns = ['name`s', 'email`s']
@@ -404,6 +413,12 @@ RSpec.describe RubyMysqlTui::Client, '#modify_column' do
     client.modify_column(table, col, type)
   end
 
+  it 'modifies a column to be NOT NULL' do
+    type_not_null = 'BIGINT NOT NULL'
+    expect(mock_mysql_client).to receive(:query).with("ALTER TABLE `#{table}` MODIFY COLUMN `#{col}` #{type_not_null}")
+    client.modify_column(table, col, type_not_null)
+  end
+
   it 'escapes backticks in table and column names' do
     expect(mock_mysql_client).to receive(:query).with('ALTER TABLE `user``s` MODIFY COLUMN `age``s` BIGINT')
     client.modify_column('user`s', 'age`s', 'BIGINT')
@@ -425,6 +440,15 @@ RSpec.describe RubyMysqlTui::Client, '#add_column' do
     col_name = 'age`s'
     type = 'INT'
     sql = 'ALTER TABLE `user``s` ADD COLUMN `age``s` INT'
+    expect(mock_mysql_client).to receive(:query).with(sql)
+    client.add_column(table_name, col_name, type)
+  end
+
+  it 'adds a column with NOT NULL constraint' do
+    table_name = 'users'
+    col_name = 'age'
+    type = 'INT NOT NULL'
+    sql = 'ALTER TABLE `users` ADD COLUMN `age` INT NOT NULL'
     expect(mock_mysql_client).to receive(:query).with(sql)
     client.add_column(table_name, col_name, type)
   end
