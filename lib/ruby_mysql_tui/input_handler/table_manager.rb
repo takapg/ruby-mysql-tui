@@ -10,7 +10,7 @@ module RubyMysqlTui
   module InputHandler
     # TableManager は テーブルの作成などの操作を提供します。
     module TableManager
-      include TableManagerUtils
+      extend TableManagerUtils
       module_function
 
       def handle_create_table(state, client, prompt)
