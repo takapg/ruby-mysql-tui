@@ -23,7 +23,7 @@ RSpec.describe RubyMysqlTui::InputHandler::ValueViewer do
 
       expect(temp_file).to receive(:write).with(value)
       expect(temp_file).to receive(:flush)
-      expect(described_class).to receive(:system).with('less /tmp/tui_value.txt')
+      expect(described_class).to receive(:system).with('less', '/tmp/tui_value.txt')
       expect(temp_file).to receive(:unlink)
 
       described_class.view_value(value)

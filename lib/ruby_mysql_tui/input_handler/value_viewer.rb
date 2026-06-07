@@ -25,7 +25,7 @@ module RubyMysqlTui
         file.write(value.to_s)
         file.flush
         pager = ENV['PAGER'] || 'less'
-        system("#{Shellwords.escape(pager)} #{Shellwords.escape(file.path)}")
+        system(*Shellwords.split(pager), file.path)
       end
     end
   end
