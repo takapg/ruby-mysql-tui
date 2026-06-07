@@ -191,14 +191,14 @@ end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
   describe '.execute_sql (USE statement)' do
-    let(:client) { double('Client', query: [], list_tables: ['t1', 't2']) }
+    let(:client) { double('Client', query: [], list_tables: %w[t1 t2]) }
     let(:state) { { sql_history: [], selected_db: 'old_db' } }
 
     it 'updates selected_db and switches to tables view' do
       described_class.execute_sql('USE new_db', state, client)
       expect(state[:selected_db]).to eq('new_db')
       expect(state[:view_mode]).to eq(:tables)
-      expect(state[:items]).to eq(['t1', 't2'])
+      expect(state[:items]).to eq(%w[t1 t2])
       expect(state[:sql_result_mode]).to be false
     end
 
