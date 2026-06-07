@@ -212,7 +212,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit' do
+RSpec.shared_context 'external edit setup' do
   include_context 'record manager setup'
 
   let(:table_name) { 'users' }
@@ -234,15 +234,21 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit
     allow(client).to receive(:list_table_structure).with(table_name).and_return(structure)
     allow(client).to receive(:list_records).and_return(state[:records])
   end
+end
 
-  context 'when editing a long text column' do
-    it 'updates the record when edited via external editor' do
-      state[:selected_column_index] = 1 # 'content' (text)
-      allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
-      expect(client).to receive(:update_record).with(table_name, 'id', 1, 'content', 'new content')
-      described_class.handle_external_edit(state, client, prompt)
-    end
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit (success)' do
+  include_context 'external edit setup'
+
+  it 'updates the record when edited via external editor' do
+    state[:selected_column_index] = 1 # 'content' (text)
+    allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
+    expect(client).to receive(:update_record).with(table_name, 'id', 1, 'content', 'new content')
+    described_class.handle_external_edit(state, client, prompt)
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit (guards)' do
+  include_context 'external edit setup'
 
   context 'when editing a non-long-text column' do
     it 'does not open editor' do
