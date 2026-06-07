@@ -13,10 +13,14 @@ module RubyMysqlTui
         return if value.nil?
 
         Tempfile.create(['tui_value', '.txt']) do |file|
-          file.write(value.to_s)
-          file.flush
-          pager = ENV['PAGER'] || 'less'
-          system("#{Shellwords.escape(pager)} #{Shellwords.escape(file.path)}")
+          begin
+            file.write(value.to_s)
+            file.flush
+            pager = ENV['PAGER'] || 'less'
+            system("#{Shellwords.escape(pager)} #{Shellwords.escape(file.path)}")
+          ensure
+            file.unlink
+          end
         end
       end
     end
