@@ -391,6 +391,30 @@ RSpec.describe RubyMysqlTui::Client, '#drop_column' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#modify_column' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table) { 'users' }
+  let(:col) { 'age' }
+  let(:type) { 'BIGINT' }
+
+  it 'executes ALTER TABLE ... MODIFY COLUMN' do
+    expect(mock_mysql_client).to receive(:query).with("ALTER TABLE `#{table}` MODIFY COLUMN `#{col}` #{type}")
+    client.modify_column(table, col, type)
+  end
+
+  it 'escapes backticks in table and column names' do
+    expect(mock_mysql_client).to receive(:query).with('ALTER TABLE `user``s` MODIFY COLUMN `age``s` BIGINT')
+    client.modify_column('user`s', 'age`s', 'BIGINT')
+  end
+
+  it 'raises ArgumentError for invalid column type' do
+    expect do
+      client.modify_column(table, col, 'INT; DROP TABLE users;')
+    end.to raise_error(ArgumentError, /Invalid column type/)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#add_column' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

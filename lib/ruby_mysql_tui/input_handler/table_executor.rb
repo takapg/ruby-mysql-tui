@@ -55,6 +55,13 @@ module RubyMysqlTui
         state[:status_message] = "Column '#{column_name}' deleted successfully"
         state
       end
+
+      def execute_modify_column(state, client, table_name, col_name, type)
+        client.modify_column(table_name, col_name, type)
+        state[:records] = client.list_table_structure(table_name)
+        state[:status_message] = "Column '#{col_name}' modified successfully"
+        state
+      end
     end
   end
 end

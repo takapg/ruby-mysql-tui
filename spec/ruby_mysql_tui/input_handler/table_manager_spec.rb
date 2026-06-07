@@ -268,3 +268,34 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column 
     expect(result).to eq(state)
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'age' }], selected_record_index: 0 } }
+
+  it 'modifies column type when a type is selected' do
+    allow(prompt).to receive(:select).and_return('BIGINT')
+    expect(RubyMysqlTui::InputHandler::TableExecutor)
+      .to receive(:execute_modify_column).with(state, client, 'test_table', 'age', 'BIGINT').and_return(state)
+
+    result = described_class.handle_modify_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'returns state unchanged when no column is selected' do
+    state[:records] = []
+    result = described_class.handle_modify_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'handles Mysql2::Error' do
+    allow(prompt).to receive(:select).and_return('BIGINT')
+    allow(RubyMysqlTui::InputHandler::TableExecutor)
+      .to receive(:execute_modify_column).and_raise(Mysql2::Error.new('Error'))
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+
+    result = described_class.handle_modify_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+end

@@ -47,6 +47,14 @@ module RubyMysqlTui
       query("ALTER TABLE `#{escaped_table}` ADD COLUMN `#{escaped_col}` #{type}")
     end
 
+    def modify_column(table_name, column_name, type)
+      raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s(),]+\z/)
+
+      escaped_table = table_name.gsub('`', '``')
+      escaped_col = column_name.gsub('`', '``')
+      query("ALTER TABLE `#{escaped_table}` MODIFY COLUMN `#{escaped_col}` #{type}")
+    end
+
     private
 
     def build_column_definitions(columns)

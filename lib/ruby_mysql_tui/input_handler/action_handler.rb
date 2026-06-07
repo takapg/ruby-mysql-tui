@@ -6,6 +6,7 @@ require_relative 'record_manager'
 require_relative 'record_sort_handler'
 require_relative 'navigation'
 require_relative 'value_viewer'
+require_relative 'action_dispatcher'
 
 module RubyMysqlTui
   module InputHandler
@@ -16,7 +17,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v', 'm' then handle_record_action(val, state, client)
         when '[', ']' then handle_record_navigation(val, state)
         end
       end
@@ -50,15 +51,15 @@ module RubyMysqlTui
         prompt = TTY::Prompt.new
         case val
         when 'n', 'd', 'c' then handle_record_lifecycle_action(val, state, client, prompt)
-        when 'e', 'o', 'r', 't', 'v' then handle_record_utility_action(val, state, client, prompt)
+        when 'e', 'o', 'r', 't', 'v', 'm' then handle_record_utility_action(val, state, client, prompt)
         else state
         end
       end
 
       private_class_method def handle_record_lifecycle_action(val, state, client, prompt)
         case val
-        when 'n' then handle_new_record_action(state, client, prompt)
-        when 'd' then handle_delete_action(state, client, prompt)
+        when 'n' then ActionDispatcher.handle_new_record_action(state, client, prompt)
+        when 'd' then ActionDispatcher.handle_delete_action(state, client, prompt)
         when 'c' then RecordManager.handle_clone_record(state, client, prompt)
         end
       end
@@ -67,62 +68,11 @@ module RubyMysqlTui
         case val
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
-        when 'r' then handle_rename_action(state, client, prompt)
-        when 't' then handle_truncate_action(state, client, prompt)
-        when 'v' then handle_view_value_action(state)
+        when 'r' then ActionDispatcher.handle_rename_action(state, client, prompt)
+        when 't' then ActionDispatcher.handle_truncate_action(state, client, prompt)
+        when 'v' then ActionDispatcher.handle_view_value_action(state)
+        when 'm' then ActionDispatcher.handle_modify_action(state, client, prompt)
         end
-      end
-
-      def handle_rename_action(state, client, prompt)
-        if state[:focus] == :left && state[:view_mode] == :tables
-          TableManager.handle_rename_table(state, client, prompt)
-        elsif state[:focus] == :right && state[:view_mode] == :table_structure
-          TableManager.handle_rename_column(state, client, prompt)
-        else
-          state
-        end
-      end
-
-      def handle_truncate_action(state, client, prompt)
-        if state[:focus] == :left && state[:view_mode] == :tables
-          TableManager.handle_truncate_table(state, client, prompt)
-        else
-          state
-        end
-      end
-
-      def handle_delete_action(state, client, prompt)
-        case state[:view_mode]
-        when :databases
-          DatabaseManager.handle_drop_database(state, client, prompt)
-        when :tables
-          TableManager.handle_drop_table(state, client, prompt)
-        when :table_structure
-          TableManager.handle_drop_column(state, client, prompt)
-        else
-          RecordManager.handle_delete_record(state, client, prompt)
-        end
-      end
-
-      def handle_new_record_action(state, client, prompt)
-        case state[:view_mode]
-        when :databases then DatabaseManager.handle_create_database(state, client, prompt)
-        when :tables then TableManager.handle_create_table(state, client, prompt)
-        when :table_structure then TableManager.handle_add_column(state, client, prompt)
-        else RecordManager.handle_create_record(state, client, prompt)
-        end
-      end
-
-      def handle_view_value_action(state)
-        return state unless state[:view_mode] == :record_detail
-
-        records = state[:records] || []
-        record = records[state[:selected_record_index] || 0]
-        return state unless record
-
-        column_name = record.keys[state[:selected_column_index] || 0]
-        ValueViewer.view_value(record[column_name])
-        state
       end
     end
   end
