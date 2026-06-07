@@ -467,3 +467,10 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
     RubyMysqlTui.handle_input(delete_event, state, client)
   end
 end
+
+RSpec.describe RubyMysqlTui, '.start (interrupt)' do
+  it 'Interruptが発生したとき、安全に終了すること' do
+    allow(RubyMysqlTui).to receive(:establish_connection).and_raise(Interrupt)
+    expect { RubyMysqlTui.start }.not_to raise_error
+  end
+end
