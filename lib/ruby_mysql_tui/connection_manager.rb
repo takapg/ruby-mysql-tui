@@ -2,25 +2,26 @@
 
 module RubyMysqlTui
   # ConnectionManager は MySQL への接続確立と再試行プロンプトを管理します。
-  class ConnectionManager
+  module ConnectionManager
     def self.establish_connection
       config = nil
       loop do
-        client, error = try_connect(config)
-        return client if client
-
-        config = handle_connection_failure(error)
-        return nil unless config
+        begin
+          return try_connect(config)
+        rescue Mysql2::Error => e
+          config = handle_connection_failure(e)
+          return nil unless config
+        end
       end
     end
 
     def self.try_connect(config)
       client = Client.new(config || {})
       verify_connection(client)
-      [client, nil]
+      client
     rescue Mysql2::Error => e
       client&.close
-      [nil, e]
+      raise e
     end
 
     def self.verify_connection(client)
@@ -44,5 +45,7 @@ module RubyMysqlTui
         database: prompt.ask('Database (optional):')
       }
     end
+
+    private_class_method :try_connect, :verify_connection, :handle_connection_failure, :prompt_config
   end
 end
