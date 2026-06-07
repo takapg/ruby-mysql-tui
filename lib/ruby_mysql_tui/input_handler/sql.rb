@@ -86,7 +86,6 @@ module RubyMysqlTui
       end
     end
 
-
     def handle_sql_text_input(event, state)
       if event.key.name == :backspace
         state[:sql_input] = state[:sql_input].chop
