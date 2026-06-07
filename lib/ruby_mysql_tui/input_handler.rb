@@ -129,7 +129,7 @@ module RubyMysqlTui
         sort_column: state[:sort_column],
         sort_direction: state[:sort_direction],
         filter_query: state[:records_filter_query]
-      }
+      }.compact.reject { |_, v| v.to_s.empty? }
     end
   end
 end
