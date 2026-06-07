@@ -11,6 +11,7 @@ module RubyMysqlTui
     # TableManager は テーブルの作成などの操作を提供します。
     module TableManager
       extend TableManagerUtils
+
       module_function
 
       def handle_create_table(state, client, prompt)
@@ -62,16 +63,15 @@ module RubyMysqlTui
 
       def handle_add_column(state, client, prompt)
         table_name = state[:selected_table]
-        return state if table_name.nil?
+        return state unless table_name
 
         col_name = prompt.ask('追加するカラム名を入力してください:')
-        return state if col_name.nil? || col_name.strip.empty?
+        return state unless col_name && !col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', RubyMysqlTui::InputHandler::TablePromptHelper::COLUMN_TYPES)
-        type_str = build_type_string(prompt, type)
-        result = TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type_str)
+        result = TableExecutor.execute_add_column(state, client, table_name, col_name.strip, build_type_string(prompt, type))
         result[:status_message] = "Column '#{col_name.strip}' added to '#{table_name}' successfully"
-        return result
+        result
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
@@ -108,14 +108,13 @@ module RubyMysqlTui
 
       def handle_modify_column(state, client, prompt)
         column_info = fetch_selected_column(state)
-        return state if column_info.nil?
+        return state unless column_info
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", RubyMysqlTui::InputHandler::TablePromptHelper::COLUMN_TYPES)
-        type_str = build_type_string(prompt, type)
-        result = TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_str)
+        result = TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, build_type_string(prompt, type))
         result[:status_message] = "Column '#{old_name}' modified successfully"
-        return result
+        result
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
