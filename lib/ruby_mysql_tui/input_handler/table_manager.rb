@@ -15,15 +15,22 @@ module RubyMysqlTui
         name = prompt.ask('作成するテーブル名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        # カラム定義を取得（:null フラグを含む）
-        cols = TablePromptHelper.collect_column_definitions(prompt)
-        return state if cols.nil? || cols.empty?
+        # カラム定義を対話的に取得
+        cols = []
+        loop do
+          col_name = prompt.ask('カラム名を入力してください (空で終了):')
+          break if col_name.nil? || col_name.strip.empty?
 
-        # Client へは :null を除いたハッシュを渡す
-        cols_for_client = cols.map { |c| { name: c[:name], type: c[:type] } }
-        TableExecutor.execute_create_table(state, client, prompt, name.strip, cols_for_client)
+          type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
+          allow_null = prompt.yes?
+          type_str = allow_null ? "#{type} NULL" : type
+          cols << { name: col_name.strip, type: type_str }
+        end
+
+        # Client へはカラム定義をそのまま渡す
+        TableExecutor.execute_create_table(state, client, prompt, name.strip, cols)
       rescue Mysql2::Error => e
-        TableErrorHandler.handle_create_error(prompt, e)
+        prompt.error("エラーが発生しました: #{e.message}")
         state
       end
 
@@ -72,7 +79,7 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        allow_null = prompt.yes?('NULLを許容しますか？')
+        allow_null = prompt.yes?
         type_str = allow_null ? "#{type} NULL" : type
         TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type_str)
       rescue Mysql2::Error => e
@@ -115,7 +122,7 @@ module RubyMysqlTui
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        allow_null = prompt.yes?('NULLを許容しますか？')
+        allow_null = prompt.yes?
         type_str = allow_null ? "#{type} NULL" : type
         TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_str)
       rescue Mysql2::Error => e
