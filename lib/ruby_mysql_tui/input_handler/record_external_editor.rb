@@ -2,6 +2,7 @@
 
 require_relative 'sql_editor'
 require_relative 'record_prompt'
+require_relative 'record_validator'
 
 module RubyMysqlTui
   module InputHandler
@@ -17,8 +18,9 @@ module RubyMysqlTui
         return state unless record && column
 
         structure = client.list_table_structure(state[:selected_table])
-        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
+        return state unless RecordValidator.long_text_type?(column, structure)
 
+        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
         return state if pk_column_not_editable?(column, pk_cols, prompt)
 
         context = { record: record, column: column, pk_column: pk_column, pk_cols: pk_cols }
@@ -51,8 +53,6 @@ module RubyMysqlTui
         info = build_update_info(context, new_value)
         RecordManager.perform_update(state, client, prompt, info)
       end
-
-      private
 
       def perform_editor_edit(context)
         editor = ENV['EDITOR'] || 'vi'
