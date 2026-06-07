@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            aider --model openai/deepseek-ai/deepseek-v4-flash \
+            aider --model openai/openai/gpt-oss-120b \
                   --edit-format diff-fenced \
                   --thinking-tokens 1024 \
                   --yes-always \
@@ -107,6 +107,7 @@ jobs:
                   --no-attribute-co-authored-by \
                   --disable-playwright \
                   --no-detect-urls \
+                  --stream \
                   --message "$INSTRUCTION (attempt: $RETRY_COUNT)"
 
             if ! git diff --quiet "origin/${{ github.ref_name }}"; then
