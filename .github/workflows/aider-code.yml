@@ -96,7 +96,7 @@ jobs:
             echo "---" >> .aider.chat.history.md
 
             aider --model openai/openai/gpt-oss-120b \
-                  --edit-format diff-fenced \
+                  --edit-format udiff \
                   --thinking-tokens 1024 \
                   --yes-always \
                   --chat-language japanese \
