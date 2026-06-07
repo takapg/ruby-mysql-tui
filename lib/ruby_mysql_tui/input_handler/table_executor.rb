@@ -40,6 +40,13 @@ module RubyMysqlTui
         state
       end
 
+      def execute_rename_column(state, client, table_name, old_name, new_name)
+        client.rename_column(table_name, old_name, new_name)
+        state[:records] = client.list_table_structure(table_name)
+        state[:status_message] = "Column '#{old_name}' renamed to '#{new_name}' successfully"
+        state
+      end
+
       def execute_drop_column(state, client, table_name, column_name)
         client.drop_column(table_name, column_name)
         state[:records] = client.list_table_structure(table_name)
