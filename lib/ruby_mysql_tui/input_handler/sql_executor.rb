@@ -4,7 +4,7 @@ module RubyMysqlTui
   module InputHandler
     # SqlExecutor は SQL の実行と結果の状態反映を提供します。
     module SqlExecutor
-      extend self
+      module_function
 
       def apply_sql_result_state(state, results, sql)
         state.merge!(
@@ -50,6 +50,8 @@ module RubyMysqlTui
       rescue StandardError => e
         [{ 'Error' => e.message }]
       end
+
+      public :apply_sql_result_state, :apply_use_state, :apply_execution_state, :query_mysql
     end
   end
 end

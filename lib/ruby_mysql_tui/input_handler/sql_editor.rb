@@ -7,7 +7,7 @@ module RubyMysqlTui
   module InputHandler
     # SqlEditor は 外部エディタを使用した SQL 入力機能を提供します。
     module SqlEditor
-      extend self
+      module_function
 
       def open_external_editor(state)
         editor = ENV['EDITOR'] || 'vi'
@@ -26,6 +26,8 @@ module RubyMysqlTui
           temp_file.unlink
         end
       end
+
+      public :open_external_editor, :edit_in_editor
     end
   end
 end
