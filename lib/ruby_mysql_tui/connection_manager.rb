@@ -19,6 +19,7 @@ module RubyMysqlTui
       verify_connection(client)
       [client, nil]
     rescue Mysql2::Error => e
+      client&.close
       [nil, e]
     end
 
