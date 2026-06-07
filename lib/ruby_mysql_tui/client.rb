@@ -53,24 +53,9 @@ module RubyMysqlTui
     end
 
     # 指定したテーブルのレコード一覧を取得します。
-    def list_records(table_name, offset = 0, limit: RubyMysqlTui::PAGE_SIZE, sort_column: nil, sort_direction: 'ASC', filter_query: nil)
-      escaped_table_name = table_name.gsub('`', '``')
-      sql = "SELECT * FROM `#{escaped_table_name}`"
-
-      if filter_query && !filter_query.empty?
-        columns = list_columns(table_name)
-        escaped_query = "%#{@connection.escape(filter_query)}%"
-        where_clause = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped_query}'" }.join(' OR ')
-        sql += " WHERE (#{where_clause})"
-      end
-
-      if sort_column
-        direction = %w[ASC DESC].include?(sort_direction.to_s.upcase) ? sort_direction.to_s.upcase : 'ASC'
-        sql += " ORDER BY `#{sort_column.gsub('`', '``')}` #{direction}"
-      end
-
-      sql += " LIMIT #{limit} OFFSET #{offset}" if limit
-
+    def list_records(table_name, offset = 0, **options)
+      limit = options[:limit] || RubyMysqlTui::PAGE_SIZE
+      sql = build_list_records_sql(table_name, offset, limit, options)
       query(sql)
     end
 
@@ -100,6 +85,30 @@ module RubyMysqlTui
     end
 
     private
+
+    def build_list_records_sql(table_name, offset, limit, options)
+      sql = "SELECT * FROM `#{table_name.gsub('`', '``')}`"
+      sql = apply_filter(sql, table_name, options[:filter_query])
+      sql = apply_sort(sql, options[:sort_column], options[:sort_direction])
+      sql += " LIMIT #{limit} OFFSET #{offset}" if limit
+      sql
+    end
+
+    def apply_filter(sql, table_name, query)
+      return sql if query.nil? || query.empty?
+
+      columns = list_columns(table_name)
+      escaped = "%#{@connection.escape(query)}%"
+      where = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped}'" }.join(' OR ')
+      "#{sql} WHERE (#{where})"
+    end
+
+    def apply_sort(sql, column, direction)
+      return sql if column.nil?
+
+      dir = %w[ASC DESC].include?(direction.to_s.upcase) ? direction.to_s.upcase : 'ASC'
+      "#{sql} ORDER BY `#{column.gsub('`', '``')}` #{dir}"
+    end
 
     def with_reconnection_retry
       retried = false

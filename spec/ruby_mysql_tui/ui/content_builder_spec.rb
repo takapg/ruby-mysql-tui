@@ -182,7 +182,7 @@ RSpec.describe RubyMysqlTui::UI::ContentBuilder, '.filtered_items edge cases' do
   end
 end
 
-RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic' do
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic - display' do
   let(:width) { 100 }
   let(:height) { 20 }
   let(:records) do
@@ -197,6 +197,18 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic' do
     state = { records: records, records_filter_query: '', selected_table: 'test' }
     output = described_class.build_view(state, width, height)
     expect(output).to include('Alice', 'Bob', 'Charlie')
+  end
+end
+
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'filtering basic - results' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+  let(:records) do
+    [
+      { 'id' => 1, 'name' => 'Alice' },
+      { 'id' => 2, 'name' => 'Bob' },
+      { 'id' => 3, 'name' => 'Charlie' }
+    ]
   end
 
   it '渡されたレコードセットをそのまま表示すること' do
