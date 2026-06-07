@@ -34,7 +34,9 @@ module RubyMysqlTui
     end
 
     def rename_column(table_name, old_name, new_name)
-      query("ALTER TABLE `#{table_name.gsub('`', '``')}` RENAME COLUMN `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`")
+      sql = "ALTER TABLE `#{table_name.gsub('`', '``')}` " \
+            "RENAME COLUMN `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`"
+      query(sql)
     end
 
     def add_column(table_name, column_name, type)
