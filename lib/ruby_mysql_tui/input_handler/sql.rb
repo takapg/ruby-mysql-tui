@@ -12,6 +12,10 @@ module RubyMysqlTui
     extend SqlEditor
     extend SqlExecutor
 
+    public *SqlNavigator.methods(false)
+    public *SqlEditor.methods(false)
+    public *SqlExecutor.methods(false)
+
     module_function
 
     MAX_HISTORY_SIZE = 100
