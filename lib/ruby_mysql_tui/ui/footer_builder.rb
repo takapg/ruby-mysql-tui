@@ -38,7 +38,7 @@ module RubyMysqlTui
       end
 
       def structure_guides
-        ['[i] Records', '[n] Add Col', '[d] Drop Col', '[↑/↓] Move', '[←/→] Scroll Cols']
+        ['[i] Records', '[n] Add Col', '[d] Drop Col', '[r] Rename Col', '[↑/↓] Move', '[←/→] Scroll Cols']
       end
     end
   end

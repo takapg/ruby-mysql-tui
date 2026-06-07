@@ -71,6 +71,21 @@ module RubyMysqlTui
         state
       end
 
+      def handle_rename_column(state, client, prompt)
+        column_info = fetch_selected_column(state)
+        return state if column_info.nil?
+
+        old_name = column_info['Field']
+        new_name = prompt.ask("カラム '#{old_name}' の新しい名前を入力してください:")
+        return state if new_name.nil? || new_name.strip.empty?
+
+        TableExecutor.execute_rename_column(state, client, state[:selected_table], old_name, new_name.strip)
+      rescue Mysql2::Error => e
+        RubyMysqlTui.logger.error("Column Rename Error: #{e.message}")
+        prompt.error("エラーが発生しました: #{e.message}")
+        state
+      end
+
       def handle_drop_column(state, client, prompt)
         column_info = fetch_selected_column(state)
         return state if column_info.nil?
