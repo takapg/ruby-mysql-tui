@@ -34,19 +34,25 @@ module RubyMysqlTui
 
   def self.start
     logger.info 'Starting RubyMysqlTui...'
-    begin
-      client = establish_connection
-      return unless client
-
-      run_main_loop(client)
-    rescue Interrupt
-      logger.info 'Interrupted by user. Exiting...'
-    rescue StandardError => e
-      logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
-    ensure
-      client&.close
-    end
+    run_app
   end
+
+  def self.run_app
+    client = establish_connection
+    run_main_loop(client) if client
+  rescue Interrupt
+    logger.info 'Interrupted by user. Exiting...'
+  rescue StandardError => e
+    log_initialization_error(e)
+  ensure
+    client&.close
+  end
+
+  def self.log_initialization_error(e)
+    logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
+  end
+
+  private_class_method :run_app, :log_initialization_error
 
   def self.verify_connection(client)
     client.query('SELECT 1')
