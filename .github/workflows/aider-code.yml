@@ -73,6 +73,8 @@ jobs:
       - name: Run AI Agent CLI (With Self-Retry)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: https://integrate.api.nvidia.com/v1
           INSTRUCTION: ${{ github.event.inputs.instruction }}
         run: |
           echo "Executing: $INSTRUCTION"
@@ -93,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            aider --model gemini/gemma-4-31b-it \
+            aider --model openai/gpt-oss-120b \
                   --edit-format diff-fenced \
                   --thinking-tokens 1024 \
                   --yes-always \
