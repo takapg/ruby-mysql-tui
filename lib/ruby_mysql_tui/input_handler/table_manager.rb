@@ -22,8 +22,7 @@ module RubyMysqlTui
       end
 
       def handle_drop_table(state, client, prompt)
-        table_name = state[:items][state[:selected_index]]
-        return state if table_name.nil?
+        return state if (table_name = state[:items][state[:selected_index]]).nil?
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
 
@@ -33,8 +32,7 @@ module RubyMysqlTui
       end
 
       def handle_rename_table(state, client, prompt)
-        table_name = state[:items][state[:selected_index]]
-        return state if table_name.nil?
+        return state if (table_name = state[:items][state[:selected_index]]).nil?
 
         new_name = prompt.ask("テーブル '#{table_name}' の新しい名前を入力してください:")
         return state if new_name.to_s.strip.empty?
@@ -47,8 +45,7 @@ module RubyMysqlTui
       end
 
       def handle_truncate_table(state, client, prompt)
-        table_name = state[:items][state[:selected_index]]
-        return state if table_name.nil?
+        return state if (table_name = state[:items][state[:selected_index]]).nil?
 
         return cancel_truncation(state) unless prompt.yes?("本当にテーブル '#{table_name}' を切り捨てますか？ (y/N)")
 
@@ -80,8 +77,7 @@ module RubyMysqlTui
       end
 
       def handle_rename_column(state, client, prompt)
-        column_info = fetch_selected_column(state)
-        return state if column_info.nil?
+        return state if (column_info = fetch_selected_column(state)).nil?
 
         old_name = column_info['Field']
         new_name = prompt.ask("カラム '#{old_name}' の新しい名前を入力してください:")
@@ -95,8 +91,7 @@ module RubyMysqlTui
       end
 
       def handle_drop_column(state, client, prompt)
-        column_info = fetch_selected_column(state)
-        return state if column_info.nil?
+        return state if (column_info = fetch_selected_column(state)).nil?
 
         column_name = column_info['Field']
         return state if primary_key_error?(column_info, prompt, column_name)
@@ -108,8 +103,7 @@ module RubyMysqlTui
       end
 
       def handle_modify_column(state, client, prompt)
-        column_info = fetch_selected_column(state)
-        return state if column_info.nil?
+        return state if (column_info = fetch_selected_column(state)).nil?
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
