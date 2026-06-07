@@ -941,33 +941,33 @@ end
 RSpec.describe 'E2E Table Column Modify' do
   include_context 'e2e setup'
 
-  it 'modifies a column type when m is pressed in table structure view' do
-    allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)), # DB
-      double('Event', value: "\r", key: double('Key', name: :return)), # Table
-      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
-      double('Event', value: 'i', key: double('Key', name: :i)),       # Structure View
-      double('Event', value: 'm', key: double('Key', name: :m)),       # Modify Col
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+  context 'when modifying column type' do
+    it 'modifies a column type when m is pressed in table structure view' do
+      allow(TTY::Reader).to receive(:new).and_return(reader)
+      events = [
+        double('Event', value: "\r", key: double('Key', name: :return)),
+        double('Event', value: "\r", key: double('Key', name: :return)),
+        double('Event', value: "\t", key: double('Key', name: :tab)),
+        double('Event', value: 'i', key: double('Key', name: :i)),
+        double('Event', value: 'm', key: double('Key', name: :m)),
+        double('Event', value: 'q', key: double('Key', name: :q))
+      ]
+      allow(reader).to receive(:read_keypress).and_return(*events)
 
-    prompt = instance_double(TTY::Prompt)
-    allow(TTY::Prompt).to receive(:new).and_return(prompt)
-    allow(prompt).to receive(:select).and_return('BIGINT')
-    allow(prompt).to receive(:yes?).and_return(true)
+      prompt = instance_double(TTY::Prompt)
+      allow(TTY::Prompt).to receive(:new).and_return(prompt)
+      allow(prompt).to receive(:select).and_return('BIGINT')
+      allow(prompt).to receive(:yes?).and_return(true)
 
-    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    allow(client).to receive(:list_tables).and_return(['test_table'])
-    allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age' }])
-    expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT NULL')
+      allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+      allow(client).to receive(:list_tables).and_return(['test_table'])
+      allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age' }])
+      expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT NULL')
 
-    states = track_states(client)
-    RubyMysqlTui.run_main_loop(client)
-    expect(states.any? do |s|
-      s[:status_message] == "Column 'age' modified successfully"
-    end).to be true
+      states = track_states(client)
+      RubyMysqlTui.run_main_loop(client)
+      expect(states.any? { |s| s[:status_message] == "Column 'age' modified successfully" }).to be true
+    end
   end
 end
 

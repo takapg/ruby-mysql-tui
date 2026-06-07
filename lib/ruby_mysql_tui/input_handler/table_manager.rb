@@ -62,16 +62,22 @@ module RubyMysqlTui
         table_name = state[:selected_table]
         return state if table_name.nil?
 
-        col_name = prompt.ask('追加するカラム名を入力してください:')
-        return state if col_name.nil? || col_name.strip.empty?
+        col_name, type_with_null = prompt_for_column_details(prompt)
+        return state if col_name.nil?
 
-        type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        type_with_null = "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"
-        TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type_with_null)
+        TableExecutor.execute_add_column(state, client, table_name, col_name, type_with_null)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
+      end
+
+      private_class_method def prompt_for_column_details(prompt)
+        col_name = prompt.ask('追加するカラム名を入力してください:')
+        return [nil, nil] if col_name.nil? || col_name.strip.empty?
+
+        type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
+        null_allowed = prompt.yes?('NULLを許容しますか？')
+        [col_name.strip, "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"]
       end
 
       def handle_rename_column(state, client, prompt)
