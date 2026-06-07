@@ -235,28 +235,30 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit
     allow(client).to receive(:list_records).and_return(state[:records])
   end
 
-  it 'updates the record when a long text column is edited via external editor' do
-    state[:selected_column_index] = 1 # 'content' (text)
-    allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
-    
-    expect(client).to receive(:update_record).with(table_name, 'id', 1, 'content', 'new content')
-    
-    described_class.handle_external_edit(state, client, prompt)
+  context 'when editing a long text column' do
+    it 'updates the record when edited via external editor' do
+      state[:selected_column_index] = 1 # 'content' (text)
+      allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
+      expect(client).to receive(:update_record).with(table_name, 'id', 1, 'content', 'new content')
+      described_class.handle_external_edit(state, client, prompt)
+    end
   end
 
-  it 'does not open editor for non-long-text columns' do
-    state[:selected_column_index] = 2 # 'name' (varchar)
-    expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
-    
-    described_class.handle_external_edit(state, client, prompt)
+  context 'when editing a non-long-text column' do
+    it 'does not open editor' do
+      state[:selected_column_index] = 2 # 'name' (varchar)
+      expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
+      described_class.handle_external_edit(state, client, prompt)
+    end
   end
 
-  it 'shows warning and does not open editor for primary key columns' do
-    state[:selected_column_index] = 0 # 'id' (PK)
-    expect(prompt).to receive(:say).with(/主キーは編集できません/, color: :red)
-    expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
-    
-    described_class.handle_external_edit(state, client, prompt)
+  context 'when editing a primary key column' do
+    it 'shows warning and does not open editor' do
+      state[:selected_column_index] = 0 # 'id' (PK)
+      expect(prompt).to receive(:say).with(/主キーは編集できません/, color: :red)
+      expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
+      described_class.handle_external_edit(state, client, prompt)
+    end
   end
 end
 

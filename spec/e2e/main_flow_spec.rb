@@ -53,6 +53,18 @@ module E2EEventHelpers
     ]
   end
 
+  def external_edit_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event("\r", :return),
+      make_event("\e[B", :down),
+      make_event("\x05", :ctrl_e),
+      make_event('q', :q)
+    ]
+  end
+
   def all_records_events
     [
       make_event("\r", :return),
@@ -962,16 +974,7 @@ RSpec.describe 'E2E Record External Edit' do
 
   it 'updates a long text field using Ctrl+E' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    events = [
-      double('Event', value: "\r", key: double('Key', name: :return)), # DB
-      double('Event', value: "\r", key: double('Key', name: :return)), # Table
-      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
-      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
-      double('Event', value: "\e[B", key: double('Key', name: :down)), # Move to 'content'
-      make_event("\x05", :ctrl_e),                                     # Ctrl+E
-      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
-    ]
-    allow(reader).to receive(:read_keypress).and_return(*events)
+    allow(reader).to receive(:read_keypress).and_return(*external_edit_events)
 
     record_value = 'old content'
     records = [{ 'id' => 1, 'content' => record_value }]
@@ -979,14 +982,14 @@ RSpec.describe 'E2E Record External Edit' do
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_records).and_return(records)
     allow(client).to receive(:primary_key_for).and_return('id')
-    allow(client).to receive(:list_table_structure).and_return([
-      { 'Field' => 'id', 'Type' => 'int', 'Null' => 'NO' },
-      { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES' }
-    ])
+    allow(client).to receive(:list_table_structure).and_return(
+      [
+        { 'Field' => 'id', 'Type' => 'int', 'Null' => 'NO' },
+        { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES' }
+      ]
+    )
 
-    # Mock SqlEditor to return new value
     allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
-
     expect(client).to receive(:update_record).with('test_table', 'id', 1, 'content', 'new content')
 
     RubyMysqlTui.run_main_loop(client)
