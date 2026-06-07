@@ -61,10 +61,12 @@ module RubyMysqlTui
       columns.map do |col|
         name = col.is_a?(Hash) ? col[:name] : col
         type = col.is_a?(Hash) ? col[:type] : 'VARCHAR(255)'
+        null_allowed = col.is_a?(Hash) ? col.fetch(:null, true) : true
+        null_constraint = null_allowed ? 'NULL' : 'NOT NULL'
 
         raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s(),]+\z/)
 
-        "`#{name.gsub('`', '``')}` #{type}"
+        "`#{name.gsub('`', '``')}` #{type} #{null_constraint}"
       end
     end
   end
