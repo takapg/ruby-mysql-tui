@@ -506,7 +506,7 @@ RSpec.describe 'E2E All Records Mode' do
     allow(client).to receive(:list_records).with('test_table', 0).and_return([{ 'id' => 1 }])
 
     all_records = [{ 'id' => 1 }, { 'id' => 2 }, { 'id' => 3 }]
-    expect(client).to receive(:list_records).with('test_table', 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT).and_return(all_records)
+    expect(client).to receive(:list_records).with('test_table', 0, hash_including(limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT)).and_return(all_records)
     expect(client).to receive(:list_records).with('test_table', 0).and_return([{ 'id' => 1 }])
 
     RubyMysqlTui.run_main_loop(client)
