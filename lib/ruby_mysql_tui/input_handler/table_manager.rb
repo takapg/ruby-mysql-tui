@@ -69,12 +69,15 @@ module RubyMysqlTui
         return state unless col_name && !col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', RubyMysqlTui::InputHandler::TablePromptHelper::COLUMN_TYPES)
-        result = TableExecutor.execute_add_column(state, client, table_name, col_name.strip, build_type_string(prompt, type))
-        result[:status_message] = "Column '#{col_name.strip}' added to '#{table_name}' successfully"
+        result = TableExecutor.execute_add_column(
+          state,
+          client,
+          table_name,
+          col_name.strip,
+          build_type_string(prompt, type)
+        ).tap { |r| r[:status_message] = "Column '#{col_name.strip}' added to '#{table_name}' successfully" }
         result
-      rescue Mysql2::Error => e
-        TableErrorHandler.handle_add_column_error(prompt, e)
-        state
+      rescue Mysql2::Error => e; TableErrorHandler.handle_add_column_error(prompt, e); state
       end
 
       def handle_rename_column(state, client, prompt)
@@ -112,7 +115,13 @@ module RubyMysqlTui
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", RubyMysqlTui::InputHandler::TablePromptHelper::COLUMN_TYPES)
-        result = TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, build_type_string(prompt, type))
+        result = TableExecutor.execute_modify_column(
+          state,
+          client,
+          state[:selected_table],
+          old_name,
+          build_type_string(prompt, type)
+        )
         result[:status_message] = "Column '#{old_name}' modified successfully"
         result
       rescue Mysql2::Error => e
