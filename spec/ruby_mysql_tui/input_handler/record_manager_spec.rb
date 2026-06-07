@@ -212,6 +212,53 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_create_record
   end
 end
 
+RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit' do
+  include_context 'record manager setup'
+
+  let(:table_name) { 'users' }
+  let(:structure) do
+    [
+      { 'Field' => 'id', 'Type' => 'int(11)', 'Null' => 'NO' },
+      { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES' },
+      { 'Field' => 'name', 'Type' => 'varchar(255)', 'Null' => 'YES' }
+    ]
+  end
+
+  before do
+    state[:focus] = :right
+    state[:view_mode] = :record_detail
+    state[:selected_table] = table_name
+    state[:records] = [{ 'id' => 1, 'content' => 'old content', 'name' => 'Alice' }]
+    state[:selected_record_index] = 0
+    allow(client).to receive(:primary_key_for).with(table_name).and_return('id')
+    allow(client).to receive(:list_table_structure).with(table_name).and_return(structure)
+  end
+
+  it 'updates the record when a long text column is edited via external editor' do
+    state[:selected_column_index] = 1 # 'content' (text)
+    allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
+    
+    expect(client).to receive(:update_record).with(table_name, 'id', 1, 'content', 'new content')
+    
+    described_class.handle_external_edit(state, client, prompt)
+  end
+
+  it 'does not open editor for non-long-text columns' do
+    state[:selected_column_index] = 2 # 'name' (varchar)
+    expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
+    
+    described_class.handle_external_edit(state, client, prompt)
+  end
+
+  it 'shows warning and does not open editor for primary key columns' do
+    state[:selected_column_index] = 0 # 'id' (PK)
+    expect(prompt).to receive(:say).with(/主キーは編集できません/, color: :red)
+    expect(RubyMysqlTui::InputHandler::SqlEditor).not_to receive(:edit_in_editor)
+    
+    described_class.handle_external_edit(state, client, prompt)
+  end
+end
+
 RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.perform_update' do
   include_context 'record manager setup'
 
