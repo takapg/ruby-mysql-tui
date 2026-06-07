@@ -137,7 +137,10 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method :prompt_for_column_details, :fetch_selected_column, :primary_key_error?, :cancel_truncation, :prompt_for_type_with_null
+      private_class_method(
+        :prompt_for_column_details, :fetch_selected_column, :primary_key_error?,
+        :cancel_truncation, :prompt_for_type_with_null
+      )
     end
   end
 end
