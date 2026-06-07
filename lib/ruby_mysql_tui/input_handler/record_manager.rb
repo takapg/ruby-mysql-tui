@@ -5,6 +5,7 @@ require_relative 'record_prompt'
 require_relative 'record_retry_handler'
 require_relative 'record_clone_manager'
 require_relative 'record_toggle_manager'
+require_relative 'record_external_editor'
 
 module RubyMysqlTui
   module InputHandler
@@ -127,32 +128,7 @@ module RubyMysqlTui
       end
 
       def self.handle_external_edit(state, client, prompt)
-        return state unless can_manage_record?(state) && state[:view_mode] == :record_detail
-
-        record, pk_column = fetch_edit_context(state, client)
-        return state unless record
-
-        col_idx = state[:selected_column_index] || 0
-        column = record.keys[col_idx]
-        return state if column.nil?
-
-        structure = client.list_table_structure(state[:selected_table])
-        pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
-
-        if pk_cols.include?(column)
-          RecordPrompt.warn_pk_not_editable(prompt)
-          return state
-        end
-
-        editor = ENV['EDITOR'] || 'vi'
-        new_value = SqlEditor.edit_in_editor(editor, record[column])
-
-        if new_value && new_value != record[column]
-          info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: new_value }
-          perform_update(state, client, prompt, info)
-        end
-
-        state
+        RecordExternalEditor.handle_external_edit(state, client, prompt)
       end
     end
   end
