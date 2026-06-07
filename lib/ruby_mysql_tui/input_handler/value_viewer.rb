@@ -12,9 +12,11 @@ module RubyMysqlTui
       def view_value(value)
         return if value.nil?
 
-        Tempfile.create(['tui_value', '.txt']) do |file|
+        file = Tempfile.new(['tui_value', '.txt'])
+        begin
           write_and_view(file, value)
         ensure
+          file.close
           file.unlink
         end
       end

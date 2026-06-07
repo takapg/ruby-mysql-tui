@@ -14,9 +14,10 @@ RSpec.describe RubyMysqlTui::InputHandler::ValueViewer do
 
     it 'writes value to a temporary file and opens it with the pager' do
       temp_file = instance_double(Tempfile, path: '/tmp/tui_value.txt')
-      allow(Tempfile).to receive(:create).and_yield(temp_file)
+      allow(Tempfile).to receive(:new).and_return(temp_file)
       allow(temp_file).to receive(:write)
       allow(temp_file).to receive(:flush)
+      allow(temp_file).to receive(:close)
       allow(temp_file).to receive(:unlink)
       allow(ENV).to receive(:[]).with('PAGER').and_return('less')
 
