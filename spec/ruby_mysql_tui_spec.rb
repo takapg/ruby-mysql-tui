@@ -399,6 +399,43 @@ RSpec.describe RubyMysqlTui, '.handle_input (raw value handling)' do
   end
 end
 
+RSpec.describe RubyMysqlTui, '.establish_connection' do
+  let(:client) { double('Client') }
+  let(:error) { Mysql2::Error.new('Connection failed') }
+  let(:prompt) { instance_double(TTY::Prompt) }
+
+  before do
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+  end
+
+  it '接続に成功したとき、Clientを返す' do
+    allow(RubyMysqlTui::Client).to receive(:new).and_return(client)
+    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_return(true)
+
+    expect(RubyMysqlTui.establish_connection).to eq(client)
+  end
+
+  it '接続に失敗し、再入力して成功したとき、Clientを返す' do
+    allow(RubyMysqlTui::Client).to receive(:new).and_return(client, client)
+    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_raise(error).once
+    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_return(true).once
+
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(prompt).to receive(:ask).and_return('val')
+    allow(prompt).to receive(:mask).and_return('pass')
+
+    expect(RubyMysqlTui.establish_connection).to eq(client)
+  end
+
+  it '接続に失敗し、再入力をキャンセルしたとき、nilを返す' do
+    allow(RubyMysqlTui::Client).to receive(:new).and_return(client)
+    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_raise(error)
+    allow(prompt).to receive(:yes?).and_return(false)
+
+    expect(RubyMysqlTui.establish_connection).to be_nil
+  end
+end
+
 RSpec.describe RubyMysqlTui, 'Integration flow (Record Deletion)' do
   let(:client) { double('Client') }
   let(:delete_event) { double('Event', value: 'd', key: double('Key', name: :unknown)) }
