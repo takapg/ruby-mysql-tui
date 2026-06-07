@@ -898,7 +898,7 @@ RSpec.describe 'E2E Table Column Addition' do
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'id' }, { 'Field' => 'new_col' }])
-    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255)')
+    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255) NULL')
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
@@ -961,7 +961,7 @@ RSpec.describe 'E2E Table Column Modify' do
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age' }])
-    expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT')
+    expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT NULL')
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
