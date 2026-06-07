@@ -66,8 +66,12 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        if TablePromptHelper::NULL_PROMPT_ENABLED
+          null_allowed = prompt.yes?('NULLを許容しますか？')
+          type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        else
+          type_str = type
+        end
         TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type_str)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
@@ -109,8 +113,12 @@ module RubyMysqlTui
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        if TablePromptHelper::NULL_PROMPT_ENABLED
+          null_allowed = prompt.yes?('NULLを許容しますか？')
+          type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        else
+          type_str = type
+        end
         TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_str)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)

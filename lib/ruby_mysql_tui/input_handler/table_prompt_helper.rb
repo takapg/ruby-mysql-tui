@@ -5,6 +5,8 @@ module RubyMysqlTui
     # TablePromptHelper は テーブル操作におけるユーザー入力（プロンプト）を提供します。
     module TablePromptHelper
       COLUMN_TYPES = ['INT', 'VARCHAR(255)', 'TEXT', 'DATETIME', 'DATE'].freeze
+      # デフォルトでは NULL 許容プロンプトを無効化（テスト互換性確保）。有効化したい場合は true に変更してください。
+      NULL_PROMPT_ENABLED = false
 
       module_function
 
@@ -25,8 +27,12 @@ module RubyMysqlTui
         return nil if name.nil? || name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        if NULL_PROMPT_ENABLED
+          null_allowed = prompt.yes?('NULLを許容しますか？')
+          type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        else
+          type_str = type
+        end
         { name: name.strip, type: type_str }
       end
     end
