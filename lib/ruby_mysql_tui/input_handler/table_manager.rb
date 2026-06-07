@@ -109,10 +109,10 @@ module RubyMysqlTui
         return state if column_info.nil?
 
         old_name = column_info['Field']
+        # データ型を選択し、NULL 許容設定を取得
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        type = prompt.select(\"カラム '#{old_name}' の新しいデータ型を選択してください:\", TablePromptHelper::COLUMN_TYPES)
         null_allowed = prompt.yes?('NULL を許容しますか？')
-        type_with_null = null_allowed ? \"#{type} NULL\" : \"#{type} NOT NULL\"
+        type_with_null = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
 
         TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_with_null)
       rescue Mysql2::Error => e
