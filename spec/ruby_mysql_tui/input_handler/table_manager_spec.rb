@@ -225,7 +225,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column (success)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'old_col' }], selected_record_index: 0 } }
@@ -239,6 +239,12 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column'
     result = described_class.handle_rename_column(state, client, prompt)
     expect(result[:status_message]).to eq("Column 'old_col' renamed to 'new_col' successfully")
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column (edge cases)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'old_col' }], selected_record_index: 0 } }
 
   it 'returns state unchanged when new name is empty' do
     allow(prompt).to receive(:ask).and_return('  ')
