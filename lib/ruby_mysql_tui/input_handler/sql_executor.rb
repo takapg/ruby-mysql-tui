@@ -17,6 +17,16 @@ module RubyMysqlTui
         )
       end
 
+      def apply_use_state(state, sql)
+        state.merge!(
+          view_mode: :tables,
+          sql_mode: false,
+          sql_history_index: nil,
+          sql_result_mode: false,
+          last_executed_sql: sql
+        )
+      end
+
       def query_mysql(sql, client)
         results = client.query(sql)
         return results if results

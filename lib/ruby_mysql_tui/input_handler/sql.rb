@@ -23,27 +23,25 @@ module RubyMysqlTui
 
       update_sql_history(sql, state)
       use_match = detect_use_statement(sql)
-      state[:selected_db] = use_match[1] || use_match[2] if use_match
 
       results = query_mysql(sql, client)
-      state[:items] = refresh_items(state, client)
+      is_error = results.any? { |r| r.key?('Error') }
 
-      use_match ? apply_use_state(state, sql) : apply_sql_result_state(state, results, sql)
+      if use_match && !is_error
+        state[:selected_db] = use_match[1] || use_match[2]
+        apply_use_state(state, sql)
+      else
+        apply_sql_result_state(state, results, sql)
+      end
+
+      state[:items] = refresh_items(state, client)
+      state
     end
 
     def detect_use_statement(sql)
       sql.strip.match(/^\s*USE\s+(?:`([^`]+)`|([^`\s;]+))\s*;?\s*$/i)
     end
 
-    def apply_use_state(state, sql)
-      state.merge!(
-        view_mode: :tables,
-        sql_mode: false,
-        sql_history_index: nil,
-        sql_result_mode: false,
-        last_executed_sql: sql
-      )
-    end
 
     def refresh_items(state, client)
       if state[:selected_db]
@@ -104,7 +102,7 @@ module RubyMysqlTui
       [new_state.merge!(sql_input: ''), false]
     end
 
-    module_function :execute_sql, :detect_use_statement, :apply_use_state,
+    module_function :execute_sql, :detect_use_statement,
                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
                     :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
   end
