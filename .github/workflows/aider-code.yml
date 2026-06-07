@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            aider --model openai/openai/gpt-oss-120b \
+            aider --model openai/nvidia/nemotron-3-ultra-550b-a55b \
                   --architect \
                   --edit-format diff \
                   --yes-always \
