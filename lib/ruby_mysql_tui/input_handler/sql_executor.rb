@@ -2,8 +2,9 @@
 
 module RubyMysqlTui
   module InputHandler
+    # SqlExecutor は SQL の実行と結果の状態反映を提供します。
     module SqlExecutor
-      extend self
+      module_function
 
       def apply_sql_result_state(state, results, sql)
         state.merge!(

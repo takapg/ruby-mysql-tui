@@ -5,8 +5,9 @@ require 'shellwords'
 
 module RubyMysqlTui
   module InputHandler
+    # SqlEditor は 外部エディタを使用した SQL 入力機能を提供します。
     module SqlEditor
-      extend self
+      module_function
 
       def open_external_editor(state)
         editor = ENV['EDITOR'] || 'vi'

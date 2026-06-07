@@ -43,7 +43,6 @@ module RubyMysqlTui
       )
     end
 
-
     def refresh_items(state, client)
       if state[:selected_db]
         client.list_tables(state[:selected_db])
@@ -68,7 +67,6 @@ module RubyMysqlTui
       state[:sql_history] = updated_history
       SqlHistoryManager.save_history(updated_history)
     end
-
 
     def handle_sql_mode_input(reader, state, client)
       event = reader.read_keypress
