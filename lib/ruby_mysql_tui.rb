@@ -2,12 +2,14 @@
 
 require 'logger'
 require 'mysql2'
+require 'tty-prompt'
 require_relative 'ruby_mysql_tui/client'
 require 'tty-reader'
 require_relative 'ruby_mysql_tui/ui/layout'
 require_relative 'ruby_mysql_tui/ui/renderer'
 require_relative 'ruby_mysql_tui/input_handler/sql_history_manager'
 require_relative 'ruby_mysql_tui/input_handler'
+require_relative 'ruby_mysql_tui/connection_manager'
 
 # RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
 module RubyMysqlTui
@@ -33,21 +35,25 @@ module RubyMysqlTui
 
   def self.start
     logger.info 'Starting RubyMysqlTui...'
-    begin
-      client = Client.new
-      verify_connection(client)
-      run_main_loop(client)
-    rescue StandardError => e
-      logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
-    ensure
-      client&.close
-    end
+    run_app
   end
 
-  def self.verify_connection(client)
-    client.query('SELECT 1')
-    logger.info 'MySQL connection verified.'
+  def self.run_app
+    client = ConnectionManager.establish_connection
+    run_main_loop(client) if client
+  rescue Interrupt
+    logger.info 'Interrupted by user. Exiting...'
+  rescue StandardError => e
+    log_initialization_error(e)
+  ensure
+    client&.close
   end
+
+  def self.log_initialization_error(error)
+    logger.error "Initialization failed: #{error.message}\n\t#{error.backtrace.join("\n\t")}"
+  end
+
+  private_class_method :run_app, :log_initialization_error
 
   def self.run_main_loop(client)
     reader = TTY::Reader.new
