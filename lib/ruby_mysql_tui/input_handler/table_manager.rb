@@ -67,7 +67,7 @@ module RubyMysqlTui
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
       end
-      private_class_method def prompt_for_column_details(prompt)
+      def prompt_for_column_details(prompt)
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return [nil, nil] if col_name.nil? || col_name.strip.empty?
 
@@ -115,23 +115,25 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def fetch_selected_column(state)
+      def fetch_selected_column(state)
         structure = state[:records]
         selected_idx = state[:selected_record_index] || 0
         structure[selected_idx]
       end
 
-      private_class_method def primary_key_error?(column_info, prompt, column_name)
+      def primary_key_error?(column_info, prompt, column_name)
         return false unless column_info['Key'] == 'PRI'
 
         prompt.error("主キーカラム '#{column_name}' は削除できません。")
         true
       end
 
-      private_class_method def cancel_truncation(state)
+      def cancel_truncation(state)
         state[:status_message] = 'Truncation cancelled'
         state
       end
+
+      private_class_method :prompt_for_column_details, :fetch_selected_column, :primary_key_error?, :cancel_truncation
     end
   end
 end
