@@ -218,9 +218,9 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit
   let(:table_name) { 'users' }
   let(:structure) do
     [
-      { 'Field' => 'id', 'Type' => 'int(11)', 'Null' => 'NO' },
-      { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES' },
-      { 'Field' => 'name', 'Type' => 'varchar(255)', 'Null' => 'YES' }
+      { 'Field' => 'id', 'Type' => 'int(11)', 'Null' => 'NO', 'Key' => 'PRI' },
+      { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES', 'Key' => '' },
+      { 'Field' => 'name', 'Type' => 'varchar(255)', 'Null' => 'YES', 'Key' => '' }
     ]
   end
 
@@ -232,6 +232,7 @@ RSpec.describe RubyMysqlTui::InputHandler::RecordManager, '.handle_external_edit
     state[:selected_record_index] = 0
     allow(client).to receive(:primary_key_for).with(table_name).and_return('id')
     allow(client).to receive(:list_table_structure).with(table_name).and_return(structure)
+    allow(client).to receive(:list_records).and_return(state[:records])
   end
 
   it 'updates the record when a long text column is edited via external editor' do
