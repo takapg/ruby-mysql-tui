@@ -24,7 +24,10 @@ module RubyMysqlTui
         name = prompt.ask('カラム名を入力してください:')
         return nil if name.nil? || name.strip.empty?
 
-        { name: name.strip, type: prompt.select('データ型を選択してください:', COLUMN_TYPES) }
+        type = prompt.select('データ型を選択してください:', COLUMN_TYPES)
+        null_allowed = prompt.yes?('NULLを許容しますか？')
+        type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        { name: name.strip, type: type_str }
       end
     end
   end
