@@ -120,10 +120,6 @@ module RubyMysqlTui
         state
       end
 
-      # Helper methods moved to TableManagerUtils
-    end
-  end
-end
       # Builds the type string with optional NULL/NOT NULL constraint.
       #
       # @param prompt [TTY::Prompt] the prompt instance
@@ -137,3 +133,7 @@ end
           type
         end
       end
+
+      # Helper methods moved to TableManagerUtils
+    end
+  end
