@@ -27,6 +27,17 @@ module RubyMysqlTui
         )
       end
 
+      def apply_execution_state(state, sql, results, use_match)
+        is_error = results.any? { |r| r.key?('Error') }
+
+        if use_match && !is_error
+          state[:selected_db] = use_match[1] || use_match[2]
+          apply_use_state(state, sql)
+        else
+          apply_sql_result_state(state, results, sql)
+        end
+      end
+
       def query_mysql(sql, client)
         results = client.query(sql)
         return results if results

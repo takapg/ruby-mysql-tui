@@ -22,18 +22,9 @@ module RubyMysqlTui
       return state if sql.nil? || sql.strip.empty?
 
       update_sql_history(sql, state)
-      use_match = detect_use_statement(sql)
-
       results = query_mysql(sql, client)
-      is_error = results.any? { |r| r.key?('Error') }
 
-      if use_match && !is_error
-        state[:selected_db] = use_match[1] || use_match[2]
-        apply_use_state(state, sql)
-      else
-        apply_sql_result_state(state, results, sql)
-      end
-
+      apply_execution_state(state, sql, results, detect_use_statement(sql))
       state[:items] = refresh_items(state, client)
       state
     end
@@ -41,7 +32,6 @@ module RubyMysqlTui
     def detect_use_statement(sql)
       sql.strip.match(/^\s*USE\s+(?:`([^`]+)`|([^`\s;]+))\s*;?\s*$/i)
     end
-
 
     def refresh_items(state, client)
       if state[:selected_db]
