@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require 'tempfile'
-require 'shellwords'
 require_relative 'sql_history_manager'
 require_relative 'sql_navigator'
+require_relative 'sql_editor'
+require_relative 'sql_executor'
 
 module RubyMysqlTui
   # InputHandler の SQL モードに関する処理を定義します。
   module InputHandler
     extend SqlNavigator
-
-    module_function
+    extend SqlEditor
+    extend SqlExecutor
 
     MAX_HISTORY_SIZE = 100
 
@@ -19,25 +19,15 @@ module RubyMysqlTui
 
       update_sql_history(sql, state)
       results = query_mysql(sql, client)
+
+      apply_execution_state(state, sql, results, detect_use_statement(sql))
       state[:items] = refresh_items(state, client)
-
-      apply_sql_result_state(state, results, sql)
-    end
-
-    def apply_sql_result_state(state, results, sql)
-      state.merge!(
-        records: results,
-        view_mode: :records,
-        sql_mode: false,
-        sql_history_index: nil,
-        sql_result_mode: true,
-        last_executed_sql: sql
-      )
+      state
     end
 
     def refresh_items(state, client)
-      if state[:selected_database]
-        client.list_tables(state[:selected_database])
+      if state[:selected_db]
+        client.list_tables(state[:selected_db])
       else
         client.list_databases
       end
@@ -60,19 +50,6 @@ module RubyMysqlTui
       SqlHistoryManager.save_history(updated_history)
     end
 
-    def query_mysql(sql, client)
-      results = client.query(sql)
-      return results if results
-
-      affected = client.affected_rows
-      last_id = client.last_id
-      message = "Query OK, #{affected} rows affected"
-      message += " (last id: #{last_id})" if last_id&.positive?
-      [{ 'Result' => message }]
-    rescue StandardError => e
-      [{ 'Error' => e.message }]
-    end
-
     def handle_sql_mode_input(reader, state, client)
       event = reader.read_keypress
       process_sql_keypress(event, state, client)
@@ -91,24 +68,6 @@ module RubyMysqlTui
       end
     end
 
-    def open_external_editor(state)
-      editor = ENV['EDITOR'] || 'vi'
-      edited_sql = edit_in_editor(editor, state[:sql_input])
-      state[:sql_input] = edited_sql if edited_sql
-      [state, true]
-    end
-
-    def edit_in_editor(editor, content)
-      temp_file = Tempfile.new(['sql_input', '.sql'])
-      begin
-        temp_file.write(content || '')
-        temp_file.close
-        File.read(temp_file.path) if system(*Shellwords.split(editor), temp_file.path)
-      ensure
-        temp_file.unlink
-      end
-    end
-
     def handle_sql_text_input(event, state)
       if event.key.name == :backspace
         state[:sql_input] = state[:sql_input].chop
@@ -124,5 +83,9 @@ module RubyMysqlTui
       new_state = execute_sql(state[:sql_input], state, client)
       [new_state.merge!(sql_input: ''), false]
     end
+
+    module_function :execute_sql,
+                    :refresh_items, :update_sql_history, :handle_sql_mode_input,
+                    :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
   end
 end

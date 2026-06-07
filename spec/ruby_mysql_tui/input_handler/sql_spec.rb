@@ -171,20 +171,63 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     let(:state) { { sql_history: [], sql_history_index: 1 } }
 
     it 'refreshes items when a database is selected' do
-      state[:selected_database] = 'db1'
+      state[:selected_db] = 'db1'
       described_class.execute_sql('CREATE TABLE t2 (id int)', state, client)
       expect(client).to have_received(:list_tables).with('db1')
       expect(state[:items]).to eq(['t1'])
     end
 
     it 'refresh_items でエラーが発生してもクラッシュせず、現在のアイテムリストを維持する' do
-      state[:selected_database] = 'db1'
+      state[:selected_db] = 'db1'
       state[:items] = ['t1']
       allow(client).to receive(:list_tables).with('db1').and_raise(StandardError.new('DB gone'))
       expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to refresh items: DB gone/)
 
       described_class.execute_sql('DROP DATABASE db1', state, client)
       expect(state[:items]).to eq(['t1'])
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.execute_sql (USE statement) success' do
+    let(:client) { double('Client', query: [], list_tables: %w[t1 t2]) }
+    let(:state) { { sql_history: [], selected_db: 'old_db' } }
+
+    it 'updates selected_db and switches to tables view' do
+      described_class.execute_sql('USE new_db', state, client)
+      expect(state[:selected_db]).to eq('new_db')
+      expect(state[:view_mode]).to eq(:tables)
+      expect(state[:items]).to eq(%w[t1 t2])
+      expect(state[:sql_result_mode]).to be false
+    end
+
+    it 'handles USE with backticks' do
+      described_class.execute_sql('USE `new_db`', state, client)
+      expect(state[:selected_db]).to eq('new_db')
+    end
+
+    it 'handles USE case-insensitively' do
+      described_class.execute_sql('use new_db', state, client)
+      expect(state[:selected_db]).to eq('new_db')
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.execute_sql (USE statement) edge cases' do
+    let(:client) { double('Client', query: [], list_tables: %w[t1 t2]) }
+    let(:state) { { sql_history: [], selected_db: 'old_db' } }
+
+    it 'handles USE with backticks and spaces in database name' do
+      described_class.execute_sql('USE `my database`', state, client)
+      expect(state[:selected_db]).to eq('my database')
+    end
+
+    it 'does not update selected_db when USE statement fails' do
+      allow(client).to receive(:query).with('USE non_existent_db').and_return([{ 'Error' => 'Unknown database' }])
+      described_class.execute_sql('USE non_existent_db', state, client)
+      expect(state[:selected_db]).to eq('old_db')
     end
   end
 end
