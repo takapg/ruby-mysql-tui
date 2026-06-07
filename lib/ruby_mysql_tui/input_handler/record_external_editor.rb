@@ -45,20 +45,28 @@ module RubyMysqlTui
       end
 
       def execute_edit(state, client, prompt, context)
+        new_value = perform_editor_edit(context)
+        return unless new_value && new_value != context[:record][context[:column]]
+
+        info = build_update_info(context, new_value)
+        RecordManager.perform_update(state, client, prompt, info)
+      end
+
+      private
+
+      def perform_editor_edit(context)
         editor = ENV['EDITOR'] || 'vi'
-        current_val = context[:record][context[:column]]
-        new_value = SqlEditor.edit_in_editor(editor, current_val)
+        SqlEditor.edit_in_editor(editor, context[:record][context[:column]])
+      end
 
-        return unless new_value && new_value != current_val
-
-        info = {
+      def build_update_info(context, new_value)
+        {
           pk_col: context[:pk_column],
           pk_val: context[:record][context[:pk_column]],
           pk_cols: context[:pk_cols],
           col: context[:column],
           val: new_value
         }
-        RecordManager.perform_update(state, client, prompt, info)
       end
     end
   end
