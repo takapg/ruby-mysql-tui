@@ -38,6 +38,10 @@ module RubyMysqlTui
         end
       end
 
+      def detect_use_statement(sql)
+        sql.strip.match(/^\s*USE\s+(?:`([^`]+)`|([^`\s;]+))\s*;?\s*$/i)
+      end
+
       def query_mysql(sql, client)
         results = client.query(sql)
         return results if results
@@ -51,7 +55,7 @@ module RubyMysqlTui
         [{ 'Error' => e.message }]
       end
 
-      public :apply_sql_result_state, :apply_use_state, :apply_execution_state, :query_mysql
+      public :apply_sql_result_state, :apply_use_state, :apply_execution_state, :detect_use_statement, :query_mysql
     end
   end
 end

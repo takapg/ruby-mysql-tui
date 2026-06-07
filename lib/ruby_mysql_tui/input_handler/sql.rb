@@ -25,10 +25,6 @@ module RubyMysqlTui
       state
     end
 
-    def detect_use_statement(sql)
-      sql.strip.match(/^\s*USE\s+(?:`([^`]+)`|([^`\s;]+))\s*;?\s*$/i)
-    end
-
     def refresh_items(state, client)
       if state[:selected_db]
         client.list_tables(state[:selected_db])
@@ -88,7 +84,7 @@ module RubyMysqlTui
       [new_state.merge!(sql_input: ''), false]
     end
 
-    module_function :execute_sql, :detect_use_statement,
+    module_function :execute_sql,
                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
                     :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
   end

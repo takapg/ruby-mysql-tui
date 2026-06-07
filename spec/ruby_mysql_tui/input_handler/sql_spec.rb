@@ -216,6 +216,12 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       described_class.execute_sql('use new_db', state, client)
       expect(state[:selected_db]).to eq('new_db')
     end
+
+    it 'does not update selected_db when USE statement fails' do
+      allow(client).to receive(:query).with('USE non_existent_db').and_return([{ 'Error' => 'Unknown database' }])
+      described_class.execute_sql('USE non_existent_db', state, client)
+      expect(state[:selected_db]).to eq('old_db')
+    end
   end
 end
 
