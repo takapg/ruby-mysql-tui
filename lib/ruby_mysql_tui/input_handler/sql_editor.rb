@@ -6,7 +6,7 @@ require 'shellwords'
 module RubyMysqlTui
   module InputHandler
     module SqlEditor
-      module_function
+      extend self
 
       def open_external_editor(state)
         editor = ENV['EDITOR'] || 'vi'

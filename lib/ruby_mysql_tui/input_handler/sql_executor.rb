@@ -3,7 +3,7 @@
 module RubyMysqlTui
   module InputHandler
     module SqlExecutor
-      module_function
+      extend self
 
       def apply_sql_result_state(state, results, sql)
         state.merge!(
