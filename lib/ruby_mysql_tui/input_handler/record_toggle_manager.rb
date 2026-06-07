@@ -19,7 +19,7 @@ module RubyMysqlTui
       end
 
       def apply_all_records_mode(state, client)
-        opts = InputHandler.sort_options(state)
+        opts = InputHandler.query_options(state)
         if state[:all_records_mode]
           state[:records] = client.list_records(
             state[:selected_table], 0, limit: RubyMysqlTui::Client::MAX_RECORDS_LIMIT, **opts

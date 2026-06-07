@@ -52,7 +52,7 @@ module RubyMysqlTui
         state.merge(filter_query: query || '', selected_index: 0)
       elsif state[:focus] == :right && state[:view_mode] == :records
         query = prompt.ask('レコードフィルターキーワードを入力:')
-        state.merge(records_filter_query: query || '', selected_record_index: 0)
+        state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
       end
     end
 
@@ -60,7 +60,7 @@ module RubyMysqlTui
       if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
         state.merge(filter_query: '', selected_index: 0)
       elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
-        state.merge(records_filter_query: '', selected_record_index: 0)
+        state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
       end
     end
 
@@ -124,8 +124,12 @@ module RubyMysqlTui
       state
     end
 
-    def self.sort_options(state)
-      state[:sort_column] ? { sort_column: state[:sort_column], sort_direction: state[:sort_direction] } : {}
+    def self.query_options(state)
+      {
+        sort_column: state[:sort_column],
+        sort_direction: state[:sort_direction],
+        filter_query: state[:records_filter_query]
+      }.compact.reject { |_, v| v.to_s.empty? }
     end
   end
 end

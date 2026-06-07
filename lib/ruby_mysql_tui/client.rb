@@ -3,12 +3,14 @@
 require 'mysql2'
 require_relative 'client/writer'
 require_relative 'client/schema_manager'
+require_relative 'client/query_builder'
 
 module RubyMysqlTui
   # Client は MySQL 接続を管理し、クエリの実行を提供します。
   class Client
     include Writer
     include SchemaManager
+    include QueryBuilder
 
     MAX_RECORDS_LIMIT = 10_000
 
@@ -53,17 +55,9 @@ module RubyMysqlTui
     end
 
     # 指定したテーブルのレコード一覧を取得します。
-    def list_records(table_name, offset = 0, limit: RubyMysqlTui::PAGE_SIZE, sort_column: nil, sort_direction: 'ASC')
-      escaped_table_name = table_name.gsub('`', '``')
-      sql = "SELECT * FROM `#{escaped_table_name}`"
-
-      if sort_column
-        direction = %w[ASC DESC].include?(sort_direction.to_s.upcase) ? sort_direction.to_s.upcase : 'ASC'
-        sql += " ORDER BY `#{sort_column.gsub('`', '``')}` #{direction}"
-      end
-
-      sql += " LIMIT #{limit} OFFSET #{offset}" if limit
-
+    def list_records(table_name, offset = 0, **options)
+      limit = options.fetch(:limit, RubyMysqlTui::PAGE_SIZE)
+      sql = build_list_records_sql(table_name, offset, limit, options)
       query(sql)
     end
 
