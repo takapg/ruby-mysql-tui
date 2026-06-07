@@ -18,10 +18,27 @@ module RubyMysqlTui
       return state if sql.nil? || sql.strip.empty?
 
       update_sql_history(sql, state)
+
+      # USE文の検知
+      use_match = sql.strip.match(/^\s*USE\s+`?([^`\s;]+)`?\s*;?\s*$/i)
+      if use_match
+        state[:selected_db] = use_match[1]
+      end
+
       results = query_mysql(sql, client)
       state[:items] = refresh_items(state, client)
 
-      apply_sql_result_state(state, results, sql)
+      if use_match
+        state.merge!(
+          view_mode: :tables,
+          sql_mode: false,
+          sql_history_index: nil,
+          sql_result_mode: false,
+          last_executed_sql: sql
+        )
+      else
+        apply_sql_result_state(state, results, sql)
+      end
     end
 
     def apply_sql_result_state(state, results, sql)
@@ -36,8 +53,8 @@ module RubyMysqlTui
     end
 
     def refresh_items(state, client)
-      if state[:selected_database]
-        client.list_tables(state[:selected_database])
+      if state[:selected_db]
+        client.list_tables(state[:selected_db])
       else
         client.list_databases
       end
