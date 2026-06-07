@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            aider --model openai/qwen/qwen3.5-397b-a17b \
+            aider --model openai/deepseek-ai/deepseek-v4-flash \
                   --edit-format diff-fenced \
                   --thinking-tokens 1024 \
                   --yes-always \
