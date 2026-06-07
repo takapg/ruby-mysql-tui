@@ -935,6 +935,7 @@ RSpec.describe 'E2E Record Value Viewing' do
       double('Event', value: "\r", key: double('Key', name: :return)), # Table
       double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
       double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Move to 'content'
       double('Event', value: 'v', key: double('Key', name: :v)),       # View
       double('Event', value: 'q', key: double('Key', name: :q))        # Quit
     ]
