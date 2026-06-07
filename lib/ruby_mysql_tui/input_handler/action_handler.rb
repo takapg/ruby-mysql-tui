@@ -5,6 +5,7 @@ require_relative 'table_manager'
 require_relative 'record_manager'
 require_relative 'record_sort_handler'
 require_relative 'navigation'
+require_relative 'value_viewer'
 
 module RubyMysqlTui
   module InputHandler
@@ -15,7 +16,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd', 'c', 'o', 'r', 't' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v' then handle_record_action(val, state, client)
         when '[', ']' then handle_record_navigation(val, state)
         end
       end
@@ -49,7 +50,7 @@ module RubyMysqlTui
         prompt = TTY::Prompt.new
         case val
         when 'n', 'd', 'c' then handle_record_lifecycle_action(val, state, client, prompt)
-        when 'e', 'o', 'r', 't' then handle_record_utility_action(val, state, client, prompt)
+        when 'e', 'o', 'r', 't', 'v' then handle_record_utility_action(val, state, client, prompt)
         else state
         end
       end
@@ -68,6 +69,7 @@ module RubyMysqlTui
         when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
         when 'r' then handle_rename_action(state, client, prompt)
         when 't' then handle_truncate_action(state, client, prompt)
+        when 'v' then handle_view_value_action(state)
         end
       end
 
@@ -109,6 +111,18 @@ module RubyMysqlTui
         when :table_structure then TableManager.handle_add_column(state, client, prompt)
         else RecordManager.handle_create_record(state, client, prompt)
         end
+      end
+
+      def handle_view_value_action(state)
+        return state unless state[:view_mode] == :record_detail
+
+        records = state[:records] || []
+        record = records[state[:selected_record_index] || 0]
+        return state unless record
+
+        column_name = record.keys[state[:selected_column_index] || 0]
+        ValueViewer.view_value(record[column_name])
+        state
       end
     end
   end
