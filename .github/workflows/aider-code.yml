@@ -96,6 +96,8 @@ jobs:
             echo "---" >> .aider.chat.history.md
 
             aider --model openai/nvidia/nemotron-3-ultra-550b-a55b \
+                  --editor-model openai/openai/gpt-oss-120b \
+                  --weak-model openai/openai/gpt-oss-120b \
                   --architect \
                   --edit-format diff \
                   --yes-always \
