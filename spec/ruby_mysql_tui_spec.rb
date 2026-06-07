@@ -399,20 +399,24 @@ RSpec.describe RubyMysqlTui, '.handle_input (raw value handling)' do
   end
 end
 
-RSpec.describe RubyMysqlTui, '.establish_connection' do
+RSpec.describe RubyMysqlTui, '.establish_connection (success)' do
   let(:client) { double('Client') }
-  let(:error) { Mysql2::Error.new('Connection failed') }
-  let(:prompt) { instance_double(TTY::Prompt) }
-
-  before do
-    allow(TTY::Prompt).to receive(:new).and_return(prompt)
-  end
 
   it '接続に成功したとき、Clientを返す' do
     allow(RubyMysqlTui::Client).to receive(:new).and_return(client)
     allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_return(true)
 
     expect(RubyMysqlTui.establish_connection).to eq(client)
+  end
+end
+
+RSpec.describe RubyMysqlTui, '.establish_connection (failure)' do
+  let(:client) { double('Client') }
+  let(:error) { Mysql2::Error.new('Connection failed') }
+  let(:prompt) { instance_double(TTY::Prompt) }
+
+  before do
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
   end
 
   it '接続に失敗し、再入力して成功したとき、Clientを返す' do
