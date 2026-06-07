@@ -76,6 +76,17 @@ module E2EEventHelpers
     ]
   end
 
+  def modify_column_events
+    [
+      make_event("\r", :return),
+      make_event("\r", :return),
+      make_event("\t", :tab),
+      make_event('i', :i),
+      make_event('m', :m),
+      make_event('q', :q)
+    ]
+  end
+
   def sql_history_events
     data = [
       ['s', :s], ['S', :unknown], ['E', :unknown], ['L', :unknown],
@@ -941,21 +952,10 @@ end
 RSpec.describe 'E2E Table Column Modify' do
   include_context 'e2e setup'
 
-  let(:modify_events) do
-    [
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\r", key: double('Key', name: :return)),
-      double('Event', value: "\t", key: double('Key', name: :tab)),
-      double('Event', value: 'i', key: double('Key', name: :i)),
-      double('Event', value: 'm', key: double('Key', name: :m)),
-      double('Event', value: 'q', key: double('Key', name: :q))
-    ]
-  end
-
   context 'when modifying column type' do
     it 'modifies a column type when m is pressed in table structure view' do
       allow(TTY::Reader).to receive(:new).and_return(reader)
-      allow(reader).to receive(:read_keypress).and_return(*modify_events)
+      allow(reader).to receive(:read_keypress).and_return(*modify_column_events)
 
       prompt = instance_double(TTY::Prompt)
       allow(TTY::Prompt).to receive(:new).and_return(prompt)
