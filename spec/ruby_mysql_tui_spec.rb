@@ -417,6 +417,7 @@ RSpec.describe RubyMysqlTui::ConnectionManager, '.establish_connection (failure)
 
   before do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(client).to receive(:close)
   end
 
   it '接続に失敗し、再入力して成功したとき、Clientを返す' do
