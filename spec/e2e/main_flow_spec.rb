@@ -925,6 +925,34 @@ RSpec.describe 'E2E Table Column Rename' do
   end
 end
 
+RSpec.describe 'E2E Record Value Viewing' do
+  include_context 'e2e setup'
+
+  it 'opens the external viewer when v is pressed in detail view' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Move to 'content'
+      double('Event', value: 'v', key: double('Key', name: :v)),       # View
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    record_value = 'This is a very long text that should be viewed in a pager'
+    records = [{ 'id' => 1, 'content' => record_value }]
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return(records)
+
+    expect(RubyMysqlTui::InputHandler::ValueViewer).to receive(:view_value).with(record_value)
+
+    RubyMysqlTui.run_main_loop(client)
+  end
+end
+
 RSpec.describe 'E2E Record Detail Log Display' do
   include_context 'e2e setup'
 

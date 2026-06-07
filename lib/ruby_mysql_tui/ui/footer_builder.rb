@@ -24,7 +24,7 @@ module RubyMysqlTui
         when :table_structure then structure_guides
         when :record_detail
           ['[b/Esc] Back', '[↑/↓] Scroll', '[e] Edit',
-           '[d] Delete', '[c] Clone', '[[/]] Prev/Next Rec']
+           '[d] Delete', '[c] Clone', '[[/]] Prev/Next Rec', '[v] View']
         else []
         end
       end
