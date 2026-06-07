@@ -17,7 +17,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v', 'm' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v', 'm', "\x05" then handle_record_action(val, state, client)
         when '[', ']' then handle_record_navigation(val, state)
         end
       end
@@ -51,7 +51,7 @@ module RubyMysqlTui
         prompt = TTY::Prompt.new
         case val
         when 'n', 'd', 'c' then handle_record_lifecycle_action(val, state, client, prompt)
-        when 'e', 'o', 'r', 't', 'v', 'm' then handle_record_utility_action(val, state, client, prompt)
+        when 'e', 'o', 'r', 't', 'v', 'm', "\x05" then handle_record_utility_action(val, state, client, prompt)
         else state
         end
       end
@@ -66,12 +66,26 @@ module RubyMysqlTui
 
       private_class_method def handle_record_utility_action(val, state, client, prompt)
         case val
+        when 'e', 'o', 'r', 't' then handle_utility_edit_actions(val, state, client, prompt)
+        when 'v', 'm', "\x05" then handle_utility_view_actions(val, state, client, prompt)
+        else state
+        end
+      end
+
+      private_class_method def handle_utility_edit_actions(val, state, client, prompt)
+        case val
         when 'e' then RecordManager.handle_edit_record(state, client, prompt)
         when 'o' then RecordSortHandler.handle_sort_record(state, client, prompt)
         when 'r' then ActionDispatcher.handle_rename_action(state, client, prompt)
         when 't' then ActionDispatcher.handle_truncate_action(state, client, prompt)
+        end
+      end
+
+      private_class_method def handle_utility_view_actions(val, state, client, prompt)
+        case val
         when 'v' then ActionDispatcher.handle_view_value_action(state)
         when 'm' then ActionDispatcher.handle_modify_action(state, client, prompt)
+        when "\x05" then RecordManager.handle_external_edit(state, client, prompt)
         end
       end
     end

@@ -5,6 +5,7 @@ require_relative 'record_prompt'
 require_relative 'record_retry_handler'
 require_relative 'record_clone_manager'
 require_relative 'record_toggle_manager'
+require_relative 'record_external_editor'
 
 module RubyMysqlTui
   module InputHandler
@@ -124,6 +125,10 @@ module RubyMysqlTui
 
       def self.handle_all_records_toggle(state, client)
         RecordToggleManager.handle_all_records_toggle(state, client)
+      end
+
+      def self.handle_external_edit(state, client, prompt)
+        RecordExternalEditor.handle_external_edit(state, client, prompt)
       end
     end
   end

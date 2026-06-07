@@ -53,6 +53,14 @@ module RubyMysqlTui
 
         TYPE_VALIDATIONS.find { |pattern, _| type.match?(pattern) }&.last
       end
+
+      def long_text_type?(column_name, structure)
+        col_info = structure.find { |c| c['Field'] == column_name }
+        type = col_info&.[]('Type')&.downcase
+        return false unless type
+
+        type.match?(/text|json/)
+      end
     end
   end
 end
