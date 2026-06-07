@@ -39,6 +39,8 @@ module RubyMysqlTui
       return unless client
 
       run_main_loop(client)
+    rescue Interrupt
+      logger.info 'Interrupted by user. Exiting...'
     rescue StandardError => e
       logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
     ensure
