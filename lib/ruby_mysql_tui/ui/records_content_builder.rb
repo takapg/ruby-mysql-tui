@@ -20,7 +20,6 @@ module RubyMysqlTui
         )
       end
 
-
       def calculate_selected_index(state, records_size)
         index = state[:selected_record_index] || 0
         index.clamp(0, [0, records_size - 1].max)

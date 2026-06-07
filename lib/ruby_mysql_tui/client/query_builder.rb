@@ -2,6 +2,7 @@
 
 module RubyMysqlTui
   class Client
+    # QueryBuilder は レコード取得のための SQL 構築ロジックを提供します。
     module QueryBuilder
       def build_list_records_sql(table_name, offset, limit, options)
         sql = "SELECT * FROM `#{table_name.gsub('`', '``')}`"
