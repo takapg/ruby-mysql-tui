@@ -224,3 +224,41 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
     expect(result).to eq(state)
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'old_col' }], selected_record_index: 0 } }
+
+  it 'renames a column when a valid new name is provided' do
+    allow(prompt).to receive(:ask).and_return('new_col')
+    expect(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_rename_column)
+      .with(state, client, 'test_table', 'old_col', 'new_col')
+      .and_return(state.merge(status_message: "Column 'old_col' renamed to 'new_col' successfully"))
+
+    result = described_class.handle_rename_column(state, client, prompt)
+    expect(result[:status_message]).to eq("Column 'old_col' renamed to 'new_col' successfully")
+  end
+
+  it 'returns state unchanged when new name is empty' do
+    allow(prompt).to receive(:ask).and_return('  ')
+    result = described_class.handle_rename_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'returns state unchanged when no column is selected' do
+    state[:records] = []
+    result = described_class.handle_rename_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+
+  it 'handles Mysql2::Error' do
+    allow(prompt).to receive(:ask).and_return('new_col')
+    allow(RubyMysqlTui::InputHandler::TableExecutor).to receive(:execute_rename_column)
+      .and_raise(Mysql2::Error.new('Error'))
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+
+    result = described_class.handle_rename_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+end
