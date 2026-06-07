@@ -137,3 +137,4 @@ module RubyMysqlTui
       # Helper methods moved to TableManagerUtils
     end
   end
+end
