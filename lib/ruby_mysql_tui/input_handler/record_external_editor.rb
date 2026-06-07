@@ -26,10 +26,10 @@ module RubyMysqlTui
         return nil unless record && column
 
         structure = client.list_table_structure(state[:selected_table])
-        return nil unless RecordValidator.long_text_type?(column, structure)
-
         pk_cols = RecordPrompt.identify_primary_keys(structure, pk_column)
         return nil if pk_column_not_editable?(column, pk_cols, prompt)
+
+        return nil unless RecordValidator.long_text_type?(column, structure)
 
         { record: record, column: column, pk_column: pk_column, pk_cols: pk_cols }
       end
