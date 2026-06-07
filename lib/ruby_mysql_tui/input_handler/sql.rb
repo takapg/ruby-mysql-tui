@@ -23,7 +23,7 @@ module RubyMysqlTui
 
       update_sql_history(sql, state)
       use_match = detect_use_statement(sql)
-      state[:selected_db] = use_match[1] if use_match
+      state[:selected_db] = use_match[1] || use_match[2] if use_match
 
       results = query_mysql(sql, client)
       state[:items] = refresh_items(state, client)
@@ -32,7 +32,7 @@ module RubyMysqlTui
     end
 
     def detect_use_statement(sql)
-      sql.strip.match(/^\s*USE\s+`?([^`\s;]+)`?\s*;?\s*$/i)
+      sql.strip.match(/^\s*USE\s+(?:`([^`]+)`|([^`\s;]+))\s*;?\s*$/i)
     end
 
     def apply_use_state(state, sql)

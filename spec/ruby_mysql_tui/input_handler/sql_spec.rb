@@ -207,6 +207,11 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(state[:selected_db]).to eq('new_db')
     end
 
+    it 'handles USE with backticks and spaces in database name' do
+      described_class.execute_sql('USE `my database`', state, client)
+      expect(state[:selected_db]).to eq('my database')
+    end
+
     it 'handles USE case-insensitively' do
       described_class.execute_sql('use new_db', state, client)
       expect(state[:selected_db]).to eq('new_db')
