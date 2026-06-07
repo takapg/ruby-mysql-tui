@@ -12,12 +12,6 @@ module RubyMysqlTui
     extend SqlEditor
     extend SqlExecutor
 
-    public *SqlNavigator.methods(false)
-    public *SqlEditor.methods(false)
-    public *SqlExecutor.methods(false)
-
-    module_function
-
     MAX_HISTORY_SIZE = 100
 
     def execute_sql(sql, state, client)
@@ -105,5 +99,9 @@ module RubyMysqlTui
       new_state = execute_sql(state[:sql_input], state, client)
       [new_state.merge!(sql_input: ''), false]
     end
+
+    module_function :execute_sql, :detect_use_statement, :apply_use_state,
+                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
+                     :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
   end
 end
