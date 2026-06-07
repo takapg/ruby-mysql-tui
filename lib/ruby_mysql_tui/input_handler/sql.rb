@@ -105,7 +105,7 @@ module RubyMysqlTui
     end
 
     module_function :execute_sql, :detect_use_statement, :apply_use_state,
-                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
-                     :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
+                    :refresh_items, :update_sql_history, :handle_sql_mode_input,
+                    :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
   end
 end
