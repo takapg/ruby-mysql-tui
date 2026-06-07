@@ -68,7 +68,6 @@ module RubyMysqlTui
         state
       end
 
-
       def handle_rename_column(state, client, prompt)
         return state if (column_info = fetch_selected_column(state)).nil?
 
@@ -105,7 +104,6 @@ module RubyMysqlTui
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
       end
-
 
       def fetch_selected_column(state)
         structure = state[:records]
