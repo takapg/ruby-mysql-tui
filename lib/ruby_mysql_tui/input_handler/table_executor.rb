@@ -6,8 +6,7 @@ module RubyMysqlTui
     module TableExecutor
       module_function
 
-      def execute_create_table(state, client, prompt, name)
-        cols = TablePromptHelper.collect_column_definitions(prompt)
+      def execute_create_table(state, client, prompt, name, cols)
         client.create_table(name, cols)
         state[:items] = client.list_tables(state[:selected_db])
         state

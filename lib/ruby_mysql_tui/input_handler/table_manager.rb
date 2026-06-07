@@ -15,7 +15,11 @@ module RubyMysqlTui
         name = prompt.ask('作成するテーブル名を入力してください:')
         return state if name.nil? || name.strip.empty?
 
-        # カラム定義に :null フラグを保持しつつ、Client へは :null を除いたハッシュを渡す
+        # カラム定義を取得（:null フラグを含む）
+        cols = TablePromptHelper.collect_column_definitions(prompt)
+        return state if cols.nil? || cols.empty?
+
+        # Client へは :null を除いたハッシュを渡す
         cols_for_client = cols.map { |c| { name: c[:name], type: c[:type] } }
         TableExecutor.execute_create_table(state, client, prompt, name.strip, cols_for_client)
       rescue Mysql2::Error => e
