@@ -16,7 +16,7 @@ module RubyMysqlTui
       def handle_action_key(val, state, client)
         case val
         when 'b', 's', 'i', "\t", "\r", 'a' then handle_system_action(val, state, client)
-        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v' then handle_record_action(val, state, client)
+        when 'n', 'e', 'd', 'c', 'o', 'r', 't', 'v', 'm' then handle_record_action(val, state, client)
         when '[', ']' then handle_record_navigation(val, state)
         end
       end
