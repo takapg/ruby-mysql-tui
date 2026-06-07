@@ -21,7 +21,8 @@ module RubyMysqlTui
 
         return state if pk_column_not_editable?(column, pk_cols, prompt)
 
-        execute_edit(state, client, prompt, record, pk_column, pk_cols, column)
+        context = { record: record, column: column, pk_column: pk_column, pk_cols: pk_cols }
+        execute_edit(state, client, prompt, context)
         state
       end
 
@@ -31,6 +32,7 @@ module RubyMysqlTui
 
       def get_selected_column(state, record)
         return nil unless record
+
         record.keys[state[:selected_column_index] || 0]
       end
 
@@ -42,14 +44,21 @@ module RubyMysqlTui
         false
       end
 
-      def execute_edit(state, client, prompt, record, pk_column, pk_cols, column)
+      def execute_edit(state, client, prompt, context)
         editor = ENV['EDITOR'] || 'vi'
-        new_value = SqlEditor.edit_in_editor(editor, record[column])
+        current_val = context[:record][context[:column]]
+        new_value = SqlEditor.edit_in_editor(editor, current_val)
 
-        if new_value && new_value != record[column]
-          info = { pk_col: pk_column, pk_val: record[pk_column], pk_cols: pk_cols, col: column, val: new_value }
-          RecordManager.perform_update(state, client, prompt, info)
-        end
+        return unless new_value && new_value != current_val
+
+        info = {
+          pk_col: context[:pk_column],
+          pk_val: context[:record][context[:pk_column]],
+          pk_cols: context[:pk_cols],
+          col: context[:column],
+          val: new_value
+        }
+        RecordManager.perform_update(state, client, prompt, info)
       end
     end
   end
