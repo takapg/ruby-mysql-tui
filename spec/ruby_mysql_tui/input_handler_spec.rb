@@ -44,32 +44,38 @@ end
 RSpec.describe RubyMysqlTui::InputHandler, '.handle_input - structure scroll' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
 
-  it 'updates records_offset when scrolling in :table_structure mode' do
-    state = { focus: :right, view_mode: :table_structure, records: [1, 2, 3], records_offset: 0 }
+  it 'updates selected_record_index and records_offset when scrolling in :table_structure mode' do
+    state = {
+      focus: :right, view_mode: :table_structure,
+      records: Array.new(50) { |i| i }, records_offset: 0, selected_record_index: 0
+    }
 
-    # 下方向へのスクロール
+    # 下方向へのスクロール (カーソルが移動し、オフセットは維持される)
     event_down = double('Event', value: "\e[B", key: double('Key'))
     state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
-    expect(state[:records_offset]).to eq(1)
-
-    # 上方向へのスクロール (0に戻る)
-    event_up = double('Event', value: "\e[A", key: double('Key'))
-    state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
+    expect(state[:selected_record_index]).to eq(1)
     expect(state[:records_offset]).to eq(0)
 
-    # 上方向へのスクロール (0未満にならないこと)
-    state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
-    expect(state[:records_offset]).to eq(0)
-
-    # 最大値までスクロール
-    3.times do
+    # 大量にスクロールしてオフセットが更新されることを確認
+    30.times do
       state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
     end
-    expect(state[:records_offset]).to eq(3)
+    expect(state[:selected_record_index]).to eq(31)
+    expect(state[:records_offset]).to be > 0
 
-    # 最大値を超えないこと
-    state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client)
-    expect(state[:records_offset]).to eq(3)
+    # 上方向へのスクロールでカーソルが移動することを確認
+    event_up = double('Event', value: "\e[A", key: double('Key'))
+    state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client)
+    expect(state[:selected_record_index]).to eq(30)
+
+    # 境界値チェック: 0未満にならないこと
+    50.times { state = RubyMysqlTui::InputHandler.handle_input(event_up, state, client) }
+    expect(state[:selected_record_index]).to eq(0)
+
+    # 境界値チェック: 最大値を超えないこと
+    event_down = double('Event', value: "\e[B", key: double('Key'))
+    100.times { state = RubyMysqlTui::InputHandler.handle_input(event_down, state, client) }
+    expect(state[:selected_record_index]).to eq(49)
   end
 end
 

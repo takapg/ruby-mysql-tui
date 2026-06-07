@@ -70,7 +70,24 @@ module RubyMysqlTui
       end
 
       private_class_method def scroll_structure(state, delta)
-        state[:records_offset] = ((state[:records_offset] || 0) + delta).clamp(0, state[:records].size)
+        items = state[:records] || []
+        return state if items.empty?
+
+        state[:selected_record_index] = ((state[:selected_record_index] || 0) + delta).clamp(0, items.size - 1)
+        adjust_structure_offset(state)
+      end
+
+      private_class_method def adjust_structure_offset(state)
+        layout = current_layout
+        max_rows = [0, layout.main_h - 4].max
+        offset = state[:records_offset] || 0
+        idx = state[:selected_record_index]
+
+        if idx < offset
+          state[:records_offset] = idx
+        elsif idx >= offset + max_rows
+          state[:records_offset] = idx - max_rows + 1
+        end
         state
       end
 

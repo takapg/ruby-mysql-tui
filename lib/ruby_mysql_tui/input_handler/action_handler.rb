@@ -93,6 +93,8 @@ module RubyMysqlTui
           DatabaseManager.handle_drop_database(state, client, prompt)
         when :tables
           TableManager.handle_drop_table(state, client, prompt)
+        when :table_structure
+          TableManager.handle_drop_column(state, client, prompt)
         else
           RecordManager.handle_delete_record(state, client, prompt)
         end

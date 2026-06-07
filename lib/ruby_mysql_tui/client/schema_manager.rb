@@ -29,6 +29,10 @@ module RubyMysqlTui
       query("RENAME TABLE `#{old_name.gsub('`', '``')}` TO `#{new_name.gsub('`', '``')}`")
     end
 
+    def drop_column(table_name, column_name)
+      query("ALTER TABLE `#{table_name.gsub('`', '``')}` DROP COLUMN `#{column_name.gsub('`', '``')}`")
+    end
+
     def add_column(table_name, column_name, type)
       raise ArgumentError, "Invalid column type: #{type}" unless type.to_s.match?(/\A[a-zA-Z0-9\s(),]+\z/)
 
