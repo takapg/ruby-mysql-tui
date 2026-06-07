@@ -957,6 +957,42 @@ RSpec.describe 'E2E Table Column Modify' do
   end
 end
 
+RSpec.describe 'E2E Record External Edit' do
+  include_context 'e2e setup'
+
+  it 'updates a long text field using Ctrl+E' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)), # DB
+      double('Event', value: "\r", key: double('Key', name: :return)), # Table
+      double('Event', value: "\t", key: double('Key', name: :tab)),    # Focus Right
+      double('Event', value: "\r", key: double('Key', name: :return)), # Detail
+      double('Event', value: "\e[B", key: double('Key', name: :down)), # Move to 'content'
+      make_event("\x05", :ctrl_e),                                     # Ctrl+E
+      double('Event', value: 'q', key: double('Key', name: :q))        # Quit
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    record_value = 'old content'
+    records = [{ 'id' => 1, 'content' => record_value }]
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(['test_table'])
+    allow(client).to receive(:list_records).and_return(records)
+    allow(client).to receive(:primary_key_for).and_return('id')
+    allow(client).to receive(:list_table_structure).and_return([
+      { 'Field' => 'id', 'Type' => 'int', 'Null' => 'NO' },
+      { 'Field' => 'content', 'Type' => 'text', 'Null' => 'YES' }
+    ])
+
+    # Mock SqlEditor to return new value
+    allow(RubyMysqlTui::InputHandler::SqlEditor).to receive(:edit_in_editor).and_return('new content')
+
+    expect(client).to receive(:update_record).with('test_table', 'id', 1, 'content', 'new content')
+
+    RubyMysqlTui.run_main_loop(client)
+  end
+end
+
 RSpec.describe 'E2E Record Value Viewing' do
   include_context 'e2e setup'
 
