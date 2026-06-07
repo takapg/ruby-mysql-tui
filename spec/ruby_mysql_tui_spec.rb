@@ -399,18 +399,18 @@ RSpec.describe RubyMysqlTui, '.handle_input (raw value handling)' do
   end
 end
 
-RSpec.describe RubyMysqlTui, '.establish_connection (success)' do
+RSpec.describe RubyMysqlTui::ConnectionManager, '.establish_connection (success)' do
   let(:client) { double('Client') }
 
   it '接続に成功したとき、Clientを返す' do
     allow(RubyMysqlTui::Client).to receive(:new).and_return(client)
-    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_return(true)
+    allow(RubyMysqlTui::ConnectionManager).to receive(:verify_connection).with(client).and_return(true)
 
-    expect(RubyMysqlTui.establish_connection).to eq(client)
+    expect(RubyMysqlTui::ConnectionManager.establish_connection).to eq(client)
   end
 end
 
-RSpec.describe RubyMysqlTui, '.establish_connection (failure)' do
+RSpec.describe RubyMysqlTui::ConnectionManager, '.establish_connection (failure)' do
   let(:client) { double('Client') }
   let(:error) { Mysql2::Error.new('Connection failed') }
   let(:prompt) { instance_double(TTY::Prompt) }
@@ -421,22 +421,22 @@ RSpec.describe RubyMysqlTui, '.establish_connection (failure)' do
 
   it '接続に失敗し、再入力して成功したとき、Clientを返す' do
     allow(RubyMysqlTui::Client).to receive(:new).and_return(client, client)
-    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_raise(error).once
-    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_return(true).once
+    allow(RubyMysqlTui::ConnectionManager).to receive(:verify_connection).with(client).and_raise(error).once
+    allow(RubyMysqlTui::ConnectionManager).to receive(:verify_connection).with(client).and_return(true).once
 
     allow(prompt).to receive(:yes?).and_return(true)
     allow(prompt).to receive(:ask).and_return('val')
     allow(prompt).to receive(:mask).and_return('pass')
 
-    expect(RubyMysqlTui.establish_connection).to eq(client)
+    expect(RubyMysqlTui::ConnectionManager.establish_connection).to eq(client)
   end
 
   it '接続に失敗し、再入力をキャンセルしたとき、nilを返す' do
     allow(RubyMysqlTui::Client).to receive(:new).and_return(client)
-    allow(RubyMysqlTui).to receive(:verify_connection).with(client).and_raise(error)
+    allow(RubyMysqlTui::ConnectionManager).to receive(:verify_connection).with(client).and_raise(error)
     allow(prompt).to receive(:yes?).and_return(false)
 
-    expect(RubyMysqlTui.establish_connection).to be_nil
+    expect(RubyMysqlTui::ConnectionManager.establish_connection).to be_nil
   end
 end
 
@@ -470,7 +470,7 @@ end
 
 RSpec.describe RubyMysqlTui, '.start (interrupt)' do
   it 'Interruptが発生したとき、安全に終了すること' do
-    allow(RubyMysqlTui).to receive(:establish_connection).and_raise(Interrupt)
+    allow(RubyMysqlTui::ConnectionManager).to receive(:establish_connection).and_raise(Interrupt)
     expect { RubyMysqlTui.start }.not_to raise_error
   end
 end
