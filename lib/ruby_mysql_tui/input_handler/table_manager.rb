@@ -75,7 +75,7 @@ module RubyMysqlTui
         column_info = fetch_selected_column(state)
         return state if column_info.nil?
 
-        column_name = column_info['Field'] || column_info.values.first
+        column_name = column_info['Field']
         return state if primary_key_error?(column_info, prompt, column_name)
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にカラム '#{column_name}' を削除しますか？ (y/N)")
