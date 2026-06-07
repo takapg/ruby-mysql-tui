@@ -28,6 +28,20 @@ module RubyMysqlTui
         null_allowed = prompt.yes?('NULLを許容しますか？')
         { name: name.strip, type: type, null: null_allowed }
       end
+
+      def prompt_for_type_with_null(prompt, message)
+        type = prompt.select(message, COLUMN_TYPES)
+        null_allowed = prompt.yes?('NULLを許容しますか？')
+        "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"
+      end
+
+      def prompt_for_column_details(prompt)
+        col_name = prompt.ask('追加するカラム名を入力してください:')
+        return [nil, nil] if col_name.nil? || col_name.strip.empty?
+
+        type_with_null = prompt_for_type_with_null(prompt, 'データ型を選択してください:')
+        [col_name.strip, type_with_null]
+      end
     end
   end
 end
