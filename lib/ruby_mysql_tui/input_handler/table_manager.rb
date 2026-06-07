@@ -37,7 +37,7 @@ module RubyMysqlTui
         return state if table_name.nil?
 
         new_name = prompt.ask("テーブル '#{table_name}' の新しい名前を入力してください:")
-        return state if new_name.nil? || new_name.strip.empty?
+        return state if new_name.to_s.strip.empty?
 
         TableExecutor.execute_rename_table(state, client, table_name, new_name.strip)
       rescue Mysql2::Error => e
@@ -45,7 +45,6 @@ module RubyMysqlTui
         prompt.error("エラーが発生しました: #{e.message}")
         state
       end
-
       def handle_truncate_table(state, client, prompt)
         table_name = state[:items][state[:selected_index]]
         return state if table_name.nil?
@@ -70,7 +69,6 @@ module RubyMysqlTui
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
       end
-
       private_class_method def prompt_for_column_details(prompt)
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return [nil, nil] if col_name.nil? || col_name.strip.empty?

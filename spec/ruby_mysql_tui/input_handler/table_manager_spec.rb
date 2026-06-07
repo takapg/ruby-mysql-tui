@@ -193,44 +193,50 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column (e
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column (success)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [] } }
 
-  context 'when input is valid' do
-    it 'adds a column and updates state' do
-      allow(prompt).to receive(:ask).and_return('new_col')
-      allow(prompt).to receive(:select).and_return('VARCHAR(255)')
-      allow(prompt).to receive(:yes?).and_return(true)
-      expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255) NULL')
-      expect(client).to receive(:list_table_structure).with('test_table').and_return([{ 'Field' => 'new_col' }])
+  it 'adds a column and updates state' do
+    allow(prompt).to receive(:ask).and_return('new_col')
+    allow(prompt).to receive(:select).and_return('VARCHAR(255)')
+    allow(prompt).to receive(:yes?).and_return(true)
+    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255) NULL')
+    expect(client).to receive(:list_table_structure).with('test_table').and_return([{ 'Field' => 'new_col' }])
 
-      result = described_class.handle_add_column(state, client, prompt)
-      expect(result[:records]).to eq([{ 'Field' => 'new_col' }])
-      expect(result[:status_message]).to eq("Column 'new_col' added to 'test_table' successfully")
-    end
+    result = described_class.handle_add_column(state, client, prompt)
+    expect(result[:records]).to eq([{ 'Field' => 'new_col' }])
+    expect(result[:status_message]).to eq("Column 'new_col' added to 'test_table' successfully")
   end
+end
 
-  context 'when input is invalid' do
-    it 'returns state unchanged when column name is empty' do
-      allow(prompt).to receive(:ask).and_return('  ')
-      result = described_class.handle_add_column(state, client, prompt)
-      expect(result).to eq(state)
-    end
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column (invalid input)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [] } }
+
+  it 'returns state unchanged when column name is empty' do
+    allow(prompt).to receive(:ask).and_return('  ')
+    result = described_class.handle_add_column(state, client, prompt)
+    expect(result).to eq(state)
   end
+end
 
-  context 'when database error occurs' do
-    it 'handles Mysql2::Error' do
-      allow(prompt).to receive(:ask).and_return('new_col')
-      allow(prompt).to receive(:select).and_return('INT')
-      allow(prompt).to receive(:yes?).and_return(true)
-      allow(client).to receive(:add_column).and_raise(Mysql2::Error.new('Error'))
-      expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column (error)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [] } }
 
-      result = described_class.handle_add_column(state, client, prompt)
-      expect(result).to eq(state)
-    end
+  it 'handles Mysql2::Error' do
+    allow(prompt).to receive(:ask).and_return('new_col')
+    allow(prompt).to receive(:select).and_return('INT')
+    allow(prompt).to receive(:yes?).and_return(true)
+    allow(client).to receive(:add_column).and_raise(Mysql2::Error.new('Error'))
+    expect(prompt).to receive(:error).with(/エラーが発生しました: Error/)
+
+    result = described_class.handle_add_column(state, client, prompt)
+    expect(result).to eq(state)
   end
 end
 
