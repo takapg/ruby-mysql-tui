@@ -53,9 +53,16 @@ module RubyMysqlTui
     end
 
     # 指定したテーブルのレコード一覧を取得します。
-    def list_records(table_name, offset = 0, limit: RubyMysqlTui::PAGE_SIZE, sort_column: nil, sort_direction: 'ASC')
+    def list_records(table_name, offset = 0, limit: RubyMysqlTui::PAGE_SIZE, sort_column: nil, sort_direction: 'ASC', filter_query: nil)
       escaped_table_name = table_name.gsub('`', '``')
       sql = "SELECT * FROM `#{escaped_table_name}`"
+
+      if filter_query && !filter_query.empty?
+        columns = list_columns(table_name)
+        escaped_query = "%#{@connection.escape(filter_query)}%"
+        where_clause = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped_query}'" }.join(' OR ')
+        sql += " WHERE (#{where_clause})"
+      end
 
       if sort_column
         direction = %w[ASC DESC].include?(sort_direction.to_s.upcase) ? sort_direction.to_s.upcase : 'ASC'
