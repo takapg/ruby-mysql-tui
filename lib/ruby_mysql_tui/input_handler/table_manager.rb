@@ -67,6 +67,7 @@ module RubyMysqlTui
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
       end
+
       def prompt_for_column_details(prompt)
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return [nil, nil] if col_name.nil? || col_name.strip.empty?
