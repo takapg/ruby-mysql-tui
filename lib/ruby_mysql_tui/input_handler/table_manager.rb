@@ -72,9 +72,8 @@ module RubyMysqlTui
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return [nil, nil] if col_name.nil? || col_name.strip.empty?
 
-        type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        [col_name.strip, "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"]
+        type_with_null = prompt_for_type_with_null(prompt, 'データ型を選択してください:')
+        [col_name.strip, type_with_null]
       end
 
       def handle_rename_column(state, client, prompt)
@@ -107,13 +106,17 @@ module RubyMysqlTui
         return state if (column_info = fetch_selected_column(state)).nil?
 
         old_name = column_info['Field']
-        type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        null_allowed = prompt.yes?('NULLを許容しますか？')
-        type_with_null = "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"
+        type_with_null = prompt_for_type_with_null(prompt, "カラム '#{old_name}' の新しいデータ型を選択してください:")
         TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_with_null)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
+      end
+
+      def prompt_for_type_with_null(prompt, message)
+        type = prompt.select(message, TablePromptHelper::COLUMN_TYPES)
+        null_allowed = prompt.yes?('NULLを許容しますか？')
+        "#{type} #{null_allowed ? 'NULL' : 'NOT NULL'}"
       end
 
       def fetch_selected_column(state)
@@ -134,7 +137,7 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method :prompt_for_column_details, :fetch_selected_column, :primary_key_error?, :cancel_truncation
+      private_class_method :prompt_for_column_details, :fetch_selected_column, :primary_key_error?, :cancel_truncation, :prompt_for_type_with_null
     end
   end
 end
