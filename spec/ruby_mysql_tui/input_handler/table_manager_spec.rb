@@ -24,8 +24,8 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
     expect(client).to receive(:create_table).with(
       'new_table',
       [
-        { name: 'name', type: 'VARCHAR(255)', null: true },
-        { name: 'email', type: 'VARCHAR(255)', null: false }
+        { name: 'name', type: 'VARCHAR(255)' },
+        { name: 'email', type: 'VARCHAR(255)' }
       ]
     )
     expect(client).to receive(:list_tables).with('test_db').and_return(%w[t1 t2 new_table])
@@ -200,7 +200,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
   it 'adds a column and updates state' do
     allow(prompt).to receive(:ask).and_return('new_col')
     allow(prompt).to receive(:select).and_return('VARCHAR(255)')
-    allow(prompt).to receive(:yes?).and_return(true)
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
     expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255) NULL')
     expect(client).to receive(:list_table_structure).with('test_table').and_return([{ 'Field' => 'new_col' }])
 
@@ -278,7 +278,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column'
 
   it 'modifies column type when a type is selected' do
     allow(prompt).to receive(:select).and_return('BIGINT')
-    allow(prompt).to receive(:yes?).and_return(true)
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
     expect(RubyMysqlTui::InputHandler::TableExecutor)
       .to receive(:execute_modify_column).with(state, client, 'test_table', 'age', 'BIGINT NULL').and_return(state)
 
