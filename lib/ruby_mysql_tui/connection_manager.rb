@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RubyMysqlTui
+  # ConnectionManager は MySQL への接続確立と再試行プロンプトを管理します。
   class ConnectionManager
     def self.establish_connection
       config = nil
