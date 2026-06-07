@@ -9,6 +9,7 @@ require_relative 'ruby_mysql_tui/ui/layout'
 require_relative 'ruby_mysql_tui/ui/renderer'
 require_relative 'ruby_mysql_tui/input_handler/sql_history_manager'
 require_relative 'ruby_mysql_tui/input_handler'
+require_relative 'ruby_mysql_tui/connection_manager'
 
 # RubyMysqlTui は、MySQL 用の TUI ツールを提供します。
 module RubyMysqlTui
@@ -38,7 +39,7 @@ module RubyMysqlTui
   end
 
   def self.run_app
-    client = establish_connection
+    client = ConnectionManager.establish_connection
     run_main_loop(client) if client
   rescue Interrupt
     logger.info 'Interrupted by user. Exiting...'
@@ -48,52 +49,11 @@ module RubyMysqlTui
     client&.close
   end
 
-  def self.log_initialization_error(e)
-    logger.error "Initialization failed: #{e.message}\n\t#{e.backtrace.join("\n\t")}"
+  def self.log_initialization_error(error)
+    logger.error "Initialization failed: #{error.message}\n\t#{error.backtrace.join("\n\t")}"
   end
 
   private_class_method :run_app, :log_initialization_error
-
-  def self.verify_connection(client)
-    client.query('SELECT 1')
-    logger.info 'MySQL connection verified.'
-  end
-
-  def self.establish_connection
-    config = nil
-    loop do
-      client, error = try_connect(config)
-      return client if client
-
-      config = handle_connection_failure(error)
-      return nil unless config
-    end
-  end
-
-  def self.try_connect(config)
-    client = Client.new(config || {})
-    verify_connection(client)
-    [client, nil]
-  rescue Mysql2::Error => e
-    [nil, e]
-  end
-
-  def self.handle_connection_failure(error)
-    logger.error "Connection failed: #{error.message}"
-    prompt = TTY::Prompt.new
-    return nil unless prompt.yes?('接続に失敗しました。接続情報を再入力しますか？')
-
-    prompt_config(prompt)
-  end
-
-  def self.prompt_config(prompt)
-    {
-      host: prompt.ask('Host:', default: 'localhost'),
-      username: prompt.ask('Username:', default: 'root'),
-      password: prompt.mask('Password:'),
-      database: prompt.ask('Database (optional):')
-    }
-  end
 
   def self.run_main_loop(client)
     reader = TTY::Reader.new
