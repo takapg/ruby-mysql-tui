@@ -4,11 +4,13 @@ require_relative 'deletable'
 require_relative 'table_prompt_helper'
 require_relative 'table_executor'
 require_relative 'table_error_handler'
+require_relative 'table_manager_utils'
 
 module RubyMysqlTui
   module InputHandler
     # TableManager は テーブルの作成などの操作を提供します。
     module TableManager
+      include TableManagerUtils
       module_function
 
       def handle_create_table(state, client, prompt)
@@ -66,12 +68,7 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        if TablePromptHelper::NULL_PROMPT_ENABLED
-          null_allowed = prompt.yes?('NULLを許容しますか？')
-          type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
-        else
-          type_str = type
-        end
+        type_str = build_type_string(prompt, type)
         TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type_str)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
@@ -113,35 +110,27 @@ module RubyMysqlTui
 
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        if TablePromptHelper::NULL_PROMPT_ENABLED
-          null_allowed = prompt.yes?('NULLを許容しますか？')
-          type_str = null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
-        else
-          type_str = type
-        end
+        type_str = build_type_string(prompt, type)
         TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type_str)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
       end
 
-      private_class_method def fetch_selected_column(state)
-        structure = state[:records]
-        selected_idx = state[:selected_record_index] || 0
-        structure[selected_idx]
-      end
-
-      private_class_method def primary_key_error?(column_info, prompt, column_name)
-        return false unless column_info['Key'] == 'PRI'
-
-        prompt.error("主キーカラム '#{column_name}' は削除できません。")
-        true
-      end
-
-      private_class_method def cancel_truncation(state)
-        state[:status_message] = 'Truncation cancelled'
-        state
-      end
+      # Helper methods moved to TableManagerUtils
     end
   end
 end
+      # Builds the type string with optional NULL/NOT NULL constraint.
+      #
+      # @param prompt [TTY::Prompt] the prompt instance
+      # @param type [String] the base column type (e.g. "INT")
+      # @return [String] the type string, possibly with NULL/NOT NULL suffix
+      def build_type_string(prompt, type)
+        if TablePromptHelper::NULL_PROMPT_ENABLED
+          null_allowed = prompt.yes?('NULLを許容しますか？')
+          null_allowed ? "#{type} NULL" : "#{type} NOT NULL"
+        else
+          type
+        end
+      end
