@@ -190,7 +190,7 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
 end
 
 RSpec.describe RubyMysqlTui::InputHandler, type: :module do
-  describe '.execute_sql (USE statement)' do
+  describe '.execute_sql (USE statement) success' do
     let(:client) { double('Client', query: [], list_tables: %w[t1 t2]) }
     let(:state) { { sql_history: [], selected_db: 'old_db' } }
 
@@ -207,14 +207,21 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
       expect(state[:selected_db]).to eq('new_db')
     end
 
-    it 'handles USE with backticks and spaces in database name' do
-      described_class.execute_sql('USE `my database`', state, client)
-      expect(state[:selected_db]).to eq('my database')
-    end
-
     it 'handles USE case-insensitively' do
       described_class.execute_sql('use new_db', state, client)
       expect(state[:selected_db]).to eq('new_db')
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.execute_sql (USE statement) edge cases' do
+    let(:client) { double('Client', query: [], list_tables: %w[t1 t2]) }
+    let(:state) { { sql_history: [], selected_db: 'old_db' } }
+
+    it 'handles USE with backticks and spaces in database name' do
+      described_class.execute_sql('USE `my database`', state, client)
+      expect(state[:selected_db]).to eq('my database')
     end
 
     it 'does not update selected_db when USE statement fails' do
