@@ -58,15 +58,26 @@ module RubyMysqlTui
     def process_sql_keypress(event, state, client)
       return handle_sql_quit(state) if event.value == 'q'
 
+      dispatch_sql_keypress(event, state, client)
+    end
+
+    def dispatch_sql_keypress(event, state, client)
       case event.key.name
-      when :escape then [state.merge!(sql_mode: false, sql_input: ''), false]
+      when :escape then handle_sql_escape(state)
       when :return then handle_sql_return(state, client)
-      when :up then handle_sql_history_up(state)
-      when :down then handle_sql_history_down(state)
+      when :up, :down then handle_sql_history_navigation(event, state)
       when :ctrl_e then open_external_editor(state)
       when :ctrl_k then handle_sql_history_clear(state)
       else handle_sql_text_input(event, state)
       end
+    end
+
+    def handle_sql_escape(state)
+      [state.merge!(sql_mode: false, sql_input: ''), false]
+    end
+
+    def handle_sql_history_navigation(event, state)
+      event.key.name == :up ? handle_sql_history_up(state) : handle_sql_history_down(state)
     end
 
     def handle_sql_quit(state)
@@ -98,7 +109,8 @@ module RubyMysqlTui
 
     module_function :execute_sql,
                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
-                    :process_sql_keypress, :handle_sql_text_input, :handle_sql_return,
+                    :process_sql_keypress, :dispatch_sql_keypress, :handle_sql_escape,
+                    :handle_sql_history_navigation, :handle_sql_text_input, :handle_sql_return,
                     :handle_sql_history_clear, :handle_sql_quit
   end
 end
