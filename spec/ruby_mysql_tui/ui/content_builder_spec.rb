@@ -297,8 +297,10 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with total recor
       output = described_class.build_view(state, width, height)
       expect(output).to include('Table: users (1-2 of 1250)')
     end
+  end
 
-    it 'shows correct range when offset is non-zero' do
+  context 'when offset is non-zero' do
+    it 'shows correct range' do
       records = [{ 'id' => 101, 'name' => 'Charlie' }]
       state = {
         records: records,
@@ -312,7 +314,7 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with total recor
   end
 
   context 'when no records exist' do
-    it 'shows zero count when no records' do
+    it 'shows zero count' do
       state = {
         records: [],
         selected_table: 'users',
