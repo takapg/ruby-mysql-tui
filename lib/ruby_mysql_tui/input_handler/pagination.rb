@@ -50,7 +50,6 @@ module RubyMysqlTui
         opts = InputHandler.query_options(state)
         state[:records] = client.list_records(state[:selected_table], new_offset, **opts).to_a
       end
-
     end
   end
 end
