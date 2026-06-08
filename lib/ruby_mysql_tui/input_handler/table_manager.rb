@@ -89,13 +89,14 @@ module RubyMysqlTui
         state = TableExecutor.execute_drop_column(state, client, state[:selected_table], column_name)
       rescue Mysql2::Error => e
         Deletable.handle_drop_error(prompt, e, state, 'Column')
+        state
       end
 
       def handle_modify_column(state, client, prompt)
         column_info = fetch_selected_column(state)
         return state if column_info.nil?
 
-        modify_column(state, client, prompt, column_info)
+        state = modify_column(state, client, prompt, column_info)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
@@ -105,7 +106,7 @@ module RubyMysqlTui
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
-        state = TableExecutor.execute_modify_column(
+        TableExecutor.execute_modify_column(
           state, client, state[:selected_table], old_name, "#{type} #{null_constraint}"
         )
       end

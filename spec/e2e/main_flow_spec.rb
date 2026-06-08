@@ -92,11 +92,13 @@ module E2EFlowHelpers
     states = [Marshal.load(Marshal.dump(RubyMysqlTui.initial_state(client)))]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
       res = m.call(*args)
+      state_to_save = nil
       if res.is_a?(Hash)
-        states << Marshal.load(Marshal.dump(res))
+        state_to_save = res
       elsif res.is_a?(Array) && res[0].is_a?(Hash)
-        states << Marshal.load(Marshal.dump(res[0]))
+        state_to_save = res[0]
       end
+      states << Marshal.load(Marshal.dump(state_to_save)) if state_to_save
       res
     end
     states
@@ -671,9 +673,10 @@ RSpec.describe 'E2E SQL History Clear' do
 
   it 'clears SQL history and prevents recall after Ctrl+K' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
-    # 先把初始history设置为空，避免初始状态干扰
-    initial_state = RubyMysqlTui.initial_state(client)
-    initial_state[:sql_history] = ['SELECT 1']
+
+    # 初期状態に履歴を設定
+    initial_state = RubyMysqlTui.initial_state(client).merge(sql_history: ['SELECT 1'])
+    allow(RubyMysqlTui).to receive(:initial_state).and_return(initial_state)
 
     # s -> SELECT 1 -> Enter -> Ctrl+K -> Up -> q
     events = [
