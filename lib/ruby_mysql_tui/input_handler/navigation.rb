@@ -64,7 +64,7 @@ module RubyMysqlTui
                      filter_query: '', records_filter_query: '', sql_result_mode: false)
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
-        state[:total_records] = client.count_records(table_name)
+        state[:total_records] = client.count_records(table_name) if client.respond_to?(:count_records)
       end
 
       def handle_back_navigation(state, client)

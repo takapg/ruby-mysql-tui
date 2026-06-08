@@ -19,12 +19,12 @@ module RubyMysqlTui
       return state.merge(show_help: false) if state[:show_help]
 
       state[:status_message] = nil
-      handle_special_keys(val, state) ||
+      handle_special_keys(val, state, client) ||
         handle_navigation_and_actions(val, event, state, client)
     end
 
-    private_class_method def handle_special_keys(val, state)
-      return handle_filter_input(val, state) if ['/', "\e"].include?(val)
+    private_class_method def handle_special_keys(val, state, client = nil)
+      return handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
 
       nil
@@ -38,14 +38,14 @@ module RubyMysqlTui
         handle_key_input(extract_key_name(event), state, client)
     end
 
-    private_class_method def handle_filter_input(val, state)
-      return handle_filter_start(state) if val == '/'
-      return handle_filter_clear(state) if val == "\e"
+    private_class_method def handle_filter_input(val, state, client = nil)
+      return handle_filter_start(state, client) if val == '/'
+      return handle_filter_clear(state, client) if val == "\e"
 
       nil
     end
 
-    private_class_method def handle_filter_start(state)
+    private_class_method def handle_filter_start(state, client = nil)
       prompt = TTY::Prompt.new
       if state[:focus] == :left
         query = prompt.ask('フィルターキーワードを入力:')
@@ -53,17 +53,21 @@ module RubyMysqlTui
       elsif state[:focus] == :right && state[:view_mode] == :records
         query = prompt.ask('レコードフィルターキーワードを入力:')
         new_state = state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-        new_state[:total_records] = client.count_records(state[:selected_table], filter_query: query) if state[:selected_table]
+        if client && state[:selected_table] && client.respond_to?(:count_records)
+          new_state[:total_records] = client.count_records(state[:selected_table], filter_query: query)
+        end
         new_state
       end
     end
 
-    private_class_method def handle_filter_clear(state)
+    private_class_method def handle_filter_clear(state, client = nil)
       if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
         state.merge(filter_query: '', selected_index: 0)
       elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
         new_state = state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-        new_state[:total_records] = client.count_records(state[:selected_table]) if state[:selected_table]
+        if client && state[:selected_table] && client.respond_to?(:count_records)
+          new_state[:total_records] = client.count_records(state[:selected_table])
+        end
         new_state
       end
     end
