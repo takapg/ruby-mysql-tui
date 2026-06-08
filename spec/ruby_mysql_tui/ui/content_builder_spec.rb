@@ -285,38 +285,42 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with total recor
   let(:width) { 100 }
   let(:height) { 20 }
 
-  it 'shows range and total count in header' do
-    records = [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }]
-    state = {
-      records: records,
-      selected_table: 'users',
-      records_offset: 0,
-      total_records: 1250
-    }
-    output = described_class.build_view(state, width, height)
-    expect(output).to include('Table: users (1-2 of 1250)')
+  context 'when records exist' do
+    it 'shows range and total count in header' do
+      records = [{ 'id' => 1, 'name' => 'Alice' }, { 'id' => 2, 'name' => 'Bob' }]
+      state = {
+        records: records,
+        selected_table: 'users',
+        records_offset: 0,
+        total_records: 1250
+      }
+      output = described_class.build_view(state, width, height)
+      expect(output).to include('Table: users (1-2 of 1250)')
+    end
+
+    it 'shows correct range when offset is non-zero' do
+      records = [{ 'id' => 101, 'name' => 'Charlie' }]
+      state = {
+        records: records,
+        selected_table: 'users',
+        records_offset: 100,
+        total_records: 1250
+      }
+      output = described_class.build_view(state, width, height)
+      expect(output).to include('Table: users (101-101 of 1250)')
+    end
   end
 
-  it 'shows correct range when offset is non-zero' do
-    records = [{ 'id' => 101, 'name' => 'Charlie' }]
-    state = {
-      records: records,
-      selected_table: 'users',
-      records_offset: 100,
-      total_records: 1250
-    }
-    output = described_class.build_view(state, width, height)
-    expect(output).to include('Table: users (101-101 of 1250)')
-  end
-
-  it 'shows zero count when no records' do
-    state = {
-      records: [],
-      selected_table: 'users',
-      records_offset: 0,
-      total_records: 0
-    }
-    output = described_class.build_view(state, width, height)
-    expect(output).to include('Table: users (0 of 0)')
+  context 'when no records exist' do
+    it 'shows zero count when no records' do
+      state = {
+        records: [],
+        selected_table: 'users',
+        records_offset: 0,
+        total_records: 0
+      }
+      output = described_class.build_view(state, width, height)
+      expect(output).to include('Table: users (0 of 0)')
+    end
   end
 end
