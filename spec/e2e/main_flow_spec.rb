@@ -88,19 +88,27 @@ module E2EEventHelpers
 end
 
 module E2EFlowHelpers
-  def track_states(client)
-    states = [RubyMysqlTui.initial_state(client).dup]
-    allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
+  def track_input_state(states)
+    lambda do |m, *args|
       res = m.call(*args)
       states << res.dup if res.is_a?(Hash)
       res
     end
-    allow(RubyMysqlTui).to receive(:handle_loop_input).and_wrap_original do |m, *args|
+  end
+
+  def track_loop_input_state(states)
+    lambda do |m, *args|
       res = m.call(*args)
       state = res.is_a?(Array) ? res.first : res
       states << state.dup if state.is_a?(Hash)
       res
     end
+  end
+
+  def track_states(client)
+    states = [RubyMysqlTui.initial_state(client).dup]
+    allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original(&track_input_state(states))
+    allow(RubyMysqlTui).to receive(:handle_loop_input).and_wrap_original(&track_loop_input_state(states))
     states
   end
 

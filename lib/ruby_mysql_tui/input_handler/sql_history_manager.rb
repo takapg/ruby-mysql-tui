@@ -27,7 +27,7 @@ module RubyMysqlTui
 
       # 履歴ファイルを削除し、履歴をクリアします。
       def clear_history
-        File.delete(HISTORY_FILE) if File.exist?(HISTORY_FILE)
+        FileUtils.rm_f(HISTORY_FILE)
       rescue StandardError => e
         RubyMysqlTui.logger.error("Failed to clear SQL history: #{e.message}")
       end

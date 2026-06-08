@@ -386,7 +386,7 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
     end
 
     it 'does not raise error when file does not exist' do
-      File.delete(temp_file.path) if File.exist?(temp_file.path)
+      FileUtils.rm_f(temp_file.path)
       expect { described_class.clear_history }.not_to raise_error
     end
 
