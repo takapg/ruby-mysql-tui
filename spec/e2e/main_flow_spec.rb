@@ -574,6 +574,36 @@ RSpec.describe 'E2E Table Creation' do
   end
 end
 
+RSpec.describe 'E2E Table Creation with Custom Type' do
+  include_context 'e2e setup'
+
+  it 'creates a table with custom data type' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    events = [
+      double('Event', value: "\r", key: double('Key', name: :return)),
+      double('Event', value: 'n', key: double('Key', name: :n)),
+      double('Event', value: 'q', key: double('Key', name: :q))
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    prompt = instance_double(TTY::Prompt)
+    allow(TTY::Prompt).to receive(:new).and_return(prompt)
+    allow(prompt).to receive(:ask).and_return('custom_type_table', 'price')
+    allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
+    allow(prompt).to receive(:ask).with('データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):').and_return('DECIMAL(10,2)')
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
+    allow(prompt).to receive(:yes?).with('さらにカラムを追加しますか？').and_return(false)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:list_tables).and_return(%w[existing_table custom_type_table])
+    expect(client).to receive(:create_table).with('custom_type_table', [{ name: 'price', type: 'DECIMAL(10,2) NOT NULL' }])
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+    expect(states.any? { |s| s[:view_mode] == :tables }).to be true
+  end
+end
+
 RSpec.describe 'E2E Database Deletion' do
   include_context 'e2e setup'
 
