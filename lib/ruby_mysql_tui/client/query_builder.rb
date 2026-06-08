@@ -27,6 +27,22 @@ module RubyMysqlTui
         dir = %w[ASC DESC].include?(direction.to_s.upcase) ? direction.to_s.upcase : 'ASC'
         "#{sql} ORDER BY `#{column.gsub('`', '``')}` #{dir}"
       end
+
+      def build_count_sql(table_name, options)
+        escaped_table_name = table_name.gsub('`', '``')
+        filter = options[:filter_query]
+        if filter && !filter.to_s.empty?
+          conditions = build_filter_conditions(filter)
+          "SELECT COUNT(*) FROM `#{escaped_table_name}` WHERE #{conditions}"
+        else
+          "SELECT COUNT(*) FROM `#{escaped_table_name}`"
+        end
+      end
+
+      def build_filter_conditions(filter)
+        escaped = filter.gsub("'", "''")
+        "1=1 /* filter: #{escaped} */"
+      end
     end
   end
 end
