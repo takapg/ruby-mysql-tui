@@ -17,9 +17,9 @@ module RubyMysqlTui
         filter = prompt.ask('フィルタ条件を入力してください:')
 
         if state[:focus] == :right
-          apply_record_filter(state, client, filter)
+          apply_record_filter!(state, client, filter)
         else
-          apply_item_filter(state, filter)
+          apply_item_filter!(state, filter)
         end
 
         state
@@ -27,7 +27,7 @@ module RubyMysqlTui
         state
       end
 
-      def apply_record_filter(state, client, filter)
+      def apply_record_filter!(state, client, filter)
         state[:records_filter_query] = filter.to_s
         state[:records_offset] = 0
         state[:selected_record_index] = 0
@@ -41,12 +41,12 @@ module RubyMysqlTui
         )
       end
 
-      def apply_item_filter(state, filter)
+      def apply_item_filter!(state, filter)
         state[:filter_query] = filter.to_s
         state[:selected_index] = 0
       end
 
-      def clear_filter(state, client = nil)
+      def clear_filter!(state, client = nil)
         if state[:focus] == :right
           clear_right_filter(state, client)
         else
