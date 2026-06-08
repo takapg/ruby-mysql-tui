@@ -46,30 +46,51 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_filter_start(state, client = nil)
+      return handle_filter_start_left(state) if state[:focus] == :left
+      return handle_filter_start_right(state, client) if state[:focus] == :right && state[:view_mode] == :records
+
+      state
+    end
+
+    private_class_method def handle_filter_start_left(state)
       prompt = TTY::Prompt.new
-      if state[:focus] == :left
-        query = prompt.ask('フィルターキーワードを入力:')
-        state.merge(filter_query: query || '', selected_index: 0)
-      elsif state[:focus] == :right && state[:view_mode] == :records
-        query = prompt.ask('レコードフィルターキーワードを入力:')
-        new_state = state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-        if client && state[:selected_table] && client.respond_to?(:count_records)
-          new_state[:total_records] = client.count_records(state[:selected_table], filter_query: query)
-        end
-        new_state
-      end
+      query = prompt.ask('フィルターキーワードを入力:')
+      state.merge(filter_query: query || '', selected_index: 0)
+    end
+
+    private_class_method def handle_filter_start_right(state, client)
+      prompt = TTY::Prompt.new
+      query = prompt.ask('レコードフィルターキーワードを入力:')
+      new_state = state.merge(
+        records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0
+      )
+      update_total_records(new_state, client, filter_query: query)
+      new_state
     end
 
     private_class_method def handle_filter_clear(state, client = nil)
-      if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
-        state.merge(filter_query: '', selected_index: 0)
-      elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
-        new_state = state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-        if client && state[:selected_table] && client.respond_to?(:count_records)
-          new_state[:total_records] = client.count_records(state[:selected_table])
-        end
-        new_state
-      end
+      return handle_filter_clear_left(state) if state[:focus] == :left && state[:filter_query]&.any?
+      return handle_filter_clear_right(state, client) if state[:focus] == :right && state[:records_filter_query]&.any?
+
+      state
+    end
+
+    private_class_method def handle_filter_clear_left(state)
+      state.merge(filter_query: '', selected_index: 0)
+    end
+
+    private_class_method def handle_filter_clear_right(state, client)
+      new_state = state.merge(
+        records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0
+      )
+      update_total_records(new_state, client)
+      new_state
+    end
+
+    private_class_method def update_total_records(state, client, options = {})
+      return unless client && state[:selected_table] && client.respond_to?(:count_records)
+
+      state[:total_records] = client.count_records[state[:selected_table], options]
     end
 
     private_class_method def detail_back_pressed?(val, state)
