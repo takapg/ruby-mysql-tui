@@ -964,7 +964,7 @@ RSpec.describe 'E2E Table Column Modify' do
     expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT NULL')
 
     states = track_states(client)
-   Offer valid code, but the user asked me to continue. RubyMysqlTui.run_main_loop(client)
+    RubyMysqlTui.run_main_loop(client)
     expect(states.any? do |s|
       s[:status_message] == "Column 'age' modified successfully"
     end).to be true

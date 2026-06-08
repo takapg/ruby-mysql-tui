@@ -20,7 +20,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
   it 'creates a table with custom columns when provided' do
     allow(prompt).to receive(:ask).and_return('new_table', 'name', 'email')
     allow(prompt).to receive(:select).and_return('VARCHAR(255)', 'VARCHAR(255)')
-    allow(prompt).to receive(:yes?).and_return(true, false, true, false)
+    allow(prompt).to receive(:yes?).and_return(true, false, true, false, true, false)
     expect(client).to receive(:create_table).with(
       'new_table',
       [
