@@ -20,7 +20,7 @@ module RubyMysqlTui
       return state.merge(show_help: false) if state[:show_help]
 
       state[:status_message] = nil
-      special_state = handle_special_keys(val, state, client)
+      special_state = self.handle_special_keys(val, state, client)
       return special_state if special_state
 
       handle_navigation_and_actions(val, event, state, client)
