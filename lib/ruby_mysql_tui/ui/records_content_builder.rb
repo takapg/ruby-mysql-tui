@@ -51,7 +51,7 @@ module RubyMysqlTui
         text = if options[:sql_result_mode]
                  "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
                else
-                 "Table: #{table_name}#{count_info}#{sort_info}"
+                 "Table: #{table_name} #{count_info}#{sort_info}"
                end
         ContentBuilder.truncate(text, width)
       end
