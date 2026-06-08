@@ -28,16 +28,11 @@ module RubyMysqlTui
 
       def view_options(state, height)
         {
-          height: height,
-          selected_index: state[:selected_record_index],
-          offset: state[:records_offset] || 0,
-          columns_offset: state[:columns_offset] || 0,
-          sort_column: state[:sort_column],
-          sort_direction: state[:sort_direction],
-          sql_result_mode: state[:sql_result_mode],
-          last_executed_sql: state[:last_executed_sql],
-          total_records: state[:total_records],
-          records_size: (state[:records] || []).size
+          height: height, selected_index: state[:selected_record_index],
+          offset: state[:records_offset] || 0, columns_offset: state[:columns_offset] || 0,
+          sort_column: state[:sort_column], sort_direction: state[:sort_direction],
+          sql_result_mode: state[:sql_result_mode], last_executed_sql: state[:last_executed_sql],
+          total_records: state[:total_records], records_size: (state[:records] || []).size
         }.compact
       end
 
