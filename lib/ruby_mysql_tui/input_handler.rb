@@ -26,7 +26,7 @@ module RubyMysqlTui
       handle_navigation_and_actions(val, event, state, client)
     end
 
-    private_class_method def handle_special_keys(val, state, client = nil)
+    def handle_special_keys(val, state, client = nil)
       if ['/', "\e"].include?(val)
         return FilterHandler.handle_filter_input(val, state, client)
       end
@@ -34,6 +34,7 @@ module RubyMysqlTui
 
       nil
     end
+    private :handle_special_keys
 
     private_class_method def handle_navigation_and_actions(val, event, state, client)
       return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
