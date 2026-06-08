@@ -702,10 +702,13 @@ RSpec.describe 'E2E SQL History Clear' do
     RubyMysqlTui.run_main_loop(client)
 
     # 履歴クリア後、state[:sql_history] が空になっていることを検証
-    history_cleared_state = states.find { |s| s[:sql_history] == [] }
-    expect(history_cleared_state).not_to be_nil
-    # 履歴クリア後に up を押しても、sql_input が空のまま（履歴から復元されていない）
-    expect(history_cleared_state[:sql_input]).to eq('')
+    history_cleared_index = states.index { |s| s[:sql_history] == [] }
+    expect(history_cleared_index).not_to be_nil
+
+    # Upキー押下後の状態を検証（履歴から復元されず空のまま）
+    post_up_state = states[history_cleared_index + 1]
+    expect(post_up_state[:sql_input]).to eq('')
+    expect(post_up_state[:sql_history_index]).to be_nil
   end
 end
 
