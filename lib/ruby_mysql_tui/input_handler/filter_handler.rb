@@ -12,8 +12,8 @@ module RubyMysqlTui
         start_filter_input(state, client)
       end
 
-      def start_filter_input(state, client)
-        prompt = TTY::Prompt.new
+      def start_filter_input(state, client, prompt: nil)
+        prompt ||= TTY::Prompt.new
         filter = prompt.ask('フィルタ条件を入力してください:')
 
         if state[:focus] == :right

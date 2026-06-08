@@ -43,8 +43,8 @@ module RubyMysqlTui
         return '1=1' if filter.nil? || filter.to_s.empty?
 
         columns = list_columns(table_name)
-        escaped = filter.gsub("'", "''")
-        "CONCAT_WS(' ', #{columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')}) LIKE '%#{escaped}%'"
+        escaped = filter.gsub("'", "''").gsub('%', '\\%').gsub('_', '\\_')
+        "CONCAT_WS(' ', #{columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')}) LIKE '%#{escaped}%' ESCAPE '\\'"
       end
     end
   end
