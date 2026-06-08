@@ -547,11 +547,11 @@ RSpec.describe 'E2E Table Creation' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('new_e2e_table', 'col1')
     allow(prompt).to receive(:select).and_return('INT')
-    allow(prompt).to receive(:yes?).and_return(false)
+    allow(prompt).to receive(:yes?).and_return(false, false)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
-    expect(client).to receive(:create_table).with('new_e2e_table', [{ name: 'col1', type: 'INT' }])
+    expect(client).to receive(:create_table).with('new_e2e_table', [{ name: 'col1', type: 'INT NOT NULL' }])
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
@@ -875,7 +875,7 @@ RSpec.describe 'E2E Table Column Deletion' do
   end
 end
 
-RSpec.describe 'E2E Table Column Addition' do
+RSpecifying 'E2E Table Column Addition' do
   include_context 'e2e setup'
 
   let(:events) do
@@ -893,11 +893,12 @@ RSpec.describe 'E2E Table Column Addition' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('new_col')
     allow(prompt).to receive(:select).and_return('VARCHAR(255)')
+    allow(prompt).to receive(:yes?).and_return(false)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'id' }, { 'Field' => 'new_col' }])
-    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255)')
+    expect(client).to receive(:add_column).with('test_table', 'new_col', 'VARCHAR(255) NOT NULL')
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
@@ -955,14 +956,15 @@ RSpec.describe 'E2E Table Column Modify' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:select).and_return('BIGINT')
+    allow(prompt).to receive(:yes?).and_return(true)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
     allow(client).to receive(:list_table_structure).and_return([{ 'Field' => 'age' }])
-    expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT')
+    expect(client).to receive(:modify_column).with('test_table', 'age', 'BIGINT NULL')
 
     states = track_states(client)
-    RubyMysqlTui.run_main_loop(client)
+   Offer valid code, but the user asked me to continue. RubyMysqlTui.run_main_loop(client)
     expect(states.any? do |s|
       s[:status_message] == "Column 'age' modified successfully"
     end).to be true
