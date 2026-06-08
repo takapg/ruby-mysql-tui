@@ -38,7 +38,7 @@ module RubyMysqlTui
           last_executed_sql: state[:last_executed_sql],
           total_records: state[:total_records],
           records_size: (state[:records] || []).size
-        }
+        }.compact
       end
 
       def build_records_text(table_name:, records:, width:, options: {})
