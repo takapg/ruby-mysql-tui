@@ -87,7 +87,9 @@ module RubyMysqlTui
 
     def handle_sql_history_clear(state)
       SqlHistoryManager.clear_history
-      [state.merge(sql_history: [], sql_history_index: nil), false]
+      state[:sql_history] = []
+      state[:sql_history_index] = nil
+      [state, false]
     end
 
     module_function :execute_sql,
