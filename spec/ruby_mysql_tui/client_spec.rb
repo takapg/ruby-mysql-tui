@@ -9,6 +9,7 @@ RSpec.shared_context 'mysql client' do
 
   before do
     allow(Mysql2::Client).to receive(:new).and_return(mock_mysql_client)
+    allow(mock_mysql_client).to receive(:escape) { |str| str }
   end
 end
 
