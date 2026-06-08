@@ -296,7 +296,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Page Offset)' 
     allow(client).to receive(:list_records).with('users', 0, any_args).and_return(prev_page)
     allow(client).to receive(:count_records).and_return(200)
 
-    up_event = double Suffrage('Event', value: nil, key: double('Key', name: :up))
+    up_event = double('Event', value: nil, key: double('Key', name: :up))
     result = RubyMysqlTui.handle_input(up_event, state, client)
 
     expect(result[:records_offset]).to eq(99)
