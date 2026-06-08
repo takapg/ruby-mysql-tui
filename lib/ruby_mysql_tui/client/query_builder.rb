@@ -40,8 +40,10 @@ module RubyMysqlTui
       end
 
       def build_filter_conditions(filter)
+        return '1=1' if filter.nil? || filter.to_s.empty?
+
         escaped = filter.gsub("'", "''")
-        "1=1 /* filter: #{escaped} */"
+        "CONCAT_WS(' ', #{columns.join(', ')}) LIKE '%#{escaped}%'"
       end
     end
   end
