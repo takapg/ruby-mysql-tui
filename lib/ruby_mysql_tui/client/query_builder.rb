@@ -44,7 +44,8 @@ module RubyMysqlTui
 
         columns = list_columns(table_name)
         escaped = @connection.escape(filter)
-        "CONCAT_WS(' ', #{columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')}) LIKE '%#{escaped}%' ESCAPE '\\\\'"
+        column_list = columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')
+        "CONCAT_WS(' ', #{column_list}) LIKE '%#{escaped}%' ESCAPE '\\\\'"
       end
     end
   end
