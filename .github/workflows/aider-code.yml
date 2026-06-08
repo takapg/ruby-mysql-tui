@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            timeout 300 aider --model openai/moonshotai/kimi-k2.6 \
+            aider --model openai/moonshotai/kimi-k2.6 \
                   --edit-format diff \
                   --yes-always \
                   --chat-language japanese \
@@ -107,7 +107,8 @@ jobs:
                   --disable-playwright \
                   --no-detect-urls \
                   --stream \
-                  --message "$INSTRUCTION (attempt: $RETRY_COUNT)" || true
+                  --timeout 180 \
+                  --message "$INSTRUCTION (attempt: $RETRY_COUNT)"
 
             if ! git diff --quiet "origin/${{ github.ref_name }}"; then
               echo "✅ 変更が検出されました！ループを抜けます。"
