@@ -64,7 +64,8 @@ module RubyMysqlTui
       when :up then handle_sql_history_up(state)
       when :down then handle_sql_history_down(state)
       when :ctrl_e then open_external_editor(state)
-      when :ctrl_k then handle_sql_history_clear(state)
+      when :ctrl_k
+        handle_sql_history_clear(state)
       else handle_sql_text_input(event, state)
       end
     end
