@@ -27,9 +27,7 @@ module RubyMysqlTui
     end
 
     def handle_special_keys(val, state, client = nil)
-      if ['/', "\e"].include?(val)
-        return FilterHandler.handle_filter_input(val, state, client)
-      end
+      return FilterHandler.handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
 
       nil
@@ -43,7 +41,6 @@ module RubyMysqlTui
       ActionHandler.handle_action_key(val, state, client) ||
         handle_key_input(extract_key_name(event), state, client)
     end
-
 
     private_class_method def detail_back_pressed?(val, state)
       state[:view_mode] == :record_detail && ['b', "\e"].include?(val)
