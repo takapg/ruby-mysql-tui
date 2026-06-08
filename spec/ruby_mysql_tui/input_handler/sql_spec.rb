@@ -390,9 +390,8 @@ RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
       expect { described_class.clear_history }.not_to raise_error
     end
 
-    it 'logs error when File.delete fails' do
-      allow(File).to receive(:exist?).and_return(true)
-      allow(File).to receive(:delete).and_raise(StandardError.new('Delete error'))
+    it 'logs error when FileUtils.rm_f fails' do
+      allow(FileUtils).to receive(:rm_f).and_raise(StandardError.new('Delete error'))
       expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to clear SQL history: Delete error/)
       expect { described_class.clear_history }.not_to raise_error
     end
