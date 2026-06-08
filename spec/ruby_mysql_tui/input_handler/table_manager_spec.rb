@@ -193,7 +193,7 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_drop_column (e
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do # rubocop:disable Metrics/BlockLength
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [] } }

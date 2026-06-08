@@ -941,7 +941,7 @@ end
 RSpec.describe 'E2E Table Column Modify' do
   include_context 'e2e setup'
 
-  it 'modifies a column type when m is pressed in table structure view' do
+  it 'modifies column type when m is pressed in structure view' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
     events = [
       double('Event', value: "\r", key: double('Key', name: :return)), # DB
