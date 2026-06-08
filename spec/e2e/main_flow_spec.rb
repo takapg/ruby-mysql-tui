@@ -95,6 +95,12 @@ module E2EFlowHelpers
       states << res.dup if res.is_a?(Hash)
       res
     end
+    allow(RubyMysqlTui).to receive(:handle_loop_input).and_wrap_original do |m, *args|
+      res = m.call(*args)
+      state = res.is_a?(Array) ? res.first : res
+      states << state.dup if state.is_a?(Hash)
+      res
+    end
     states
   end
 
