@@ -407,7 +407,7 @@ RSpec.describe RubyMysqlTui::Client, '#count_records' do
     columns = %w[id name email]
     allow(client).to receive(:list_columns).with(table_name).and_return(columns)
     expect(mock_mysql_client).to receive(:query).with(
-      "SELECT COUNT(*) FROM `#{table_name}` WHERE CONCAT_WS(' ', `id`, `name`, `email`) LIKE '%test%'"
+      "SELECT COUNT(*) FROM `#{table_name}` WHERE CONCAT_WS(' ', `id`, `name`, `email`) LIKE '%test%' ESCAPE '\\\\'"
     ).and_return([{ 'count' => 5 }])
     expect(client.count_records(table_name, filter_query: 'test')).to eq(5)
   end
