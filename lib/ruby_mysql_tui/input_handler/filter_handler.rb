@@ -17,25 +17,30 @@ module RubyMysqlTui
         filter = prompt.ask('フィルタ条件を入力してください:')
 
         if state[:focus] == :right
-          state[:records_filter_query] = filter.to_s
-          state[:records_offset] = 0
-          state[:selected_record_index] = 0
-
-          if state[:selected_table] && client
-            state[:records] = client.list_records(
-              state[:selected_table],
-              state[:records_offset],
-              InputHandler.query_options(state)
-            )
-          end
+          apply_record_filter(state, client, filter)
         else
-          state[:filter_query] = filter.to_s
-          state[:selected_index] = 0
+          apply_item_filter(state, filter)
         end
 
         state
       rescue TTY::Reader::InputInterrupt
         state
+      end
+
+      private_class_method def apply_record_filter(state, client, filter)
+        state[:records_filter_query] = filter.to_s
+        state[:records_offset] = 0
+        state[:selected_record_index] = 0
+        return unless state[:selected_table] && client
+
+        state[:records] = client.list_records(
+          state[:selected_table], 0, InputHandler.query_options(state)
+        )
+      end
+
+      private_class_method def apply_item_filter(state, filter)
+        state[:filter_query] = filter.to_s
+        state[:selected_index] = 0
       end
 
       private_class_method def clear_filter(state)
