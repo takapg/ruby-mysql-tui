@@ -42,6 +42,9 @@ module RubyMysqlTui
           state[:page_offset] = new_offset
           state[:records] = records
         end
+        state[:total_records] = client.count_records(
+          state[:selected_table], filter_query: state[:records_filter_query]
+        ) if state[:selected_table]
       end
 
       def fetch_prev_page(state, client)
@@ -49,6 +52,9 @@ module RubyMysqlTui
         state[:page_offset] = new_offset
         opts = InputHandler.query_options(state)
         state[:records] = client.list_records(state[:selected_table], new_offset, **opts).to_a
+        state[:total_records] = client.count_records(
+          state[:selected_table], filter_query: state[:records_filter_query]
+        ) if state[:selected_table]
       end
     end
   end
