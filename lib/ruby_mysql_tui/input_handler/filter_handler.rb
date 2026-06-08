@@ -7,7 +7,7 @@ module RubyMysqlTui
       module_function
 
       def handle_filter_input(val, state, client = nil)
-        return clear_filter(state, client) if val == "\e"
+        return clear_filter!(state, client) if val == "\e"
 
         start_filter_input(state, client)
       end
