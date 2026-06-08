@@ -106,15 +106,19 @@ module RubyMysqlTui
         column_info = fetch_selected_column(state)
         return state if column_info.nil?
 
+        modify_column(state, client, prompt, column_info)
+      rescue Mysql2::Error => e
+        TableErrorHandler.handle_modify_column_error(prompt, e)
+        state
+      end
+
+      private_class_method def modify_column(state, client, prompt, column_info)
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
         TableExecutor.execute_modify_column(
           state, client, state[:selected_table], old_name, "#{type} #{null_constraint}"
         )
-      rescue Mysql2::Error => e
-        TableErrorHandler.handle_modify_column_error(prompt, e)
-        state
       end
 
       private_class_method def fetch_selected_column(state)

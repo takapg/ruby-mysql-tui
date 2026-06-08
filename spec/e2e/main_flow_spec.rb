@@ -938,7 +938,7 @@ RSpec.describe 'E2E Table Column Rename' do
   end
 end
 
-RSpec.describe 'E2E Table Column Modify' do
+RSpec.describe 'E2E Table Column Modify' do # rubocop:disable Metrics/BlockLength
   include_context 'e2e setup'
 
   it 'modifies column type when m is pressed in structure view' do
