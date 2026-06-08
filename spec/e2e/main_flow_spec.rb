@@ -671,6 +671,10 @@ RSpec.describe 'E2E SQL History Clear' do
 
   it 'clears SQL history and prevents recall after Ctrl+K' do
     allow(TTY::Reader).to receive(:new).and_return(reader)
+    # 先把初始history设置为空，避免初始状态干扰
+    initial_state = RubyMysqlTui.initial_state(client)
+    initial_state[:sql_history] = ['SELECT 1']
+
     # s -> SELECT 1 -> Enter -> Ctrl+K -> Up -> q
     events = [
       make_event('s', :s),
