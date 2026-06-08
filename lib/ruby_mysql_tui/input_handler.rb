@@ -69,8 +69,8 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_filter_clear(state, client = nil)
-      return handle_filter_clear_left(state) if state[:focus] == :left && state[:filter_query]&.any?
-      return handle_filter_clear_right(state, client) if state[:focus] == :right && state[:records_filter_query]&.any?
+      return handle_filter_clear_left(state) if state[:focus] == :left && !state[:filter_query]&.empty?
+      return handle_filter_clear_right(state, client) if state[:focus] == :right && !state[:records_filter_query]&.empty?
 
       state
     end
@@ -90,7 +90,7 @@ module RubyMysqlTui
     private_class_method def update_total_records(state, client, options = {})
       return unless client && state[:selected_table] && client.respond_to?(:count_records)
 
-      state[:total_records] = client.count_records[state[:selected_table], options]
+      state[:total_records] = client.count_records(state[:selected_table], options)
     end
 
     private_class_method def detail_back_pressed?(val, state)
