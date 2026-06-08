@@ -64,6 +64,7 @@ module RubyMysqlTui
       when :up then handle_sql_history_up(state)
       when :down then handle_sql_history_down(state)
       when :ctrl_e then open_external_editor(state)
+      when :ctrl_k then handle_sql_history_clear(state)
       else handle_sql_text_input(event, state)
       end
     end
@@ -84,8 +85,16 @@ module RubyMysqlTui
       [new_state.merge!(sql_input: ''), false]
     end
 
+    def handle_sql_history_clear(state)
+      SqlHistoryManager.clear_history
+      state[:sql_history] = []
+      state[:sql_history_index] = nil
+      [state, false]
+    end
+
     module_function :execute_sql,
                     :refresh_items, :update_sql_history, :handle_sql_mode_input,
-                    :process_sql_keypress, :handle_sql_text_input, :handle_sql_return
+                    :process_sql_keypress, :handle_sql_text_input, :handle_sql_return,
+                    :handle_sql_history_clear
   end
 end

@@ -662,6 +662,37 @@ RSpec.describe 'E2E SQL History' do
   end
 end
 
+RSpec.describe 'E2E SQL History Clear' do
+  include_context 'e2e setup'
+
+  it 'clears SQL history and prevents recall after Ctrl+K' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # s -> SELECT 1 -> Enter -> Ctrl+K -> Up -> q
+    events = [
+      make_event('s', :s),
+      make_event('S', :unknown), make_event('E', :unknown), make_event('L', :unknown),
+      make_event('E', :unknown), make_event('C', :unknown), make_event('T', :unknown),
+      make_event(' ', :unknown), make_event('1', :unknown),
+      make_event("\r", :return),
+      make_event("\x0B", :ctrl_k),
+      make_event("\e[A", :up),
+      make_event('q', :q)
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:query).and_return([{ '1' => 1 }])
+
+    allow(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:clear_history)
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+
+    # 履歴クリア後、state[:sql_history] が空になっていることを検証
+    expect(states.any? { |s| s[:sql_history] == [] }).to be true
+  end
+end
+
 RSpec.describe 'E2E SQL Result Scrolling' do
   include_context 'e2e setup'
 

@@ -371,3 +371,49 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  let(:temp_file) { Tempfile.new('ruby_mysql_tui_history_test') }
+  before { stub_const('RubyMysqlTui::InputHandler::SqlHistoryManager::HISTORY_FILE', temp_file.path) }
+  after { temp_file.unlink }
+
+  describe '.clear_history' do
+    it 'deletes the history file if it exists' do
+      File.write(temp_file.path, "SELECT 1\n")
+      described_class.clear_history
+      expect(File.exist?(temp_file.path)).to be false
+    end
+
+    it 'does not raise error when file does not exist' do
+      File.delete(temp_file.path) if File.exist?(temp_file.path)
+      expect { described_class.clear_history }.not_to raise_error
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.handle_sql_history_clear' do
+    let(:state) { { sql_history: ['SELECT 1', 'SELECT 2'], sql_history_index: 1, sql_input: 'current' } }
+
+    it 'clears sql_history and resets sql_history_index' do
+      allow(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:clear_history)
+      new_state, _redraw = described_class.handle_sql_history_clear(state)
+      expect(new_state[:sql_history]).to eq([])
+      expect(new_state[:sql_history_index]).to be_nil
+      expect(new_state[:sql_input]).to eq('current')
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.process_sql_keypress' do
+    let(:state) { { sql_input: 'SELECT 1' } }
+    let(:client) { double('Client') }
+
+    it 'calls handle_sql_history_clear when :ctrl_k is pressed' do
+      event = double('Event', key: double('Key', name: :ctrl_k), value: nil)
+      expect(described_class).to receive(:handle_sql_history_clear).and_return([state, false])
+      described_class.process_sql_keypress(event, state, client)
+    end
+  end
+end
