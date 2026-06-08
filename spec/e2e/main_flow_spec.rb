@@ -819,6 +819,8 @@ RSpec.describe 'E2E Record Filtering - Apply' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('Alice')
 
+    allow(client).to receive(:count_records).and_return(1)
+
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
 
