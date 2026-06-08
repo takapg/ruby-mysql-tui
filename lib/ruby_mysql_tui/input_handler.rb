@@ -21,7 +21,7 @@ module RubyMysqlTui
 
       state[:status_message] = nil
       special_state = handle_special_keys(val, state, client)
-      return special_state if special_state
+      return special_state unless special_state.nil?
 
       handle_navigation_and_actions(val, event, state, client)
     end
