@@ -33,12 +33,14 @@ module RubyMysqlTui
         state[:selected_record_index] = 0
         return unless state[:selected_table] && client
 
-        state[:records] = client.list_records(
+        records = client.list_records(
           state[:selected_table], 0, InputHandler.query_options(state)
         )
-        state[:total_records] = client.count_records(
+        total = client.count_records(
           state[:selected_table], filter_query: state[:records_filter_query]
         )
+        state[:records] = records
+        state[:total_records] = total
       end
 
       def apply_item_filter!(state, filter)

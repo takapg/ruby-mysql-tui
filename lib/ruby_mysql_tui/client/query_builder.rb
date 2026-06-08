@@ -16,8 +16,9 @@ module RubyMysqlTui
         return sql if query.nil? || query.empty?
 
         columns = list_columns(table_name)
-        escaped = "%#{@connection.escape(query)}%"
-        where = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped}'" }.join(' OR ')
+        escaped = @connection.escape(query).gsub(/([%_])/, '\\\\\1')
+        escaped_val = "%#{escaped}%"
+        where = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped_val}' ESCAPE '\\\\'" }.join(' OR ')
         "#{sql} WHERE (#{where})"
       end
 
@@ -43,7 +44,7 @@ module RubyMysqlTui
         return '1=1' if filter.nil? || filter.to_s.empty?
 
         columns = list_columns(table_name)
-        escaped = @connection.escape(filter)
+        escaped = @connection.escape(filter).gsub(/([%_])/, '\\\\\1')
         column_list = columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')
         "CONCAT_WS(' ', #{column_list}) LIKE '%#{escaped}%' ESCAPE '\\\\'"
       end
