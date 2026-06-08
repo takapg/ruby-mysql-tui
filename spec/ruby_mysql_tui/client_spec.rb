@@ -398,7 +398,8 @@ RSpec.describe RubyMysqlTui::Client, '#count_records' do
   let(:table_name) { 'users' }
 
   it 'executes SELECT COUNT(*) and returns the count' do
-    expect(mock_mysql_client).to receive(:query).with("SELECT COUNT(*) FROM `#{table_name}`").and_return([{ 'count' => 42 }])
+    expect(mock_mysql_client).to receive(:query)
+      .with("SELECT COUNT(*) FROM `#{table_name}`").and_return([{ 'count' => 42 }])
     expect(client.count_records(table_name)).to eq(42)
   end
 

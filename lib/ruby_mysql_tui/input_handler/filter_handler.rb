@@ -48,16 +48,19 @@ module RubyMysqlTui
 
       def clear_filter(state, client = nil)
         if state[:focus] == :right
-          state[:records_filter_query] = ''
-          state[:records_offset] = 0
-          state[:selected_record_index] = 0
-          if state[:selected_table] && client
-            state[:total_records] = client.count_records(state[:selected_table])
-          end
+          clear_right_filter(state, client)
         else
           state[:filter_query] = ''
           state[:selected_index] = 0
         end
+        state
+      end
+
+      def clear_right_filter(state, client)
+        state[:records_filter_query] = ''
+        state[:records_offset] = 0
+        state[:selected_record_index] = 0
+        state[:total_records] = client.count_records(state[:selected_table]) if state[:selected_table] && client
         state
       end
     end
