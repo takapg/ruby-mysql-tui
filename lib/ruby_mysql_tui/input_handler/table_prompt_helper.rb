@@ -4,7 +4,7 @@ module RubyMysqlTui
   module InputHandler
     # TablePromptHelper は テーブル操作におけるユーザー入力（プロンプト）を提供します。
     module TablePromptHelper
-      COLUMN_TYPES = ['INT', 'VARCHAR(255)", "TEXT", "DATETIME", "DATE", "OTHER (Custom Input)'].freeze
+      COLUMN_TYPES = ['INT', 'VARCHAR(255)', 'TEXT', 'DATETIME', 'DATE', 'OTHER (Custom Input)'].freeze
 
       module_function
 
