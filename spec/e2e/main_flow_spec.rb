@@ -89,10 +89,10 @@ end
 
 module E2EFlowHelpers
   def track_states(client)
-    states = [RubyMysqlTui.initial_state(client).dup]
+    states = [Marshal.load(Marshal.dump(RubyMysqlTui.initial_state(client)))]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
       res = m.call(*args)
-      states << res.dup if res.is_a?(Hash)
+      states << Marshal.load(Marshal.dump(res)) if res.is_a?(Hash)
       res
     end
     states
