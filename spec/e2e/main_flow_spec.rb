@@ -875,7 +875,7 @@ RSpec.describe 'E2E Table Column Deletion' do
   end
 end
 
-RSpecifying 'E2E Table Column Addition' do
+RSpec.describe 'E2E Table Column Addition' do
   include_context 'e2e setup'
 
   let(:events) do
