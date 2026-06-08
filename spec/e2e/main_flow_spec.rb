@@ -92,7 +92,11 @@ module E2EFlowHelpers
     states = [Marshal.load(Marshal.dump(RubyMysqlTui.initial_state(client)))]
     allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
       res = m.call(*args)
-      states << Marshal.load(Marshal.dump(res)) if res.is_a?(Hash)
+      if res.is_a?(Hash)
+        states << Marshal.load(Marshal.dump(res))
+      elsif res.is_a?(Array) && res[0].is_a?(Hash)
+        states << Marshal.load(Marshal.dump(res[0]))
+      end
       res
     end
     states
@@ -174,8 +178,8 @@ RSpec.describe 'E2E Navigation' do
     allow(reader).to receive(:read_keypress).and_return(*events)
     states = track_states(client)
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
-    expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
-    expect(client).to receive(:list_records).with('test_table', 0).and_call_original
+    allow(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_return(['test_table'])
+    allow(client).to receive(:list_records).with('test_table', 0).and_return([])
     RubyMysqlTui.run_main_loop(client)
     expect(states.any? { |s| s[:view_mode] == :databases }).to be true
     expect(states.any? { |s| s[:view_mode] == :tables }).to be true

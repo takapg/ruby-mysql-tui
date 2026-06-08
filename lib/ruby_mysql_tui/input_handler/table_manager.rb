@@ -56,7 +56,7 @@ module RubyMysqlTui
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
-        TableExecutor.execute_add_column(state, client, table_name, col_name.strip, "#{type} #{null_constraint}")
+        state = TableExecutor.execute_add_column(state, client, table_name, col_name.strip, "#{type} #{null_constraint}")
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
@@ -70,7 +70,7 @@ module RubyMysqlTui
         new_name = prompt.ask("カラム '#{old_name}' の新しい名前を入力してください:")
         return state if new_name.nil? || new_name.strip.empty?
 
-        TableExecutor.execute_rename_column(state, client, state[:selected_table], old_name, new_name.strip)
+        state = TableExecutor.execute_rename_column(state, client, state[:selected_table], old_name, new_name.strip)
       rescue Mysql2::Error => e
         RubyMysqlTui.logger.error("Column Rename Error: #{e.message}")
         prompt.error("エラーが発生しました: #{e.message}")
@@ -86,7 +86,7 @@ module RubyMysqlTui
 
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にカラム '#{column_name}' を削除しますか？ (y/N)")
 
-        TableExecutor.execute_drop_column(state, client, state[:selected_table], column_name)
+        state = TableExecutor.execute_drop_column(state, client, state[:selected_table], column_name)
       rescue Mysql2::Error => e
         Deletable.handle_drop_error(prompt, e, state, 'Column')
       end
@@ -105,7 +105,7 @@ module RubyMysqlTui
         old_name = column_info['Field']
         type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
-        TableExecutor.execute_modify_column(
+        state = TableExecutor.execute_modify_column(
           state, client, state[:selected_table], old_name, "#{type} #{null_constraint}"
         )
       end
