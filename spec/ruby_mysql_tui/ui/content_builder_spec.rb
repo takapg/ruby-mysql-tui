@@ -298,31 +298,37 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with total recor
       expect(output).to include('Table: users (1-2 of 1250)')
     end
   end
+end
 
-  context 'when offset is non-zero' do
-    it 'shows correct range' do
-      records = [{ 'id' => 101, 'name' => 'Charlie' }]
-      state = {
-        records: records,
-        selected_table: 'users',
-        records_offset: 100,
-        total_records: 1250
-      }
-      output = described_class.build_view(state, width, height)
-      expect(output).to include('Table: users (101-101 of 1250)')
-    end
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with offset' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+
+  it 'shows correct range when offset is non-zero' do
+    records = [{ 'id' => 101, 'name' => 'Charlie' }]
+    state = {
+      records: records,
+      selected_table: 'users',
+      records_offset: 100,
+      total_records: 1250
+    }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Table: users (101-101 of 1250)')
   end
+end
 
-  context 'when no records exist' do
-    it 'shows zero count' do
-      state = {
-        records: [],
-        selected_table: 'users',
-        records_offset: 0,
-        total_records: 0
-      }
-      output = described_class.build_view(state, width, height)
-      expect(output).to include('Table: users (0 of 0)')
-    end
+RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with no records' do
+  let(:width) { 100 }
+  let(:height) { 20 }
+
+  it 'shows zero count when no records exist' do
+    state = {
+      records: [],
+      selected_table: 'users',
+      records_offset: 0,
+      total_records: 0
+    }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Table: users (0 of 0)')
   end
 end
