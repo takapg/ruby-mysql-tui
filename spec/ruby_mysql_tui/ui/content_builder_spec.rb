@@ -331,4 +331,15 @@ RSpec.describe RubyMysqlTui::UI::RecordsContentBuilder, 'header with no records'
     output = described_class.build_view(state, width, height)
     expect(output).to include('Table: users (0 of 0)')
   end
+
+  it 'shows correct total when records_size is zero but total is positive' do
+    state = {
+      records: [],
+      selected_table: 'users',
+      records_offset: 100,
+      total_records: 1250
+    }
+    output = described_class.build_view(state, width, height)
+    expect(output).to include('Table: users (0 of 1250)')
+  end
 end
