@@ -547,7 +547,8 @@ RSpec.describe 'E2E Table Creation' do
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('new_e2e_table', 'col1')
     allow(prompt).to receive(:select).and_return('INT')
-    allow(prompt).to receive(:yes?).and_return(false, false)
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
+    allow(prompt).to receive(:yes?).with('さらにカラムを追加しますか？').and_return(false)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(%w[existing_table new_e2e_table])
@@ -956,7 +957,7 @@ RSpec.describe 'E2E Table Column Modify' do # rubocop:disable Metrics/BlockLengt
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:select).and_return('BIGINT')
-    allow(prompt).to receive(:yes?).and_return(true)
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
 
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     allow(client).to receive(:list_tables).and_return(['test_table'])
