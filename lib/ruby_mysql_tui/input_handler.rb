@@ -52,7 +52,9 @@ module RubyMysqlTui
         state.merge(filter_query: query || '', selected_index: 0)
       elsif state[:focus] == :right && state[:view_mode] == :records
         query = prompt.ask('レコードフィルターキーワードを入力:')
-        state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
+        new_state = state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
+        new_state[:total_records] = client.count_records(state[:selected_table], filter_query: query) if state[:selected_table]
+        new_state
       end
     end
 
@@ -60,7 +62,9 @@ module RubyMysqlTui
       if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
         state.merge(filter_query: '', selected_index: 0)
       elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
-        state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
+        new_state = state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
+        new_state[:total_records] = client.count_records(state[:selected_table]) if state[:selected_table]
+        new_state
       end
     end
 

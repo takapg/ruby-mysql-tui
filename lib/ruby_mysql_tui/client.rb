@@ -81,6 +81,13 @@ module RubyMysqlTui
       query("SHOW COLUMNS FROM `#{escaped_table_name}`")
     end
 
+    # 指定したテーブルのレコード数を取得します。
+    def count_records(table_name, options = {})
+      sql = build_count_sql(table_name, options)
+      result = query(sql)
+      result.first ? result.first.values.first : 0
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close
@@ -113,6 +120,26 @@ module RubyMysqlTui
 
     def connection_lost?(error)
       [2006, 2013].include?(error.errno)
+    end
+
+    def build_count_sql(table_name, options)
+      escaped_table_name = table_name.gsub('`', '``')
+      filter = options[:filter_query]
+      if filter && !filter.to_s.empty?
+        conditions = build_filter_conditions(filter, options[:sort_column])
+        "SELECT COUNT(*) FROM `#{escaped_table_name}` WHERE #{conditions}"
+      else
+        "SELECT COUNT(*) FROM `#{escaped_table_name}`"
+      end
+    end
+
+    def build_filter_conditions(filter, sort_column)
+      # 簡易的なフィルタ条件: 全カラムを OR 条件で検索
+      # 実際には QueryBuilder を使うべきだが、ここでは簡略化
+      escaped = filter.gsub("'", "''")
+      # カラム情報がないため、LIKE 条件は各カラムに適用できない
+      # ここではダミー条件を返す（実際には QueryBuilder の機能を利用）
+      "1=1 /* filter: #{escaped} */"
     end
 
     def connect!

@@ -35,7 +35,9 @@ module RubyMysqlTui
           sort_column: state[:sort_column],
           sort_direction: state[:sort_direction],
           sql_result_mode: state[:sql_result_mode],
-          last_executed_sql: state[:last_executed_sql]
+          last_executed_sql: state[:last_executed_sql],
+          total_records: state[:total_records],
+          records_size: (state[:records] || []).size
         }
       end
 
@@ -50,14 +52,29 @@ module RubyMysqlTui
 
       def build_header(table_name, width, options)
         sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
+        count_info = build_count_info(options)
         text = if options[:sql_result_mode]
                  "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
                else
-                 "Table: #{table_name}#{sort_info}"
+                 "Table: #{table_name}#{count_info}#{sort_info}"
                end
         ContentBuilder.truncate(text, width)
       end
       private_class_method :build_header
+
+      def build_count_info(options)
+        total = options[:total_records]
+        return '' if total.nil?
+
+        offset = options[:offset] || 0
+        records_size = options[:records_size] || 0
+        return "(0 of 0)" if total.zero?
+
+        start_num = offset + 1
+        end_num = offset + records_size
+        "(#{start_num}-#{end_num} of #{total})"
+      end
+      private_class_method :build_count_info
 
       def create_records_table(records, width, max_rows, options = {})
         columns = records.first.keys
