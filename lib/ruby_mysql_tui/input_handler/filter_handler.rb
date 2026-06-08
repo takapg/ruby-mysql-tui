@@ -28,19 +28,26 @@ module RubyMysqlTui
       end
 
       def apply_record_filter!(state, client, filter)
+        update_filter_state!(state, filter)
+        fetch_filtered_records!(state, client)
+        state
+      end
+
+      private_class_method def update_filter_state!(state, filter)
         state[:records_filter_query] = filter.to_s
         state[:records_offset] = 0
         state[:selected_record_index] = 0
+      end
+
+      private_class_method def fetch_filtered_records!(state, client)
         return unless state[:selected_table] && client
 
-        records = client.list_records(
+        state[:records] = client.list_records(
           state[:selected_table], 0, InputHandler.query_options(state)
         )
-        total = client.count_records(
+        state[:total_records] = client.count_records(
           state[:selected_table], filter_query: state[:records_filter_query]
         )
-        state[:records] = records
-        state[:total_records] = total
       end
 
       def apply_item_filter!(state, filter)
