@@ -3,7 +3,7 @@
 require 'spec_helper'
 require_relative '../../../lib/ruby_mysql_tui/input_handler/table_manager'
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (success)' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (success)' do # rubocop:disable Metrics/BlockLength
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { items: %w[t1 t2], selected_index: 0, selected_db: 'test_db' } }
