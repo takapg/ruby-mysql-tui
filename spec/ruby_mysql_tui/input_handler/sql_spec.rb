@@ -371,3 +371,63 @@ RSpec.describe RubyMysqlTui::InputHandler, type: :module do
     end
   end
 end
+
+RSpec.describe RubyMysqlTui::InputHandler::SqlHistoryManager do
+  let(:temp_file) { Tempfile.new('ruby_mysql_tui_history_test') }
+  before { stub_const('RubyMysqlTui::InputHandler::SqlHistoryManager::HISTORY_FILE', temp_file.path) }
+  after { temp_file.unlink }
+
+  describe '.clear_history' do
+    it 'deletes the history file if it exists' do
+      File.write(temp_file.path, "SELECT 1\n")
+      expect(File).to exist(temp_file.path)
+      described_class.clear_history
+      expect(File).not_to exist(temp_file.path)
+    end
+
+    it 'does not raise error when file does not exist' do
+      File.delete(temp_file.path) if File.exist?(temp_file.path)
+      expect { described_class.clear_history }.not_to raise_error
+    end
+
+    it 'logs error when File.delete fails' do
+      allow(File).to receive(:exist?).and_return(true)
+      allow(File).to receive(:delete).and_raise(StandardError.new('Delete error'))
+      expect(RubyMysqlTui.logger).to receive(:error).with(/Failed to clear SQL history: Delete error/)
+      expect { described_class.clear_history }.not_to raise_error
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.handle_sql_history_clear' do
+    let(:state) { { sql_history: %w[SQL1 SQL2], sql_history_index: 1 } }
+
+    it 'clears sql_history and resets sql_history_index' do
+      allow(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:clear_history)
+      new_state, _redraw = described_class.handle_sql_history_clear(state)
+      expect(new_state[:sql_history]).to eq([])
+      expect(new_state[:sql_history_index]).to be_nil
+    end
+
+    it 'calls SqlHistoryManager.clear_history' do
+      expect(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:clear_history)
+      described_class.handle_sql_history_clear(state)
+    end
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler, type: :module do
+  describe '.process_sql_keypress with ctrl_k' do
+    let(:state) { { sql_history: %w[SQL1 SQL2], sql_history_index: 1, sql_input: 'SELECT' } }
+    let(:client) { double('Client') }
+
+    it 'handles ctrl_k by clearing history' do
+      event = double('Event', key: double('Key', name: :ctrl_k), value: nil)
+      allow(RubyMysqlTui::InputHandler::SqlHistoryManager).to receive(:clear_history)
+      new_state, _redraw = described_class.process_sql_keypress(event, state, client)
+      expect(new_state[:sql_history]).to eq([])
+      expect(new_state[:sql_history_index]).to be_nil
+    end
+  end
+end
