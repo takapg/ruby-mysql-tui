@@ -54,7 +54,7 @@ module RubyMysqlTui
         col_name = prompt.ask('追加するカラム名を入力してください:')
         return state if col_name.nil? || col_name.strip.empty?
 
-        type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
+        type = TablePromptHelper.prompt_type(prompt)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
         TableExecutor.execute_add_column(state, client, table_name, col_name.strip, "#{type} #{null_constraint}")
       rescue Mysql2::Error => e
@@ -103,7 +103,7 @@ module RubyMysqlTui
 
       private_class_method def modify_column(state, client, prompt, column_info)
         old_name = column_info['Field']
-        type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
+        type = TablePromptHelper.prompt_type(prompt)
         null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
         TableExecutor.execute_modify_column(
           state, client, state[:selected_table], old_name, "#{type} #{null_constraint}"

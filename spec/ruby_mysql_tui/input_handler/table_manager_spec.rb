@@ -34,6 +34,22 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (
     result = described_class.handle_create_table(state, client, prompt)
     expect(result[:items]).to eq(%w[t1 t2 new_table])
   end
+
+  it 'creates a table with custom data type when OTHER is selected' do
+    allow(prompt).to receive(:ask).and_return('new_table', 'price')
+    allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
+    allow(prompt).to receive(:ask).with('データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):').and_return('DECIMAL(10,2)')
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
+    allow(prompt).to receive(:yes?).with('さらにカラムを追加しますか？').and_return(false)
+    expect(client).to receive(:create_table).with(
+      'new_table',
+      [{ name: 'price', type: 'DECIMAL(10,2) NOT NULL' }]
+    )
+    expect(client).to receive(:list_tables).with('test_db').and_return(%w[t1 t2 new_table])
+
+    result = described_class.handle_create_table(state, client, prompt)
+    expect(result[:items]).to eq(%w[t1 t2 new_table])
+  end
 end
 
 RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_create_table (edge cases)' do
@@ -211,6 +227,19 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_add_column' do
     expect(result[:status_message]).to eq("Column 'new_col' added to 'test_table' successfully")
   end
 
+  it 'adds a column with custom data type' do
+    allow(prompt).to receive(:ask).and_return('price')
+    allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
+    allow(prompt).to receive(:ask).with('データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):').and_return('DECIMAL(10,2)')
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
+    expect(client).to receive(:add_column).with('test_table', 'price', 'DECIMAL(10,2) NULL')
+    expect(client).to receive(:list_table_structure).with('test_table').and_return([{ 'Field' => 'price' }])
+
+    result = described_class.handle_add_column(state, client, prompt)
+    expect(result[:records]).to eq([{ 'Field' => 'price' }])
+    expect(result[:status_message]).to eq("Column 'price' added to 'test_table' successfully")
+  end
+
   it 'returns state unchanged when column name is empty' do
     allow(prompt).to receive(:ask).and_return('  ')
     result = described_class.handle_add_column(state, client, prompt)
@@ -273,20 +302,49 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_rename_column 
   end
 end
 
-RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column' do
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column (standard type)' do
   let(:client) { instance_double('RubyMysqlTui::Client') }
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'age' }], selected_record_index: 0 } }
 
-  it 'modifies column type when a type is selected' do
+  it 'modifies column type' do
     allow(prompt).to receive(:select).and_return('BIGINT')
     allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
     expect(RubyMysqlTui::InputHandler::TableExecutor)
-      .to receive(:execute_modify_column).with(state, client, 'test_table', 'age', 'BIGINT NOT NULL').and_return(state)
+      .to receive(:execute_modify_column).with(
+        state, client, 'test_table', 'age', 'BIGINT NOT NULL'
+      ).and_return(state)
 
     result = described_class.handle_modify_column(state, client, prompt)
     expect(result).to eq(state)
   end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column (custom type)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'age' }], selected_record_index: 0 } }
+
+  it 'modifies column type with custom data type' do
+    allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
+    allow(prompt).to receive(:ask).with(
+      'データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):'
+    ).and_return('DECIMAL(10,2)')
+    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
+    expect(RubyMysqlTui::InputHandler::TableExecutor)
+      .to receive(:execute_modify_column).with(
+        state, client, 'test_table', 'age', 'DECIMAL(10,2) NULL'
+      ).and_return(state)
+
+    result = described_class.handle_modify_column(state, client, prompt)
+    expect(result).to eq(state)
+  end
+end
+
+RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column (edge cases)' do
+  let(:client) { instance_double('RubyMysqlTui::Client') }
+  let(:prompt) { instance_double('TTY::Prompt') }
+  let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'age' }], selected_record_index: 0 } }
 
   it 'returns state unchanged when no column is selected' do
     state[:records] = []
