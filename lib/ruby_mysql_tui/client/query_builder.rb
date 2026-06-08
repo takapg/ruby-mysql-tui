@@ -32,18 +32,19 @@ module RubyMysqlTui
         escaped_table_name = table_name.gsub('`', '``')
         filter = options[:filter_query]
         if filter && !filter.to_s.empty?
-          conditions = build_filter_conditions(filter)
+          conditions = build_filter_conditions(filter, table_name)
           "SELECT COUNT(*) FROM `#{escaped_table_name}` WHERE #{conditions}"
         else
           "SELECT COUNT(*) FROM `#{escaped_table_name}`"
         end
       end
 
-      def build_filter_conditions(filter)
+      def build_filter_conditions(filter, table_name)
         return '1=1' if filter.nil? || filter.to_s.empty?
 
+        columns = list_columns(table_name)
         escaped = filter.gsub("'", "''")
-        "CONCAT_WS(' ', #{columns.join(', ')}) LIKE '%#{escaped}%'"
+        "CONCAT_WS(' ', #{columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')}) LIKE '%#{escaped}%'"
       end
     end
   end

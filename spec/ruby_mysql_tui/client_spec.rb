@@ -392,6 +392,31 @@ RSpec.describe RubyMysqlTui::Client, '#drop_column' do
   end
 end
 
+RSpec.describe RubyMysqlTui::Client, '#count_records' do
+  include_context 'mysql client'
+  let(:client) { described_class.new(config) }
+  let(:table_name) { 'users' }
+
+  it 'executes SELECT COUNT(*) and returns the count' do
+    expect(mock_mysql_client).to receive(:query).with("SELECT COUNT(*) FROM `#{table_name}`").and_return([{ 'count' => 42 }])
+    expect(client.count_records(table_name)).to eq(42)
+  end
+
+  it 'applies filter condition when filter_query is provided' do
+    columns = %w[id name email]
+    allow(client).to receive(:list_columns).with(table_name).and_return(columns)
+    expect(mock_mysql_client).to receive(:query).with(
+      "SELECT COUNT(*) FROM `#{table_name}` WHERE CONCAT_WS(' ', `id`, `name`, `email`) LIKE '%test%'"
+    ).and_return([{ 'count' => 5 }])
+    expect(client.count_records(table_name, filter_query: 'test')).to eq(5)
+  end
+
+  it 'returns 0 when count query returns empty result' do
+    expect(mock_mysql_client).to receive(:query).and_return([])
+    expect(client.count_records(table_name)).to eq(0)
+  end
+end
+
 RSpec.describe RubyMysqlTui::Client, '#modify_column' do
   include_context 'mysql client'
   let(:client) { described_class.new(config) }

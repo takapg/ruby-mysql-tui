@@ -7,12 +7,12 @@ module RubyMysqlTui
       module_function
 
       def handle_filter_input(val, state, client = nil)
-        return clear_filter(state) if val == "\e"
+        return clear_filter(state, client) if val == "\e"
 
         start_filter_input(state, client)
       end
 
-      private_class_method def start_filter_input(state, client)
+      def start_filter_input(state, client)
         prompt = TTY::Prompt.new
         filter = prompt.ask('フィルタ条件を入力してください:')
 
@@ -27,7 +27,7 @@ module RubyMysqlTui
         state
       end
 
-      private_class_method def apply_record_filter(state, client, filter)
+      def apply_record_filter(state, client, filter)
         state[:records_filter_query] = filter.to_s
         state[:records_offset] = 0
         state[:selected_record_index] = 0
@@ -41,16 +41,19 @@ module RubyMysqlTui
         )
       end
 
-      private_class_method def apply_item_filter(state, filter)
+      def apply_item_filter(state, filter)
         state[:filter_query] = filter.to_s
         state[:selected_index] = 0
       end
 
-      private_class_method def clear_filter(state)
+      def clear_filter(state, client = nil)
         if state[:focus] == :right
           state[:records_filter_query] = ''
           state[:records_offset] = 0
           state[:selected_record_index] = 0
+          if state[:selected_table] && client
+            state[:total_records] = client.count_records(state[:selected_table])
+          end
         else
           state[:filter_query] = ''
           state[:selected_index] = 0
