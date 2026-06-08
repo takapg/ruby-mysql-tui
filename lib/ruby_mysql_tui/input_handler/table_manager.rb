@@ -4,6 +4,8 @@ require_relative 'deletable'
 require_relative 'table_prompt_helper'
 require_relative 'table_executor'
 require_relative 'table_error_handler'
+require_relative 'table_creator'
+require_relative 'table_dropper'
 
 module RubyMysqlTui
   module InputHandler
