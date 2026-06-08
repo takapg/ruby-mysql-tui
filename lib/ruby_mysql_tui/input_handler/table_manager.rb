@@ -16,9 +16,6 @@ module RubyMysqlTui
         return state if name.nil? || name.strip.empty?
 
         TableExecutor.execute_create_table(state, client, prompt, name.strip)
-      rescue Mysql2::Error => e
-        TableErrorHandler.handle_create_error(prompt, e)
-        state
       end
 
       def handle_drop_table(state, client, prompt)
@@ -28,8 +25,6 @@ module RubyMysqlTui
         return Deletable.cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
 
         TableExecutor.execute_drop_table(state, client, table_name)
-      rescue Mysql2::Error => e
-        Deletable.handle_drop_error(prompt, e, state, 'Table')
       end
 
       def handle_rename_table(state, client, prompt)
