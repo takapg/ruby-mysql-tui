@@ -63,7 +63,7 @@ module RubyMysqlTui
 
         offset = options[:offset] || 0
         records_size = options[:records_size] || 0
-        return "(0 of 0)" if total.zero?
+        return '(0 of 0)' if total.zero?
 
         start_num = offset + 1
         end_num = offset + records_size

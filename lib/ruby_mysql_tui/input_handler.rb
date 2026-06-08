@@ -7,6 +7,7 @@ require_relative 'input_handler/record_manager'
 require_relative 'input_handler/navigation'
 require_relative 'input_handler/action_handler'
 require_relative 'input_handler/scroll_handler'
+require_relative 'input_handler/filter_handler'
 require_relative 'ui/layout'
 
 module RubyMysqlTui
@@ -24,7 +25,7 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_special_keys(val, state, client = nil)
-      return handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
+      return FilterHandler.handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
 
       nil
@@ -38,60 +39,6 @@ module RubyMysqlTui
         handle_key_input(extract_key_name(event), state, client)
     end
 
-    private_class_method def handle_filter_input(val, state, client = nil)
-      return handle_filter_start(state, client) if val == '/'
-      return handle_filter_clear(state, client) if val == "\e"
-
-      nil
-    end
-
-    private_class_method def handle_filter_start(state, client = nil)
-      return handle_filter_start_left(state) if state[:focus] == :left
-      return handle_filter_start_right(state, client) if state[:focus] == :right && state[:view_mode] == :records
-
-      state
-    end
-
-    private_class_method def handle_filter_start_left(state)
-      prompt = TTY::Prompt.new
-      query = prompt.ask('フィルターキーワードを入力:')
-      state.merge(filter_query: query || '', selected_index: 0)
-    end
-
-    private_class_method def handle_filter_start_right(state, client)
-      prompt = TTY::Prompt.new
-      query = prompt.ask('レコードフィルターキーワードを入力:')
-      new_state = state.merge(
-        records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0
-      )
-      update_total_records(new_state, client, filter_query: query)
-      new_state
-    end
-
-    private_class_method def handle_filter_clear(state, client = nil)
-      return handle_filter_clear_left(state) if state[:focus] == :left && !state[:filter_query]&.empty?
-      return handle_filter_clear_right(state, client) if state[:focus] == :right && !state[:records_filter_query]&.empty?
-
-      state
-    end
-
-    private_class_method def handle_filter_clear_left(state)
-      state.merge(filter_query: '', selected_index: 0)
-    end
-
-    private_class_method def handle_filter_clear_right(state, client)
-      new_state = state.merge(
-        records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0
-      )
-      update_total_records(new_state, client)
-      new_state
-    end
-
-    private_class_method def update_total_records(state, client, options = {})
-      return unless client && state[:selected_table] && client.respond_to?(:count_records)
-
-      state[:total_records] = client.count_records(state[:selected_table], options)
-    end
 
     private_class_method def detail_back_pressed?(val, state)
       state[:view_mode] == :record_detail && ['b', "\e"].include?(val)
