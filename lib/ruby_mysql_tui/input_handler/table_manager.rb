@@ -4,6 +4,8 @@ require_relative 'deletable'
 require_relative 'table_prompt_helper'
 require_relative 'table_executor'
 require_relative 'table_error_handler'
+require_relative 'table_creator'
+require_relative 'table_dropper'
 
 module RubyMysqlTui
   module InputHandler
@@ -12,24 +14,11 @@ module RubyMysqlTui
       module_function
 
       def handle_create_table(state, client, prompt)
-        name = prompt.ask('作成するテーブル名を入力してください:')
-        return state if name.nil? || name.strip.empty?
-
-        TableExecutor.execute_create_table(state, client, prompt, name.strip)
-      rescue Mysql2::Error => e
-        TableErrorHandler.handle_create_error(prompt, e)
-        state
+        TableCreator.create(state, client, prompt)
       end
 
       def handle_drop_table(state, client, prompt)
-        table_name = state[:items][state[:selected_index]]
-        return state if table_name.nil?
-
-        return Deletable.cancel_deletion(state) unless prompt.yes?("本当にテーブル '#{table_name}' を削除しますか？ (y/N)")
-
-        TableExecutor.execute_drop_table(state, client, table_name)
-      rescue Mysql2::Error => e
-        Deletable.handle_drop_error(prompt, e, state, 'Table')
+        TableDropper.drop(state, client, prompt)
       end
 
       def handle_rename_table(state, client, prompt)
@@ -66,7 +55,8 @@ module RubyMysqlTui
         return state if col_name.nil? || col_name.strip.empty?
 
         type = prompt.select('データ型を選択してください:', TablePromptHelper::COLUMN_TYPES)
-        TableExecutor.execute_add_column(state, client, table_name, col_name.strip, type)
+        null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
+        TableExecutor.execute_add_column(state, client, table_name, col_name.strip, "#{type} #{null_constraint}")
       rescue Mysql2::Error => e
         TableErrorHandler.handle_add_column_error(prompt, e)
         state
@@ -105,12 +95,19 @@ module RubyMysqlTui
         column_info = fetch_selected_column(state)
         return state if column_info.nil?
 
-        old_name = column_info['Field']
-        type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
-        TableExecutor.execute_modify_column(state, client, state[:selected_table], old_name, type)
+        modify_column(state, client, prompt, column_info)
       rescue Mysql2::Error => e
         TableErrorHandler.handle_modify_column_error(prompt, e)
         state
+      end
+
+      private_class_method def modify_column(state, client, prompt, column_info)
+        old_name = column_info['Field']
+        type = prompt.select("カラム '#{old_name}' の新しいデータ型を選択してください:", TablePromptHelper::COLUMN_TYPES)
+        null_constraint = prompt.yes?('NULLを許容しますか？') ? 'NULL' : 'NOT NULL'
+        TableExecutor.execute_modify_column(
+          state, client, state[:selected_table], old_name, "#{type} #{null_constraint}"
+        )
       end
 
       private_class_method def fetch_selected_column(state)
