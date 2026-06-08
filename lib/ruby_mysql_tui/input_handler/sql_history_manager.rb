@@ -24,6 +24,13 @@ module RubyMysqlTui
       rescue StandardError => e
         RubyMysqlTui.logger.error("Failed to save SQL history: #{e.message}")
       end
+
+      # 履歴ファイルを削除し、履歴をクリアします。
+      def clear_history
+        FileUtils.rm_f(HISTORY_FILE)
+      rescue StandardError => e
+        RubyMysqlTui.logger.error("Failed to clear SQL history: #{e.message}")
+      end
     end
   end
 end

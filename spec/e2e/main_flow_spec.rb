@@ -88,13 +88,27 @@ module E2EEventHelpers
 end
 
 module E2EFlowHelpers
-  def track_states(client)
-    states = [RubyMysqlTui.initial_state(client).dup]
-    allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original do |m, *args|
+  def track_input_state(states)
+    lambda do |m, *args|
       res = m.call(*args)
       states << res.dup if res.is_a?(Hash)
       res
     end
+  end
+
+  def track_loop_input_state(states)
+    lambda do |m, *args|
+      res = m.call(*args)
+      state = res.is_a?(Array) ? res.first : res
+      states << state.dup if state.is_a?(Hash)
+      res
+    end
+  end
+
+  def track_states(client)
+    states = [RubyMysqlTui.initial_state(client).dup]
+    allow(RubyMysqlTui).to receive(:handle_input).and_wrap_original(&track_input_state(states))
+    allow(RubyMysqlTui).to receive(:handle_loop_input).and_wrap_original(&track_loop_input_state(states))
     states
   end
 
@@ -659,6 +673,42 @@ RSpec.describe 'E2E SQL History' do
     RubyMysqlTui.run_main_loop(client)
 
     expect(states.last[:sql_history]).to include('SELECT 1')
+  end
+end
+
+RSpec.describe 'E2E SQL History Clear' do
+  include_context 'e2e setup'
+
+  it 'clears history and prevents recall after ctrl_k' do
+    allow(TTY::Reader).to receive(:new).and_return(reader)
+    # s -> SELECT 1 -> Enter -> s -> Ctrl+K -> Up -> q
+    events = [
+      make_event('s', :s),
+      make_event('S', :unknown), make_event('E', :unknown), make_event('L', :unknown),
+      make_event('E', :unknown), make_event('C', :unknown), make_event('T', :unknown),
+      make_event(' ', :unknown), make_event('1', :unknown),
+      make_event("\r", :return),
+      make_event('s', :s),
+      make_event("\x0B", :ctrl_k),
+      make_event("\e[A", :up),
+      make_event('q', :q)
+    ]
+    allow(reader).to receive(:read_keypress).and_return(*events)
+
+    allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
+    allow(client).to receive(:query).and_return([{ '1' => 1 }])
+
+    states = track_states(client)
+    RubyMysqlTui.run_main_loop(client)
+
+    # 履歴クリア後、state[:sql_history] が空になっていることを検証
+    history_cleared_index = states.index { |s| s[:sql_history] == [] }
+    expect(history_cleared_index).not_to be_nil
+
+    # Upキー押下後の状態を検証（履歴から復元されず空のまま）
+    post_up_state = states[history_cleared_index + 1]
+    expect(post_up_state[:sql_input]).to eq('')
+    expect(post_up_state[:sql_history_index]).to be_nil
   end
 end
 
