@@ -307,31 +307,35 @@ RSpec.describe RubyMysqlTui::InputHandler::TableManager, '.handle_modify_column 
   let(:prompt) { instance_double('TTY::Prompt') }
   let(:state) { { selected_table: 'test_table', records: [{ 'Field' => 'age' }], selected_record_index: 0 } }
 
-  it 'modifies column type when a type is selected' do
-    allow(prompt).to receive(:select).and_return('BIGINT')
-    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
-    expect(RubyMysqlTui::InputHandler::TableExecutor)
-      .to receive(:execute_modify_column).with(
-        state, client, 'test_table', 'age', 'BIGINT NOT NULL'
-      ).and_return(state)
+  context 'when a standard type is selected' do
+    it 'modifies column type' do
+      allow(prompt).to receive(:select).and_return('BIGINT')
+      allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(false)
+      expect(RubyMysqlTui::InputHandler::TableExecutor)
+        .to receive(:execute_modify_column).with(
+          state, client, 'test_table', 'age', 'BIGINT NOT NULL'
+        ).and_return(state)
 
-    result = described_class.handle_modify_column(state, client, prompt)
-    expect(result).to eq(state)
+      result = described_class.handle_modify_column(state, client, prompt)
+      expect(result).to eq(state)
+    end
   end
 
-  it 'modifies column type with custom data type' do
-    allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
-    allow(prompt).to receive(:ask).with(
-      'データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):'
-    ).and_return('DECIMAL(10,2)')
-    allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
-    expect(RubyMysqlTui::InputHandler::TableExecutor)
-      .to receive(:execute_modify_column).with(
-        state, client, 'test_table', 'age', 'DECIMAL(10,2) NULL'
-      ).and_return(state)
+  context 'when a custom data type is selected' do
+    it 'modifies column type with custom data type' do
+      allow(prompt).to receive(:select).and_return('OTHER (Custom Input)')
+      allow(prompt).to receive(:ask).with(
+        'データ型を入力してください (例: VARCHAR(64), DECIMAL(10,2)):'
+      ).and_return('DECIMAL(10,2)')
+      allow(prompt).to receive(:yes?).with('NULLを許容しますか？').and_return(true)
+      expect(RubyMysqlTui::InputHandler::TableExecutor)
+        .to receive(:execute_modify_column).with(
+          state, client, 'test_table', 'age', 'DECIMAL(10,2) NULL'
+        ).and_return(state)
 
-    result = described_class.handle_modify_column(state, client, prompt)
-    expect(result).to eq(state)
+      result = described_class.handle_modify_column(state, client, prompt)
+      expect(result).to eq(state)
+    end
   end
 end
 
