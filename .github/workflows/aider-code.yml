@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            aider --model openai/moonshotai/kimi-k2.6 \
+            aider --model openai/stepfun-ai/step-3.7-flash \
                   --editor-model openai/openai/gpt-oss-120b \
                   --weak-model openai/openai/gpt-oss-120b \
                   --architect \
