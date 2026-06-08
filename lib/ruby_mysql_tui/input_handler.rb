@@ -27,7 +27,9 @@ module RubyMysqlTui
     end
 
     private_class_method def handle_special_keys(val, state, client = nil)
-      return FilterHandler.handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
+      if ['/', "\e"].include?(val)
+        return FilterHandler.handle_filter_input(val, state, client)
+      end
       return state.merge(show_help: true) if val == '?'
 
       nil
