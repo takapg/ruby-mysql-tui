@@ -26,8 +26,8 @@ jobs:
           config.model: "moonshotai/kimi-k2.6"
           config.ai_timeout: "600"
           # GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_BASE: https://integrate.api.nvidia.com/v1
+          OPENAI__KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI__API_BASE: https://integrate.api.nvidia.com/v1
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "false"
