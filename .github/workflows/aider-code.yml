@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            timeout 180 aider --model openai/google/gemma-4-31b-it \
+            timeout 180 aider --model openai/mistralai/mistral-medium-3.5-128b \
                   --edit-format diff \
                   --yes-always \
                   --chat-language japanese \
