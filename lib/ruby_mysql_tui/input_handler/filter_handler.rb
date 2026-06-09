@@ -4,8 +4,6 @@ module RubyMysqlTui
   module InputHandler
     # FilterHandler は '/' キーによるフィルタ入力と 'Esc' キーによるフィルタクリアを処理します。
     module FilterHandler
-      module_function
-
       # The filter input methods are internal and should not be public.
 
       def handle_filter_input(val, state, client = nil)
@@ -15,7 +13,7 @@ module RubyMysqlTui
         state
       end
 
-      module_function def start_filter_input(state, client, prompt)
+      def start_filter_input(state, client, prompt)
         filter = prompt.ask('フィルタ条件を入力してください:')
 
         if state[:focus] == :right
@@ -29,19 +27,17 @@ module RubyMysqlTui
         state
       end
 
-      module_function def apply_record_filter!(state, client, filter)
+      def apply_record_filter!(state, client, filter)
         update_filter_state!(state, filter)
         fetch_filtered_records!(state, client)
         state
       end
 
-      module_function def update_filter_state!(state, filter)
+      def update_filter_state!(state, filter)
         state[:records_filter_query] = filter.to_s
         state[:records_offset] = 0
         state[:selected_record_index] = 0
       end
-
-      module_function
 
       def fetch_filtered_records!(state, client)
         return unless state[:selected_table] && client
@@ -54,12 +50,12 @@ module RubyMysqlTui
         )
       end
 
-      module_function def apply_item_filter!(state, filter)
+      def apply_item_filter!(state, filter)
         state[:filter_query] = filter.to_s
         state[:selected_index] = 0
       end
 
-      module_function def clear_filter!(state, client = nil)
+      def clear_filter!(state, client = nil)
         if state[:focus] == :right
           clear_right_filter(state, client)
         else
@@ -69,7 +65,7 @@ module RubyMysqlTui
         state
       end
 
-      module_function def clear_right_filter(state, client)
+      def clear_right_filter(state, client)
         state[:records_filter_query] = ''
         state[:records_offset] = 0
         state[:selected_record_index] = 0
