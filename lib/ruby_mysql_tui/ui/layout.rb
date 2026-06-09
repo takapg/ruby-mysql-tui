@@ -21,7 +21,17 @@ module RubyMysqlTui
       private
 
       def calculate_heights
-        @height = TTY::Screen.height
+        # TTY::Screen may raise errors in non‑interactive test environments.
+        # Fallback to sensible defaults when height cannot be obtained.
+        @height = if TTY::Screen.respond_to?(:height)
+                    begin
+                      TTY::Screen.height
+                    rescue StandardError
+                      24
+                    end
+                  else
+                    24
+                  end
         @header_h = 3
         @footer_h = 3
         @log_h = 5
@@ -29,7 +39,16 @@ module RubyMysqlTui
       end
 
       def calculate_widths
-        @width = TTY::Screen.width
+        # Similar fallback for width.
+        @width = if TTY::Screen.respond_to?(:width)
+                   begin
+                     TTY::Screen.width
+                   rescue StandardError
+                     80
+                   end
+                 else
+                   80
+                 end
         @left_w = [(@width * 0.3).to_i, 10].max.clamp(0, [@width - 2, 0].max)
         @right_w = [@width - @left_w - 1, 0].max
       end
