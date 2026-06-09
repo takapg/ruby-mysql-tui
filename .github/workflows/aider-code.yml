@@ -95,7 +95,7 @@ jobs:
             echo "\`\`\`" >> .aider.chat.history.md
             echo "---" >> .aider.chat.history.md
 
-            timeout 180 aider --model openai/deepseek-ai/deepseek-v4-pro \
+            timeout 180 aider --model openai/deepseek-ai/deepseek-v4-flash \
                   --edit-format diff \
                   --yes-always \
                   --chat-language japanese \
