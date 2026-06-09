@@ -4,7 +4,7 @@ module RubyMysqlTui
   module InputHandler
     # FilterHandler は '/' キーによるフィルタ入力と 'Esc' キーによるフィルタクリアを処理します。
     module FilterHandler
-      module_function
+      private_class_method :start_filter_input, :apply_record_filter!
 
       def handle_filter_input(val, state, client = nil)
         return clear_filter!(state, client) if val == "\e"

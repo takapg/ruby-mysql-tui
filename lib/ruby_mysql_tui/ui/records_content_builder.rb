@@ -48,11 +48,14 @@ module RubyMysqlTui
       def build_header(table_name, width, options)
         sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
         count_info = build_count_info(options)
-        text = if options[:sql_result_mode]
-                 "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
-               else
-                 "Table: #{table_name} #{count_info}#{sort_info}"
-               end
+        if options[:sql_result_mode]
+          text = "SQL Result: #{options[:last_executed_sql]}#{sort_info}"
+        else
+          header = "Table: #{table_name}"
+          header += " #{count_info}" unless count_info.empty?
+          header += sort_info
+          text = header
+        end
         ContentBuilder.truncate(text, width)
       end
       private_class_method :build_header
