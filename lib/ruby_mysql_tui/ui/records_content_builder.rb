@@ -45,7 +45,7 @@ module RubyMysqlTui
         "#{header}\n\n#{table_output}"
       end
 
-      def build_header(table_name, width, options)
+      def build_header(table_name, width, options) # rubocop:disable Metrics/MethodLength
         sort_info = options[:sort_column] ? " (Sorted by #{options[:sort_column]} #{options[:sort_direction]})" : ''
         count_info = build_count_info(options)
         if options[:sql_result_mode]
