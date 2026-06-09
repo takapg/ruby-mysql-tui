@@ -16,16 +16,19 @@ module RubyMysqlTui
       end
 
       def start_filter_input(state, client, prompt)
+        # state を直接変更せず、コピーしたハッシュで操作して安全性を確保
+        new_state = state.dup
         filter = prompt.ask('フィルタ条件を入力してください:')
 
-        if state[:focus] == :right
-          apply_record_filter!(state, client, filter)
+        if new_state[:focus] == :right
+          apply_record_filter!(new_state, client, filter)
         else
-          apply_item_filter!(state, filter)
+          apply_item_filter!(new_state, filter)
         end
 
-        state
+        new_state
       rescue TTY::Reader::InputInterrupt
+        # 入力が中断された場合は元の state をそのまま返す
         state
       end
 
@@ -58,13 +61,15 @@ module RubyMysqlTui
       end
 
       def clear_filter!(state, client = nil)
-        if state[:focus] == :right
-          clear_right_filter(state, client)
+        # state を直接変更せず、コピーしたハッシュで操作
+        new_state = state.dup
+        if new_state[:focus] == :right
+          clear_right_filter(new_state, client)
         else
-          state[:filter_query] = ''
-          state[:selected_index] = 0
+          new_state[:filter_query] = ''
+          new_state[:selected_index] = 0
         end
-        state
+        new_state
       end
 
       def clear_right_filter(state, client)
