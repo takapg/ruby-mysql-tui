@@ -8,9 +8,9 @@ module RubyMysqlTui
 
       def handle_filter_input(val, state, client = nil)
         return clear_filter!(state, client) if val == "\e"
+        return start_filter_input(state, client, TTY::Prompt.new) if val == '/'
 
-        prompt = TTY::Prompt.new
-        start_filter_input(state, client, prompt)
+        state
       end
 
       def start_filter_input(state, client, prompt)
