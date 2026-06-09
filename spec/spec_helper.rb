@@ -17,4 +17,13 @@ RSpec.configure do |config|
   config.around(:each) do |example|
     Timeout.timeout(5) { example.run }
   end
+
+  def capture_stdout
+    out = StringIO.new
+    $stdout = out
+    yield
+    out.string
+  ensure
+    $stdout = STDOUT
+  end
 end

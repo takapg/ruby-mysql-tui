@@ -190,7 +190,8 @@ RSpec.describe 'E2E Navigation' do
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
     expect(client).to receive(:list_records).with('test_table', 0).and_call_original
-    expect { RubyMysqlTui.run_main_loop(client) }.to output(/Table: test_table \(0 of 0\)/).to_stdout
+    output = capture_stdout { RubyMysqlTui.run_main_loop(client) }
+    expect(output).to include('Table: test_table (0 of 0)')
     expect(states.any? { |s| s[:view_mode] == :databases }).to be true
     expect(states.any? { |s| s[:view_mode] == :tables }).to be true
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
