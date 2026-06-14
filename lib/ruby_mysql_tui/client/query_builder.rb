@@ -16,8 +16,9 @@ module RubyMysqlTui
         return sql if query.nil? || query.empty?
 
         columns = list_columns(table_name)
-        escaped = "%#{@connection.escape(query)}%"
-        where = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped}'" }.join(' OR ')
+        escaped = @connection.escape(query).gsub(/([%_])/, '\\\\\1')
+        escaped_val = "%#{escaped}%"
+        where = columns.map { |col| "`#{col.gsub('`', '``')}` LIKE '#{escaped_val}' ESCAPE '\\\\'" }.join(' OR ')
         "#{sql} WHERE (#{where})"
       end
 
@@ -26,6 +27,26 @@ module RubyMysqlTui
 
         dir = %w[ASC DESC].include?(direction.to_s.upcase) ? direction.to_s.upcase : 'ASC'
         "#{sql} ORDER BY `#{column.gsub('`', '``')}` #{dir}"
+      end
+
+      def build_count_sql(table_name, options)
+        escaped_table_name = table_name.gsub('`', '``')
+        filter = options[:filter_query]
+        if filter && !filter.to_s.empty?
+          conditions = build_filter_conditions(filter, table_name)
+          "SELECT COUNT(*) FROM `#{escaped_table_name}` WHERE #{conditions}"
+        else
+          "SELECT COUNT(*) FROM `#{escaped_table_name}`"
+        end
+      end
+
+      def build_filter_conditions(filter, table_name)
+        return '1=1' if filter.nil? || filter.to_s.empty?
+
+        columns = list_columns(table_name)
+        escaped = @connection.escape(filter).gsub(/([%_])/, '\\\\\1')
+        column_list = columns.map { |col| "`#{col.gsub('`', '``')}`" }.join(', ')
+        "CONCAT_WS(' ', #{column_list}) LIKE '%#{escaped}%' ESCAPE '\\\\'"
       end
     end
   end

@@ -7,6 +7,7 @@ require_relative 'input_handler/record_manager'
 require_relative 'input_handler/navigation'
 require_relative 'input_handler/action_handler'
 require_relative 'input_handler/scroll_handler'
+require_relative 'input_handler/filter_handler'
 require_relative 'ui/layout'
 
 module RubyMysqlTui
@@ -19,16 +20,19 @@ module RubyMysqlTui
       return state.merge(show_help: false) if state[:show_help]
 
       state[:status_message] = nil
-      handle_special_keys(val, state) ||
-        handle_navigation_and_actions(val, event, state, client)
+      special_state = handle_special_keys(val, state, client)
+      return special_state unless special_state.nil?
+
+      handle_navigation_and_actions(val, event, state, client)
     end
 
-    private_class_method def handle_special_keys(val, state)
-      return handle_filter_input(val, state) if ['/', "\e"].include?(val)
+    def handle_special_keys(val, state, client = nil)
+      return FilterHandler.handle_filter_input(val, state, client) if ['/', "\e"].include?(val)
       return state.merge(show_help: true) if val == '?'
 
       nil
     end
+    private :handle_special_keys
 
     private_class_method def handle_navigation_and_actions(val, event, state, client)
       return state.merge(view_mode: :records) if detail_back_pressed?(val, state)
@@ -36,32 +40,6 @@ module RubyMysqlTui
 
       ActionHandler.handle_action_key(val, state, client) ||
         handle_key_input(extract_key_name(event), state, client)
-    end
-
-    private_class_method def handle_filter_input(val, state)
-      return handle_filter_start(state) if val == '/'
-      return handle_filter_clear(state) if val == "\e"
-
-      nil
-    end
-
-    private_class_method def handle_filter_start(state)
-      prompt = TTY::Prompt.new
-      if state[:focus] == :left
-        query = prompt.ask('フィルターキーワードを入力:')
-        state.merge(filter_query: query || '', selected_index: 0)
-      elsif state[:focus] == :right && state[:view_mode] == :records
-        query = prompt.ask('レコードフィルターキーワードを入力:')
-        state.merge(records_filter_query: query || '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-      end
-    end
-
-    private_class_method def handle_filter_clear(state)
-      if state[:focus] == :left && state[:filter_query] && !state[:filter_query].empty?
-        state.merge(filter_query: '', selected_index: 0)
-      elsif state[:focus] == :right && state[:records_filter_query] && !state[:records_filter_query].empty?
-        state.merge(records_filter_query: '', selected_record_index: 0, records_offset: 0, page_offset: 0)
-      end
     end
 
     private_class_method def detail_back_pressed?(val, state)

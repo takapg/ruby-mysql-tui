@@ -13,6 +13,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_next_page success'
     allow(mock_result).to receive(:empty?).and_raise(NoMethodError, "undefined method `empty?' for #<Mysql2::Result...>")
 
     allow(client).to receive(:list_records).and_return(mock_result)
+    allow(client).to receive(:count_records).and_return(1)
 
     expect do
       described_class.fetch_next_page(state, client, page_offset: 0, size: 0)
@@ -33,6 +34,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_next_page empty' d
     allow(mock_result).to receive(:empty?).and_raise(NoMethodError)
 
     allow(client).to receive(:list_records).and_return(mock_result)
+    allow(client).to receive(:count_records).and_return(0)
 
     described_class.fetch_next_page(state, client, page_offset: 0, size: 10)
     expect(state[:records_offset]).to eq(9)
@@ -58,6 +60,7 @@ RSpec.describe RubyMysqlTui::InputHandler::Pagination, 'fetch_prev_page' do
       allow(mock_result).to receive(:empty?).and_raise(NoMethodError)
 
       allow(client).to receive(:list_records).and_return(mock_result)
+      allow(client).to receive(:count_records).and_return(1)
 
       expect do
         described_class.fetch_prev_page(state, client)

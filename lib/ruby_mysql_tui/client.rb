@@ -81,6 +81,13 @@ module RubyMysqlTui
       query("SHOW COLUMNS FROM `#{escaped_table_name}`")
     end
 
+    # 指定したテーブルのレコード数を取得します。
+    def count_records(table_name, options = {})
+      sql = build_count_sql(table_name, options)
+      result = query(sql)
+      result.first ? result.first.values.first : 0
+    end
+
     # 接続を閉じます。
     def close
       @connection&.close

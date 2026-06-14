@@ -239,6 +239,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down)' do
 
     next_page = Array.new(100) { { 'id' => 1 } }
     allow(client).to receive(:list_records).with('users', 100, any_args).and_return(next_page)
+    allow(client).to receive(:count_records).and_return(200)
 
     down_event = double('Event', value: nil, key: double('Key', name: :down))
     result = RubyMysqlTui.handle_input(down_event, state, client)
@@ -266,6 +267,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Down Boundary)' do
     )
 
     allow(client).to receive(:list_records).with('users', 150, any_args).and_return([])
+    allow(client).to receive(:count_records).and_return(150)
 
     down_event = double('Event', value: nil, key: double('Key', name: :down))
     result = RubyMysqlTui.handle_input(down_event, state, client)
@@ -292,6 +294,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Page Offset)' 
 
     prev_page = Array.new(100) { { 'id' => 0 } }
     allow(client).to receive(:list_records).with('users', 0, any_args).and_return(prev_page)
+    allow(client).to receive(:count_records).and_return(200)
 
     up_event = double('Event', value: nil, key: double('Key', name: :up))
     result = RubyMysqlTui.handle_input(up_event, state, client)
@@ -318,6 +321,7 @@ RSpec.describe RubyMysqlTui, 'Integration flow (Pagination - Up - Empty Next Pag
     )
 
     allow(client).to receive(:list_records).with('users', 100, any_args).and_return([])
+    allow(client).to receive(:count_records).and_return(100)
 
     down_event = double('Event', value: nil, key: double('Key', name: :down))
     result = RubyMysqlTui.handle_input(down_event, state, client)

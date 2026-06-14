@@ -64,7 +64,17 @@ module RubyMysqlTui
                      filter_query: '', records_filter_query: '', sql_result_mode: false)
         state[:records] = client.list_records(table_name, 0)
         state[:selected_record_index] = 0
+        state[:total_records] = safe_count_records(client, table_name)
       end
+
+      def safe_count_records(client, table_name)
+        return nil unless client.respond_to?(:count_records)
+
+        client.count_records(table_name)
+      rescue StandardError
+        nil
+      end
+      private_class_method :safe_count_records
 
       def handle_back_navigation(state, client)
         return state if state[:view_mode] == :databases

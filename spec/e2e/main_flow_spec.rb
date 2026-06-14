@@ -190,7 +190,8 @@ RSpec.describe 'E2E Navigation' do
     allow(client).to receive(:list_databases).and_return([E2EHelper::TEST_DB])
     expect(client).to receive(:list_tables).with(E2EHelper::TEST_DB).and_call_original
     expect(client).to receive(:list_records).with('test_table', 0).and_call_original
-    RubyMysqlTui.run_main_loop(client)
+    output = capture_stdout { RubyMysqlTui.run_main_loop(client) }
+    expect(output).to include('Table: test_table')
     expect(states.any? { |s| s[:view_mode] == :databases }).to be true
     expect(states.any? { |s| s[:view_mode] == :tables }).to be true
     expect(states.any? { |s| s[:view_mode] == :records }).to be true
@@ -818,6 +819,8 @@ RSpec.describe 'E2E Record Filtering - Apply' do
     prompt = instance_double(TTY::Prompt)
     allow(TTY::Prompt).to receive(:new).and_return(prompt)
     allow(prompt).to receive(:ask).and_return('Alice')
+
+    allow(client).to receive(:count_records).and_return(1)
 
     states = track_states(client)
     RubyMysqlTui.run_main_loop(client)
