@@ -1,3 +1,8 @@
 - name: openai/moonshotai/kimi-k2.6
   reasoning_tag: think
   edit_format: diff
+- name: openai/minimaxai/minimax-m3
+  meta_info:
+    extra_body:
+      chat_template_kwargs:
+        thinking_mode: "enabled"
